@@ -1,0 +1,22 @@
+### Secreted protein overlap
+
+Question: How much do the secreted and transmembrane protein lists overlap?
+
+```{r secreted_tm_overlap}
+num_shared_st <- length(intersect(secreted_proteins$gene_id,
+                                 membrane_proteins$gene_id))
+
+if (CONFIG$include_plots && 'venneuler' %in% installed.packages()) {
+    require(venneuler)
+    plot(venneuler(c(
+        Secreted=nrow(secreted_proteins),
+        Transmembrane=nrow(membrane_proteins),
+        "Secreted&Transmembrane"=num_shared_st
+    )))
+}
+
+print(sprintf("Number secreted genes: %d", nrow(secreted_proteins)))
+print(sprintf("Number transmembrane genes: %d", nrow(membrane_proteins)))
+print(sprintf("Number overlapping genes: %d", num_shared_st))
+```
+

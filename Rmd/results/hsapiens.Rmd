@@ -1,0 +1,7 @@
+```{r}
+# sort result
+sorted_result <- tbl_df(result[with(result, order(color, description)),])
+
+# Also save a simplified version of the table for display in the HTML output
+simple_result <- sorted_result
+```

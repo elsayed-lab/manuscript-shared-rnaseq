@@ -1,0 +1,47 @@
+Normalization
+-------------
+
+Next, we will normalize the data for differential expression analysis, as well
+as for network construction. While all of the steps will be applied to prepare
+the data for differential expression analysis, some or all may be skipped for
+the network preprocessing.
+
+We will use the `voom` function from the `limma` pipeline to make several
+adjustments to the count matrix:
+
+1. Convert to log2 Counts-per-million reads (log2-CPM)
+2. Adjust for mean variance bias (voom observation-level weights)
+3. Quantile normalization `r citep('10.1093/bioinformatics/19.2.185')`
+
+The overall effect of these changes are to convert out RNA-Seq data to a scale
+that looks more like microarray, to adjust for RNA-Seq specific biases, and to
+normalize the data so that statements can be made across samples.
+
+For more information, refer to the Voom paper `r citep('10.1186/gb-2014-15-2-r29')`.
+
+```{r pre_normalization}
+# Differential expression parameters
+counts             <- de_counts
+batch_adjust       <- CONFIG$de_batch_adjust
+quantile_normalize <- CONFIG$de_quantile_normalize
+use_cpm            <- CONFIG$de_cpm
+use_log2           <- CONFIG$de_log2
+use_voom           <- CONFIG$de_voom
+robust_ebayes      <- CONFIG$de_ebayes_robust
+```
+
+### Voom, log2CPM, and quantile normalization
+
+```{r child='normalize_counts.Rmd'}
+```
+
+```{r child='sample_visualization.Rmd'}
+```
+
+```{r child='batch_adjustment.Rmd', include=CONFIG$de_batch_adjust != 'none', eval=CONFIG$de_batch_adjust != 'none'}
+```
+
+```{r post_normalization}
+de_counts <- counts
+```
+

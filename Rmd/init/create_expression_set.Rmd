@@ -1,0 +1,85 @@
+### Create ExpressionSet
+
+Rather than keeping track of the count data and meta information all
+separately, let's create a Bioconductor [ExpressionSet](http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf)
+instance containing all of the relevant information.
+
+In order to create an ExpressionSet we first have to make sure each of
+the three main componenets (expression data, sample information, and feature
+information) have consistent column and row names and have been sorted
+similarly.
+
+Some useful methods for working with ExpressionSets:
+
+- `sampleNames(expr_set)`     // sample ids
+- `featureNames(expr_set)`    // gene ids
+- `exprs(expr_set)`           // counts
+- `pData(expr_set)`           // sample metadata (id, condition, batch, etc)
+- `fData(expr_set)`           // gene annotations
+
+```{r create_expression_set}
+# Assay data (RNA-Seq count table)
+assay_data <- as.matrix(count_table)
+
+# Sort rows by gene id
+assay_data <- assay_data[order(row.names(assay_data)),]
+
+# Pheno data (sample information)
+pheno_data <- new("AnnotatedDataFrame",
+                  data.frame(sample=sample_ids, condition=condition, batch=batch))
+sampleNames(pheno_data) <- colnames(assay_data)
+
+# Feature data (gene annotations)
+gene_info <- gene_info[order(gene_info$gene_id),]
+feature_data <- new("AnnotatedDataFrame", as.data.frame(gene_info))
+
+#featureNames(feature_data) <- rownames(assay_data)
+featureNames(feature_data) <- gene_info$gene_id
+
+# List to store counts used for differential expression analysis
+de_counts = list()
+
+de_counts$raw <- new("ExpressionSet", exprs=assay_data,
+                        phenoData=pheno_data, featureData=feature_data)
+```
+
+```{r include=CONFIG$verbose, echo=CONFIG$verbose}
+print(de_counts$raw)
+```
+
+Preview raw counts
+------------------
+
+### Total number of reads
+
+```{r num_reads_total, results='asis'}
+num_reads_total <- sum(as.numeric(exprs(de_counts$raw)))
+cat(sprintf('\n**Total number of reads: %0.0f**\n\n', num_reads_total))
+```
+
+### Highly expressed genes (before filtering)
+
+```{r highly_expressed_genes_before_filtering, results='asis'}
+gene_total_counts <- data.frame(sort(rowSums(exprs(de_counts$raw)), decreasing=TRUE))
+colnames(gene_total_counts) <- c("total_reads")
+
+# preview structure of gene annotations
+gene_info_subset <- gene_info[match(rownames(gene_total_counts), gene_info$gene_id),]
+gene_info_subset$num_reads <- gene_total_counts$total_reads
+gene_info_subset$num_reads_pct <- (gene_total_counts$total_reads / num_reads_total) * 100
+
+gene_info_subset <- gene_info_subset %>% 
+    select(-chromosome, -strand) %>%
+    rename(tx_len=transcript_length)
+
+if (CONFIG$include_tables) {
+    xkable(head(gene_info_subset, 10), 
+        caption='Genes with the highest average expression before filtering.',
+        str_max_width=20)
+}
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(de_counts$raw))
+```
+

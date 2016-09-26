@@ -1,0 +1,125 @@
+### Load gene annotations
+
+Next, we will use gene annotations for *C. elegans* provided by
+[ReCount](http://bowtie-bio.sourceforge.net/recount/) 
+`r citep('10.1186/1471-2105-12-449')`along with [Bioconductor
+OrganismDb](http://bioconductor.org/packages/release/bioc/html/OrganismDbi.html)
+packages `r citep(citation('OrganismDbi'))` and the R interface to BioMart 
+`r citep(c('10.1186/1471-2164-10-22', '10.1038/nprot.2009.97'))` to retrieve ENSEMBL
+gene annotations for the host.
+
+```{r load_gene_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
+# Load gene annotations
+library(CONFIG$orgdb, character.only=TRUE)
+orgdb <- get(CONFIG$orgdb)
+
+# Fix AnnotationDbi namespace mess
+assign('select', dplyr::select, envir=.GlobalEnv)
+assign('get',    base::get, envir=.GlobalEnv)
+
+gene_info <- read.table(gzfile('../../data/celegans/worm_genes.txt.gz'),
+                        header=TRUE)
+colnames(gene_info) <- c('gene_id', 'external_gene_id', 'chromosome', 'start', 'end',
+                         'strand', 'type')
+
+# reorder gene_info to match counts
+gene_info <- gene_info[match(rownames(count_table), gene_info$gene_id),]
+
+# OrgDB gene identifiers
+orgdb_ids <- keys(orgdb, keytype='SYMBOL')
+
+# Attempt to map gene ID's not found using gene_info$external_gene_id
+# Some of the IDs in OrgDb match to 'gene_id'; others to 'external_gene_id'
+mixed_ids <- gene_info$gene_id
+ind <- !mixed_ids %in% orgdb_ids
+mixed_ids[ind] <- gene_info$external_gene_id[ind]
+
+# Gene IDs
+gene_ids <- rownames(count_table)
+
+# Determine approximate transcript lengths for each gene.
+gene_info$transcript_length <- getlength(mixed_ids, CONFIG$organism_genome, "geneSymbol")
+
+# Location of external annotation files
+species_dir <- tolower(sub('. ', '', CONFIG$host))
+input_dir <- file.path('..', '..', 'data', species_dir)
+```
+
+```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
+# gene annotations
+if (CONFIG$include_tables) {
+    kable(head(gene_info), caption='Preview of gene annotations.')
+}
+```
+
+### Load GO annotations
+
+Next, we will use the [GO.db annotation
+package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.html) 
+`r citep(citation('GO.db'))` to load a table of Gene Ontology (GO) 
+`r citep('10.1038/75556')` terms associated with each parasite gene.
+
+```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
+# Load GO annotations
+go_terms <- load_go_terms(orgdb, mixed_ids,
+                          keytype=CONFIG$orgdb_key)
+
+# Gene / GO term mapping
+gene_go_mapping <- as.data.frame(unique(
+    go_terms %>% select(get(CONFIG$orgdb_key), GO, ONTOLOGY)
+))
+colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
+go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
+colnames(go_term_id_mapping) <- c("category", "term", "ontology")
+```
+
+```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
+# Preview of GO term annotations
+if (CONFIG$include_tables) {
+    kable(head(go_terms), caption='Preview of GO annotations.')
+}
+```
+
+### Load KEGG annotations
+
+Next, we will load a table of KEGG `r citep('10.1093/nar/27.1.29')` pathway
+annotations for each host gene.
+
+```{r load_kegg_annotations}
+# KEGG annotation filepaths
+kegg_mapping_file  <- file.path(input_dir, 'Celegans_KEGG_Annotations.csv')
+kegg_pathways_file <- file.path(input_dir, 'Celegans_KEGG_Pathways.csv')
+org_abbreviation <- 'cel'
+
+if (file.exists(kegg_mapping_file)) {
+    # If KEGG mapping are available, load from file
+    gene_kegg_mapping <- read.csv(kegg_mapping_file)
+    kegg_pathways <- read.delim(kegg_pathways_file)
+} else {
+    # Otherwise use KEGGREST to construct mappings
+    library('KEGGREST')
+
+    pathways <- unique(keggLink("pathway", org_abbreviation))
+    kegg_pathways <- generate_kegg_pathway_mapping(pathways, CONFIG$verbose)
+    gene_kegg_mapping <- generate_gene_kegg_mapping(pathways,
+                                                    org_abbreviation,
+                                                    keytype='WBGene',
+                                                    verbose=CONFIG$verbose)
+
+    # Save KEGG mapping
+    if(!file.exists(input_dir)) {
+        dir.create(input_dir, recursive=TRUE)
+    }
+
+    write.csv(gene_kegg_mapping, file=kegg_mapping_file, quote=FALSE,
+            row.names=FALSE)
+    write.table(kegg_pathways, file=kegg_pathways_file, quote=FALSE,
+            row.names=FALSE, sep='\t')
+}
+
+# Rename gene/KEGG mapping columns to be consistent with GO mapping
+colnames(gene_kegg_mapping) <- c('gene', 'category')
+colnames(kegg_pathways)     <- c('category', 'name', 'class', 'description')
+
+kegg_pathways <- unique(kegg_pathways)
+```

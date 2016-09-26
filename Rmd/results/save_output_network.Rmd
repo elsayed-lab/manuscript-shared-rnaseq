@@ -1,0 +1,110 @@
+Exporting the Network
+---------------------
+
+Next we will export the WGCNA network, along with the module assignments and
+some addition meta information to a format that is easily readable by network
+visualization tools such as Cytoscape.
+
+- TODO 2014/06/09: Include cor() as well as TOM in output, including the sign
+  of the correlation.
+
+```{r create_output_df, cache=CONFIG$use_cache, autodep=TRUE, cache.lazy=FALSE}
+if ('descriptiion' %in% colnames(result)) {
+    sorted_result <- tbl_df(result[with(result, order(color, description)),])
+} else {
+    sorted_result <- tbl_df(result[with(result, order(color)),])
+}
+
+# Also save a simplified version of the table for display in the HTML output
+simple_result <- sorted_result
+```
+
+```{r export_graphml, cache=CONFIG$use_cache, autodep=TRUE, cache.lazy=FALSE}
+# Remove self-loops
+diag(adjacency_matrix) <- 0
+
+# Export to GraphML
+nodeAttrDataFrame <- result[-c(1)]
+nodeAttrDataFrame$color <- as.character(nodeAttrDataFrame$color)
+#nodeAttrDataFrame$type  <- as.character(nodeAttrDataFrame$type)
+
+# Include RGB versions of module colors for better assignment in Cytoscape
+nodeAttrDataFrame$color_rgb <- col2hex(nodeAttrDataFrame$color)
+
+# Note: the igraph write.graph function converts NA values for node attributes
+# to a very low number (-2.14748e+09) when writing to graphml
+# To avoid this issue, we will set all NA UTR lengths to their approximate
+# median values when exporting the network.
+if ('utr5_len' %in% colnames(nodeAttrDataFrame)) {
+	nodeAttrDataFrame$utr5_len[is.na(nodeAttrDataFrame$utr5_len)] <- CONFIG$default_5utr_length
+	nodeAttrDataFrame$utr3_len[is.na(nodeAttrDataFrame$utr3_len)] <- CONFIG$default_3utr_length
+}
+```
+
+Output results
+--------------
+
+```{r output_results, results='asis', echo=CONFIG$save_results}
+# Write out a csv file to be used as a node table input in cytoscape.                 
+write.table(sorted_result,                                                            
+            file.path(output_dir, "output", "network-annotation-full.tab"),           
+            row.names=FALSE, quote=FALSE, sep="\t")                                   
+                                                                                      
+# Also save a simplified version of the table for display in the HTML output          
+write.table(simple_result,                                                            
+            file.path(output_dir, "output", "network-annotation.tab"),                
+            row.names=FALSE, quote=FALSE, sep="\t")
+
+# Save dendrogram and module information
+save(gene_tree, file=file.path(outdir, 'gene_tree.RData'))
+save(module_colors, file=file.path(outdir, 'module_colors.RData'))
+
+# Save GO/KEGG network module enrichment results
+save(module_go_enrichment, 
+     file=file.path(outdir, 'module_go_enrichment.RData'))
+
+save(module_kegg_enrichment,
+     file=file.path(outdir, 'module_kegg_enrichment.RData'))
+
+write.csv(combined_counts_table,
+          file.path(output_dir, "output", "combined_counts.csv"),
+          row.names=FALSE, quote=FALSE)
+
+# Write out a csv file to be used as a node table input in cytoscape.
+write.table(sorted_result,
+            file.path(output_dir, "output", "network-annotation-full.tab"),
+            row.names=FALSE, quote=FALSE, sep="\t")
+
+write.table(simple_result,
+            file.path(output_dir, "output", "network-annotation.tab"),
+
+            row.names=FALSE, quote=FALSE, sep="\t")
+
+# save inidividual module information
+for (mod_color in module_colors) {
+	# module genes
+	module_genes <- result %>% filter(color==mod_color)
+	write.table(module_genes,                                                            
+				file.path(module_output_dir, sprintf("%s_genes.txt", mod_color)),                
+				row.names=FALSE, quote=FALSE, sep="\t")
+}
+
+# Save enrichment results as text files
+output_module_enrichment_results(module_go_enrichment, module_output_dir,
+                                 'go', go_term_id_mapping)
+output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
+                                 'kegg', kegg_pathways %>% select(-description))
+
+if (CONFIG$target == "pathogen" && CONFIG$pathogen == "L. major") {
+    output_module_enrichment_results(leishcyc_pathway_enrichment,
+                                     module_output_dir, 'leishcyc')
+}
+
+# Write module stats to a file
+write.csv(module_stats, file.path(output_dir, "output", "module_stats.csv"),
+          row.names=FALSE, quote=FALSE) 
+graphml_outfile <- file.path(output_dir, 'output', 'network.graphml')
+
+## gzip output
+#system(sprintf('gzip -f %s', graphml_outfile))
+```

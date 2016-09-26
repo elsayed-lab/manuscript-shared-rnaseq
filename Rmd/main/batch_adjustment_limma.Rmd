@@ -1,0 +1,31 @@
+### Limma batch correction
+
+To see what the effect of including batch in our limma model is, we will fit a
+linear model using only batch and visualize the residuals of the model.
+
+```{r}
+batch_design <- model.matrix(~batch)
+
+# If voom is enable, redo with batch design
+if (use_voom) {
+    # voom data
+    norm_method <- ifelse(quantile_normalize, 'quantile', 'none')
+
+    batch_voom <- voom(exprs(counts$raw), batch_design,
+                       normalize.method=norm_method,
+                       plot=CONFIG$include_plots)
+
+    # Create a linear model for batch and get residuals
+    batch_fit <- lmFit(batch_voom, design=batch_design)
+    
+    # same as residuals(batch_fit, batch_voom)
+    limma_residuals <- residuals(batch_fit, batch_voom$E)
+} else {
+    batch_fit <- lmFit(counts$normed, design=batch_design)
+    limma_residuals <- residuals(batch_fit, exprs(counts$normed))
+}
+
+# store batch-adjusted counts
+exprs(counts$batch_adjusted) <- limma_residuals
+```
+

@@ -1,0 +1,24 @@
+```{r resampling, results='asis'}
+cat("\n**Resampling analysis**\n\n")
+# Unset random seed to ensure different samples chosen for each run
+# Note that this means that any results after this point will no longer be
+# reproducible. For the purposes of resampling analysis, however, this is 
+# probably okay.
+rm(.Random.seed)
+
+# Select sample of genes
+resampling_num_genes <- round(CONFIG$resampling_sample_ratio *
+                              nrow(de_counts$raw))
+resampling_indices <- sort(sample(1:nrow(de_counts$raw), resampling_num_genes))
+
+# Keep only genes in random sample
+de_counts$raw <- de_counts$raw[resampling_indices,]
+```
+
+```{r update_gene_info, results='asis'}
+# Limit gene annotations dataframe to filtered genes
+gene_info <- gene_info %>% filter(gene_id %in% rownames(de_counts$raw))
+
+cat(sprintf('\n**Number of genes remaining:** %d\n\n', nrow(de_counts$raw)))
+```
+

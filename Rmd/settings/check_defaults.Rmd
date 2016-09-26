@@ -1,0 +1,30 @@
+```{r check_defaults}
+# Set default condition aliases if none specified
+conditions <- unique(CONFIG$samples[[CONFIG$condition]])
+
+if (is.null(CONFIG$condition_mapping)) {
+    CONFIG$condition_mapping <- data.frame(list(
+        long=conditions,
+        short=conditions
+    ))
+}
+
+# Set default differential expression contrasts
+if (is.null(CONFIG$de_comparisons)) {
+    # By default, perform all possible pairwise contrasts
+    condition_pairs <- t(combn(conditions, 2))
+
+    CONFIG$de_comparisons <- list()
+    for (i in 1:nrow(condition_pairs)) {
+        CONFIG$de_comparisons[[i]] <- as.character(condition_pairs[i,])
+    }
+    rm(condition_pairs)
+}
+
+# Use first contrast as default main comparison
+if (is.null(CONFIG$main_comparison)) {
+    CONFIG$main_comparison <- CONFIG$de_comparisons[[1]]
+}
+
+rm(conditions)
+```

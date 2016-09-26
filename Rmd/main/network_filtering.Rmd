@@ -1,0 +1,52 @@
+Network-specific filtering
+--------------------------
+
+```{r include=CONFIG$filter_non_de_genes, eval=CONFIG$filter_non_de_genes, results='asis'}
+cat('\n### Filter non differentially-expressed genes\n')
+
+# Find genes that are differentially expressed across at least one comparison
+de_genes <- c()
+
+# Determine which genes pass p-value cutoff for each contrast. Here we use
+# the orginal DEA results since the normalization steps have been optimized
+# for this type of analysis.
+for (contrast in names(limma_results$top_genes)) {
+    pass_cutoff <- limma_results$top_genes[[contrast]] %>% 
+        filter(adj.P.Val < CONFIG$filter_non_de_genes_pvalue)
+    de_genes <- unique(c(de_genes, as.character(pass_cutoff$gene_id)))
+}
+
+# Differential expression results
+cat(sprintf("\nRemoving **%d** non differentially expressed genes (**%d** remaining).\n\n",
+            (nrow(network_counts$final) - length(de_genes)), length(de_genes)))
+
+# Filter out non-DE genes
+network_counts$final <- network_counts$final[rownames(network_counts$final) %in% de_genes,]
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(network_counts$final))
+```
+
+### Variance filtering
+
+In order to reduce the number of genes for analysis, it may be helpful to
+remove genes which do not change much across conditions: during network
+construction, these genes will provide little information.
+
+If enabled in the experiment settings, genes with low variances will be
+removed.
+
+```{r variance_filtering}
+# Remove any genes with exactly zero variance (otherwise will result in NAs
+# in the correlation matrix)
+zero_var_mask <- apply(exprs(network_counts$final), 1, var) != 0
+network_counts$final <- network_counts$final[zero_var_mask,]
+
+# If further variance-based filtering is enabled, apply to counts
+if (CONFIG$min_var_percentile > 0) {
+    network_counts$final <- filter_low_variance_genes(network_counts$final,
+                                                      CONFIG$min_var_percentile,
+                                                      include_plot=CONFIG$include_plots)
+}
+```

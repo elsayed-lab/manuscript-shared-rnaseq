@@ -1,0 +1,484 @@
+### Co-expression Module detection
+
+Next, we convert the adjacency matrix from above to a topological overlap
+matrix and subtract it from 1 to create a dissimilarity matrix to use for
+clustering.
+
+#### Dissimilarity matrix
+
+**Note**: The function `TOMsimilarity` does not preserve the sign of the input
+adjacency matrix; In the function `tomSimilarityFromAdj` in networkFunctions.c
+the `fabs()` is called during the transformation effectively dropping the sign.
+
+Moreover, `TOMsimilarity` expects values in the range [-1,1] when `tomType` is
+set to `signed`. If strictly positive input is given (e.g. the output from
+`adjacency()`) then it does not matter if `tomType` is set to `signed` or
+`unsigned` -- the result will be the same:
+
+Below, we will generate a topological overlap matrix. Depending on the analysis
+settings, this may be used for cluster detection and network export, otherwise
+the adjacency matrix will be used.
+
+```{r construct_dissimilarity_matrix, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
+# Dissimilarity matrix (used for clustering distance metric)
+if (CONFIG$topological_overlap) {
+    # Convert adjacency matrix to a topoligical overlap matrix
+    adjacency_matrix <- TOMsimilarity(adjacency_matrix, TOMType=CONFIG$network_type)
+
+    # Set TOM matrix row and column names
+    rownames(adjacency_matrix) <- colnames(adjacency_matrix) <- gene_ids
+
+    # Histogram of TOM values
+    if (CONFIG$include_plots) {
+        qplot(as.vector(adjacency_matrix), geom='histogram', 
+              binwidth=(max(adjacency_matrix) - min(adjacency_matrix))/200) +
+            labs(title="Distribution of Topological Overlap Values")
+    }
+}
+
+# Take the reciprocal of the adjacency matrix
+dissimilarity_matrix <- 1 - adjacency_matrix
+```
+
+```{r include=CONFIG$verbose, echo=CONFIG$verbose}
+# Preview dissimilarity matrix
+dissimilarity_matrix[1:4,1:4]
+```
+
+```{r topological_overlap_matrix, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, dev='png'}
+if (CONFIG$topological_overlap && CONFIG$include_plots) {
+    heatmap.2(adjacency_matrix[heatmap_indices, heatmap_indices],
+            hclustfun=flashClust, col=redgreen(75),
+            labRow=NA, labCol=NA, trace='none',
+            main='Topological overlap matrix')
+}
+```
+
+```{r cleanup}
+# Delete adjacency matrix for now to free up memory
+rm(adjacency_matrix)
+gc()
+```
+
+#### Hierarchical clustering
+
+##### Create dendrogram
+
+```{r create_dendrogram}
+
+# Create a transposed version of the count table
+sample_counts <- as.data.frame(t(wgcna_input))
+
+# Cluster gene expression profiles
+gene_tree <- flashClust(as.dist(dissimilarity_matrix), method="average")
+
+# 2015/11/05: Work-around for cutree bug:
+# "the 'height' component of 'tree' is not sorted (increasingly)"
+# See: https://stat.ethz.ch/pipermail/r-help/2008-May/163409.html
+gene_tree$height <- round(gene_tree$height, 6)
+
+```
+
+##### Large-scale modules
+
+First, let's explore some of the major features of the expression data by
+clustering the genes into a few very large modules, and plotting the eigengenes
+for each of the modules.
+
+```{r large_scale_features, results='asis', include=CONFIG$include_plots, eval=CONFIG$include_plots}
+#module_labels <- cutreeDynamicTree(dendro=gene_tree,
+#                                  minModuleSize=20,
+#                                  deepSplit=FALSE)
+
+# large-scale network features
+#cut_height <- 0.15
+
+#module_labels <- cutreeStatic(dendro=gene_tree,
+#                             cutHeight=cut_height, minSize=10)
+
+## If default cut height leads to more than five modules, increase cutoff and
+## try again until a more ideal division is reached
+#while (length(unique(module_labels)) > 5) {
+#    if (cut_height <= 0.90) {
+#        cut_height <- cut_height + 0.05
+#    } else if (cut_height < 0.99) {
+#        cut_height <- cut_height + 0.01
+#    } else {
+#        cut_height <- cut_height + 0.002
+#    }
+#    module_labels <- cutreeStatic(dendro=gene_tree,
+#                                cutHeight=cut_height, minSize=10)
+#}
+
+#if (length(unique(module_labels)) == 1) {
+#    stop("Only a single module detected when exploring large-scale network features.")
+#}
+
+module_labels <- cutreeDynamicTree(dendro=gene_tree, minModuleSize=100,
+                                  deepSplit=FALSE)
+
+# plot dendrogram and eigengenes
+large_scale_module_colors <- labels2colors(module_labels)
+
+if (CONFIG$include_tables) {
+    xkable(as.data.frame(table(large_scale_module_colors)),
+        caption='Large-scale module network summary.')
+}
+
+# determine label sizes to use for dendrogram
+if (CONFIG$fig_width <= 1200) {
+    cex_main <- 1.2
+    cex_lab  <- 1.2
+    cex_axis <- 1.2
+    cex_color_labels <- 0.65
+} else if (CONFIG$fig_width <= 1920) {
+    cex_main <- 1.5
+    cex_lab  <- 1.5
+    cex_axis <- 1.5
+    cex_color_labels <- 1
+} else if (CONFIG$fig_width <= 2560) {
+    cex_main <- 1.6
+    cex_lab  <- 1.8
+    cex_axis <- 1.8
+    cex_color_labels <- 1.3
+} else {
+    cex_main <- 2
+    cex_lab  <- 2.5
+    cex_axis <- 2.5
+    cex_color_labels <- 2
+}
+
+# dendrogram
+plotDendroAndColors(gene_tree, large_scale_module_colors,
+                    groupLabels=c("Modules"), dendroLabels=FALSE,
+                    cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                    cex.axis=cex_axis, cex.lab=cex_lab, marAll=c(4,8,6,4),
+                    guideHang=0.05)
+```
+
+#### Large-scale module expression (Raw eigengenes)
+
+```{r largescale_feature_eigengenes, results='asis', include=CONFIG$include_plots, eval=CONFIG$include_plots}
+# eigengenes representing major features
+module_eigengenes <- moduleEigengenes(sample_counts,
+                                      colors=large_scale_module_colors)$eigengenes
+# line plot (eigengenes)
+combined_eigengenes <- combine_replicates(t(module_eigengenes), condition)
+
+# convert to long
+eigengenes_long <- melt_counts(combined_eigengenes, CONFIG$condition_mapping)
+colnames(eigengenes_long) <- c('module', 'condition', 'expression')
+
+# drop the ME_ prefix for module name
+eigengenes_long$module <- substring(eigengenes_long$module, 3)
+
+# add clustering results and convert to a factor
+#eigengenes_long <- cbind(eigengenes_long, cluster=as.factor(large_scale_module_colors))
+
+# colormap
+cmap <- unique(eigengenes_long$module)
+
+# first, plot all of the clusters in color
+ggplot(data=eigengenes_long,
+    aes(x=condition, y=expression, group=module, color=module)) +
+    geom_line(size=I(2)) + scale_colour_manual(values=cmap) +
+    ggtitle("Module eigengene Expression Profiles") +
+    xlab("Time (hours)") +
+    ylab("Expression level") +
+    theme(axis.text=element_text(colour="#333333"),
+        axis.text.x=element_text(angle=0, vjust=0.5, size=16))
+```
+
+#### Large-scale module expression (Log2-CPM averages)
+
+```{r largescale_feature_average_expr, results='asis', include=CONFIG$include_plots, eval=CONFIG$include_plots}
+# average expression profiles for each module
+module_averages <- get_module_averages(network_counts$log2cpm,
+                                       large_scale_module_colors, method=median)
+
+combined_module_counts <- combine_replicates(module_averages, condition)
+
+# convert to long
+module_averages_long <- melt_counts(combined_module_counts, CONFIG$condition_mapping)
+colnames(module_averages_long) <- c('module', 'condition', 'expression')
+
+# add clustering results and convert to a factor
+#eigengenes_long <- cbind(eigengenes_long, cluster=as.factor(large_scale_module_colors))
+
+# colormap
+cmap <- unique(module_averages_long$module)
+
+# first, plot all of the clusters in color
+ggplot(data=module_averages_long,
+    aes(x=condition, y=expression, group=module, color=module)) +
+    geom_line(size=I(2)) + scale_colour_manual(values=cmap) +
+    ggtitle("Module Average Log2-CPM Expression Profiles") +
+    xlab("Time (hours)") +
+    ylab("Expression level (log2-CPM)") +
+    theme(axis.text=element_text(colour="#333333"),
+        axis.text.x=element_text(angle=0, vjust=0.5, size=16))
+```
+
+##### Smaller-scale modules
+
+```{r hierarchical_clustering}
+message("Finding network modules")
+
+# Module identification using dynamic tree cut:
+if (CONFIG$cut_tree_method == 'hybrid') {
+    module_labels <- cutreeDynamic(dendro=gene_tree, distM=dissimilarity_matrix,
+                                  deepSplit=CONFIG$deep_split,
+                                  pamRespectsDendro=CONFIG$pam_respects_dendro,
+                                  minlusterSize=CONFIG$min_module_size)
+} else {
+    module_labels <- cutreeDynamicTree(dendro=gene_tree,
+                                      deepSplit=CONFIG$deep_split,
+                                      minModuleSize=CONFIG$min_module_size)
+}
+
+module_colors <- labels2colors(module_labels)
+```
+
+#### Gene developmental stage associations
+
+It may also be interesting to see if any of the detected modules are associated
+with a specific lifecycle stage.
+
+To visualize this, each differentially expressed gene will be associated with
+the lifecycle stage for which it showed the highest average level of
+expression. Genes which were not found to be differentially expressed will be
+shown as grey.
+
+```{r setup_development_stages}
+lifecycle_stages <- list()
+
+for (contrast in names(sig_genes)) {
+    # If at least 50 DE genes, include in dendrogram
+    if (nrow(sig_genes[[contrast]]) > 50) {
+        cond1_upreg <- (sig_genes[[contrast]] %>%  filter(logFC < 0))$gene_id
+        cond2_upreg <- (sig_genes[[contrast]] %>%  filter(logFC > 0))$gene_id
+
+        lifecycle_stages[[contrast]] <- rep(0, length(gene_ids))
+        lifecycle_stages[[contrast]][gene_ids %in% cond1_upreg] <- 1
+        lifecycle_stages[[contrast]][gene_ids %in% cond2_upreg] <- 2
+    }
+}
+
+# Main contrast to use when only including one DE comparison
+# cond1_upreg
+main_comparison_one_short <- unique((CONFIG$condition_mapping %>% 
+    filter(long == CONFIG$main_comparison[1]))$short)
+main_comparison_two_short <- unique((CONFIG$condition_mapping %>%
+    filter(long == CONFIG$main_comparison[2]))$short)
+
+if (!is.null(sig_genes[[main_contrast]])) {
+    cond2_upreg   <- (sig_genes[[main_contrast]] %>%  filter(logFC > 0))$gene_id
+    cond2_downreg <- (sig_genes[[main_contrast]] %>%  filter(logFC < 0))$gene_id
+} else {
+    cond2_upreg <- c()
+    cond2_downreg <- c()
+}
+```
+
+#### Module Eigengenes
+
+```{r module_eigengenes, cache=CONFIG$use_cache, autodep=TRUE}
+num_genes   <- ncol(sample_counts)
+num_samples <- nrow(sample_counts)
+
+# Calculate eigengenes
+module_eigengenes <- moduleEigengenes(sample_counts,
+                                     colors=module_colors)$eigengenes
+
+if (CONFIG$include_plots) {
+    plot_eigengene_dendrogram(module_eigengenes, module_colors,
+                            CONFIG$merge_correlation)
+}
+```
+
+#### Merge similar modules
+
+If enabled, this step will merge modules whose eigengenes are highly
+correlated, thus reducing the total number of modules.
+
+```{r module_merge}
+num_modules_before <- length(unique(module_colors))
+
+if (CONFIG$merge_correlation < 1) {
+    merge_result <- merge_similar_modules(sample_counts, module_colors,
+                                         CONFIG$merge_correlation,
+                                         verbose=CONFIG$verbose)
+    module_labels <- merge_result$module_labels
+    module_colors <- merge_result$module_colors
+    module_eigengenes <- merge_result$module_eigengenes
+
+}
+```
+
+#### Module filtering (optional)
+
+After gene module assignments have been made, it's likely that some genes will
+end up in modules where they only correlate partially and appear to follow a
+different overall trend than most other genes in the modules.
+
+This step attempts to remove the effect of these outlier genes by removing all
+genes which don't fit well with the majority of genes in the modules they are
+assigned to, effectively pruning each module to its "core" set of co-expressed
+genes.
+
+Genes filtered this way will be move to the "grey" (unassigned) module.
+
+```{r module_pruning, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
+if (CONFIG$module_min_correlation > 0) {
+    # average expression profile for each module
+    module_averages <- get_module_averages(network_counts$final,
+                                          module_colors, method=median)
+
+    for (color in unique(module_colors)) {
+        # skip grey
+        if (color == 'grey') {
+            next
+        }
+        # get counts for module genes
+        module_genes <- network_counts$final[module_colors == color,]
+
+        correlations <- apply(exprs(module_genes) * 1.0, 1, function(row) {
+            cor(row, module_averages[color,])
+        })
+
+        # move outlier genes to grey cluster
+        new_assignments <- ifelse(correlations >= CONFIG$module_min_correlation, color, 'grey')
+        module_colors[module_colors == color] <- new_assignments
+    }
+}
+```
+
+#### Dendrogram with differential expression status
+
+Plot the network dendrogram and module memberships. We will also test out some
+alternative parameters for the branch cut algorithm see if any combination
+produce more qualitatively appealing results.
+
+```{r network_dendrogram}
+# total number of modules remaining after merge
+num_modules <- length(unique(module_colors))
+
+print(sprintf("Number of modules: %d", num_modules))
+
+# Dendrogram with differential expression status included
+treecut_params <- sprintf("method=%s,\nmin_module_size=%d,\ndeep_split=%s",
+                         CONFIG$cut_tree_method, CONFIG$min_module_size,
+                         CONFIG$deep_split)
+
+dendrogram_colors <- c(module_colors)
+
+if (CONFIG$fig_width < 1920) {
+    dendrogram_module_labels <- c(sprintf("Modules (n=%s)", num_modules))
+} else {
+    dendrogram_module_labels <- c(sprintf("Modules (n=%s)\n%s", num_modules, treecut_params))
+}
+
+for (contrast in names(lifecycle_stages)) {
+    dendrogram_colors <- cbind(dendrogram_colors, lifecycle_stages[[contrast]])
+    dendrogram_labels <- append(dendrogram_module_labels, contrast)
+}
+
+#sprintf("%s vs. %s\n Red <- Up-regulated\n Black <- Down-regulated",
+if (CONFIG$include_plots) {
+    plotDendroAndColors(gene_tree, dendrogram_colors,
+                        groupLabels=dendrogram_labels, dendroLabels=FALSE,
+                        cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                        cex.axis=cex_axis, cex.lab=cex_lab, marAll=c(4,8,6,4),
+                        guideHang=0.05)
+}
+
+# total number of modules remaining after merge
+num_modules <- length(unique(module_colors))
+```
+
+```{r include=CONFIG$verbose, echo=CONFIG$verbose}
+# list module colors and sizes for top 15 largest and smallest modules
+quantile(table(module_colors))
+head(sort(table(module_colors), decreasing=TRUE), 15)
+head(sort(table(module_colors)), 15)
+```
+
+#### Module visualization
+
+##### Dissimilarity Matrix
+
+Let's look at a heatmap of the dissimilarity matrix along with its
+corresponding modules.
+
+```{r dissimilarity_matrix, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, dev='png'}
+# As advised in the WGCNA vignette, the dissimilarity matrix is
+# transformed by raising it to a power in order to increase the contrast
+# on the resulting heatmap.
+if (CONFIG$include_plots) {
+    # downsample to speed things up
+    sample_size <- min(2500, nrow(dissimilarity_matrix))
+    ind <- sample(nrow(dissimilarity_matrix), sample_size)
+
+    dissim_subset <- dissimilarity_matrix[ind, ind]
+
+    # Re-cluster
+    dendrogram <- flashClust(as.dist(dissim_subset), method='average')
+    select_colors <- module_colors[ind]
+
+    # Plot
+    diag(dissim_subset) <- NA
+
+    TOMplot(dissim_subset^5, dendrogram, select_colors, verbose=CONFIG$verbose,
+            setLayout=TRUE, main='Network heatmap plot')
+}
+```
+
+Output
+------
+
+In addition to WGCNA module assignment, it may be helpful to explore other
+aspects relating to the genes in the network. Below, additional information
+relating to expression levels, differential expression, TriTrypDB gene
+annotations, known RNA binding proteins, etc. are combined to create a table
+which can be used to annotate the network nodes in Cytoscape or another network
+visualization tool.
+
+```{r additional_annotations}
+# Create result data frame
+result <- cbind(gene_info, color=module_colors)
+
+# drop unneeded columns
+keep_cols <- intersect(c('gene_id', 'color', 'description', 'chromosome',
+                         'strand', 'transcript_length'), colnames(result))
+result <- tbl_df(result[,keep_cols])
+
+# add expression-related fields
+result$expr_variance <- apply(wgcna_input, 1, var)
+result$expr_mean     <- apply(wgcna_input, 1, mean)
+
+for (contrast in names(sig_genes)) {
+    de_status <- result$gene_id %in% sig_genes[[contrast]]$gene_id
+    result[paste('de', contrast, sep='_')] <- de_status
+}
+```
+
+### Save results
+
+```{r save_results}
+message("Saving results")
+
+# Recreate adjacency matrix and free up space from dissimilarity matrix
+adjacency_matrix <- 1 - dissimilarity_matrix
+rm(dissimilarity_matrix)
+gc()
+
+COEXPRESSION_NETWORK_RESULT <- list(
+    adj_matrix=adjacency_matrix,
+    wgcna_input=wgcna_input,
+    gene_tree=gene_tree,
+    gene_info=gene_info,
+    module_colors=module_colors,
+    module_eigengenes=module_eigengenes,
+    result=result
+)
+```

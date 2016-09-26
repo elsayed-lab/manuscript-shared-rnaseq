@@ -1,0 +1,56 @@
+Codon Adaptation Index (CAI)
+----------------------------
+
+Using CAI values computed by Subramanian & Sarkar (2015).
+
+- Subramanian, A., & Rup Sarkar, R. (2015). Data in support of large scale
+comparative codon usage analysis in Leishmania and Trypanosomatids. Data in
+Brief, 4, 269–272. doi:10.1016/j.dib.2015.06.003iiiiii
+
+```{r load_codon_adaptation_index}
+if (CONFIG$pathogen == 'L. major') {
+    # load CAI information
+    codon_adaptation <- read_tsv('../../data/lmajor/subramanian2015_table_s3_lmaj.tsv')
+    cai_df <- codon_adaptation %>% select(gene_id, cai)
+
+    # add NAs for missing genes
+    missing_genes <- gene_info$gene_id[!gene_info$gene_id %in% cai_df$gene_id]
+    cai_df <- rbind(cai_df, data.frame(gene_id=missing_genes, cai=NA)) %>%
+            arrange(gene_id)
+
+    # remove genes that have been filtered out
+    cai_df <- cai_df[cai_df$gene_id %in% gene_info$gene_id,]
+
+    cai <- cai_df$cai
+}
+```
+
+```{r dendrogram_cai}
+# Threshold to avoid having extremes dominate color scale
+cai_clip_lower <- as.numeric(quantile(cai, 0.01, na.rm=TRUE))
+cai_clip_upper <- as.numeric(quantile(cai, 0.99, na.rm=TRUE))
+
+cai <- pmax(cai_clip_lower, pmin(cai_clip_upper, cai))
+
+pal <- colorRampPalette(brewer.pal(n=11, name='PRGn'))(100)
+cai_colors <- pal[pmax(1, round((cai / max(cai, na.rm=TRUE)) * 100))]
+
+# Replace NAs with grey
+cai_colors[is.na(cai_colors)] <- '#CCCCCC'
+
+# Dendrogram colors and labels
+dendrogram_colors <- cbind(module_colors, de_contrast, cai_colors)
+dendrogram_labels <- c(dendrogram_module_labels,
+                       sprintf("Red = upregulated\n at %s", "72 hours"),
+                      'Codon Adaptation Index')
+
+#sprintf("%s vs. %s\n Red = Up-regulated\n Black = Down-regulated",
+if (CONFIG$include_plots) {
+    plotDendroAndColors(gene_tree, dendrogram_colors,
+                        groupLabels=dendrogram_labels, dendroLabels=FALSE,
+                        cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                        cex.axis=cex_axis, cex.lab=cex_lab, marAll=c(4,8,6,4),
+                        guideHang=0.05)
+}
+```
+

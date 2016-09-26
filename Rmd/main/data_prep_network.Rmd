@@ -1,0 +1,108 @@
+Normalization (Network)
+-----------------------
+
+Because the optimal parameters used for processing count data for co-expression
+network construction may different from that used for the differential 
+expression analysis performed previously, we will begin by reprocessing the
+data and storing alternate version of each level of processing, specifically
+for use during network construction.
+
+Depending on the focus of the co-expression network, we may also drop some of
+the samples to only retain samples for the specific conditions we are
+interested in. Instead of limiting ourselves to these samples right away, we
+will wait until a later step in order to preserve as much information as
+possible for variance estimation and batch adjustment.
+
+```{r pre_normalization}
+# Create network version of counts
+network_counts <- list(raw=de_counts$raw,
+                       normed=de_counts$raw,
+                       log2cpm=de_counts$log2cpm)
+
+# Co-expression network analysis parameters
+counts             <- network_counts
+batch_adjust       <- CONFIG$network_batch_adjust
+quantile_normalize <- CONFIG$network_quantile_normalize
+use_cpm            <- CONFIG$network_cpm
+use_log2           <- CONFIG$network_log2
+use_voom           <- CONFIG$network_voom
+robust_ebayes      <- CONFIG$network_ebayes_robust
+```
+
+### Voom, log2CPM, and quantile normalization
+
+```{r child='normalize_counts.Rmd'}
+```
+
+```{r child='sample_visualization.Rmd'}
+```
+
+```{r batch_adjustment}
+if (CONFIG$network_batch_adjust != 'none') {
+    cat(knit_child('batch_adjustment.Rmd'))
+}
+```
+
+```{r post_normalization}
+# Store transformed network counts
+network_counts <- counts
+
+# Update condition, batch, etc. to include only network-specific samples
+condition <- factor(CONFIG$wgcna_samples[[CONFIG$condition]])
+batch     <- factor(CONFIG$wgcna_samples[[CONFIG$batch]])
+
+# Samples to use for network construction
+sample_ids_network  <- as.character(CONFIG$wgcna_samples[[CONFIG$sample_id]])
+network_sample_mask <- sampleNames(network_counts$raw) %in% sample_ids_network
+
+covariates <- covariates[network_sample_mask,]
+
+# drop samples not used in network construction
+network_counts$batched_adjusted <- network_counts$batch_adjusted[,network_sample_mask]
+network_counts$final            <- network_counts$final[,network_sample_mask]
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(network_counts$final))
+```
+
+```{r child='network_filtering.Rmd'}
+```
+
+```{r update_network_counts}
+# Update gene annotations
+gene_info <- gene_info[gene_info$gene_id %in% rownames(network_counts$final),]
+
+# Update rows and columns for each version of de_s and network_counts to only
+# include those genes that remain in network_counts$final
+gene_ids <- rownames(network_counts$final)
+
+for (name in names(network_counts)) {
+    # Update de count tables (batch_adjusted may not exist)
+    if (name %in% names(de_counts)) {
+        de_counts[[name]] <- de_counts[[name]][rownames(de_counts[[name]]) %in% gene_ids,]
+    }
+    # Update network count tables
+    if (ncol(network_counts[[name]]) == length(network_sample_mask)) {
+        sample_ind <- network_sample_mask
+    } else {
+        sample_ind <- rep(TRUE, ncol(network_counts[[name]])) 
+    }
+    network_counts[[name]] <- network_counts[[name]][rownames(network_counts[[name]]) %in% gene_ids, sample_ind]
+}
+```
+
+```{r network_sample_vis, echo=FALSE, results='asis'}
+# If the samples used for DEA and network construction differ, show the
+# sample heatmap and PCA plots once more for only the network-specific samples
+samples_differ <- length(sample_ids) == length(sample_ids_network)
+
+if (samples_differ) {
+    cat("\nNetwork sample visualization\n\n")
+    counts <- network_counts
+}
+```
+
+```{r child='sample_visualization.Rmd', echo=samples_differ, eval=samples_differ}
+```
+

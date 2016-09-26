@@ -1,0 +1,81 @@
+Batch Adjustment
+----------------
+
+### Variable correlations (before batch correction)
+
+```{r pca_feature_cor_before, results='asis'}
+# Sample condition and covariate correlations with PCs
+if (CONFIG$include_tables) {
+    xkable(pca_feature_correlations(exprs(counts$normed), 
+                                    cbind(condition, covariates)),
+                                    caption=paste('Variable correlations with ',
+                                                'principle components prior ',
+                                                'to batch adjustment'))
+}
+```
+
+```{r apply_batch_adjustment, results='asis'}
+# Create a new variable to store normalized/batch-adjusted counts
+counts$batch_adjusted <- counts$normed
+
+if (batch_adjust == 'limma') {
+    cat(knit_child('batch_adjustment_limma.Rmd'))
+} else if (batch_adjust == 'combat') {
+    cat(knit_child('batch_adjustment_combat.Rmd'))
+}
+```
+
+### Variable correlations (after batch correction)
+
+```{r pca_feature_cor_after, results='asis', error=FALSE}
+if (CONFIG$include_tables) {
+    xkable(pca_feature_correlations(exprs(counts$batch_adjusted), 
+                                    cbind(condition, covariates)),
+                                    caption=paste('Variable correlations with ',
+                                                'principle components ',
+                                                'following batch adjustment'))
+}
+```
+
+### Sample plots before/after batch adjustment
+
+#### Sample heatmap (normalized euclidean distance, before/after batch adjustment)
+
+```{r sample_heatmap_dist_batch_adj, out.width=combined_plot_width, fig.show='hold', eval=CONFIG$include_plots}
+plot_sample_heatmap(exprs(counts$normed), condition, batch,
+                    main='Sample heatmap (euclidean distance, before batch adjustment)')
+plot_sample_heatmap(exprs(counts$batch_adjusted), condition, batch,
+                    main='Sample heatmap (euclidean distance, after batch adjustment)')
+```
+
+#### Sample heatmap (normalized pearson correlation, before/after batch adjustment)
+
+```{r sample_heatmap_correlation_batch_adj, out.width=combined_plot_width, fig.show='hold', eval=CONFIG$include_plots}
+plot_sample_heatmap(exprs(counts$normed), condition, batch,
+                    metric='pearson',
+                    main='Sample heatmap (pearson correlation, before batch adjustment)')
+plot_sample_heatmap(exprs(counts$batch_adjusted), condition, batch,
+                    metric='pearson',
+                    main='Sample heatmap (pearson correlation, after batch adjustment)')
+```
+
+#### Sample PCA (normalized counts, before/after batch adjustment)
+
+```{r sample_pca_before_after_batch_adjustment, out.width=combined_plot_width, fig.show='hold', eval=CONFIG$include_plots}
+layout(t(1:2))
+plot_sample_pca(exprs(counts$normed), sample_ids, condition,
+                batch, main='Sample PCA (before batch adjustment)')
+plot_sample_pca(exprs(counts$batch_adjusted), sample_ids, condition,
+                batch, main='Sample PCA (after batch adjustment)')
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(counts$batch_adjusted))
+```
+
+```{r}
+# For DEA, our "final" version of the counts is just the batch-adjusted count
+# table
+counts$final <- counts$batch_adjusted
+```
+

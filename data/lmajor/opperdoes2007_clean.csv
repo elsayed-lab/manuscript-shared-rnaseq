@@ -1,0 +1,344 @@
+gene_id	Enzyme name	Pathway/Function	Function1	Function2	Function3
+LmjF.32.1960	1-acyl-sn-glycerol-3-phosphate acyltransferase-like protein	lipid metabolism ether-lipid phospholipid	lipid metabolism		
+LmjF.3.0040	2-aminoethylphosphonate:pyruvate aminotransferase				
+LmjF.36.3470	2-oxoglutarate dehydrogenase e1 component, mitochondrial precursor, putative	krebs	krebs cycle		
+LmjF.31.2640	2-oxoglutarate dehydrogenase, e3 component, lipoamidedehydrogenase-like	krebs |  carbohydrate	krebs cycle		carbohydrate metabolism
+LmjF.35.0050	2-oxoisovalerate dehydrogenase beta subunit, mitochondrial precursor, putative | branched-chain alpha-keto acid decarboxylase E1 beta subunit	amino acid metabolism valine leucine isoleucine	amino acid metabolism		
+LmjF.28.2220	2,3-bisphosphoglycerate-independent phosphoglycerate mutase	glycolysis gluconeogenesis	glycolysis	gluconeogenesis	
+LmjF.36.6650	2,3-bisphosphoglycerate-independent phosphoglycerate mutase	glycolysis gluconeogenesis	glycolysis	gluconeogenesis	
+LmjF.06.0930	2,4-dienoyl-coa reductase-like	lipid	lipid metabolism		
+LmjF.24.2110	3-hydroxy-3-methylglutaryl-CoA synthase | hydroxymethylglutaryl-CoA synthase	ketone bodies | isoprenoid synthesis | amino acid leucine	amino acid metabolism		
+LmjF.33.2600	3-hydroxyacyl-coa dehydrogenase family-like protein (trifunctional enzyme) | possible mitochondrial trifunctional enzyme alpha subunit precursor	lipid	lipid metabolism		
+LmjF.32.3680	3-hydroxyisobutyryl-coenzyme a hydrolase-like protein	amino acid valine	amino acid metabolism		
+LmjF.23.0690	3-ketoacyl-coa thiolase, possible	Lipid metabolism	lipid metabolism		
+LmjF.11.0590	3-methylcrotonoyl-coa carboxylase beta subunit-like	amino acid leucine	amino acid metabolism		
+LmjF.27.2520	3-oxoacyl-(acyl-carrier protein) reductase	amino acid leucine	amino acid metabolism		
+LmjF.24.2030	3-oxoacyl-(acyl-carrier protein) reductase, probable	lipid synthesis eukaryotic	lipid metabolism		
+LmjF.31.2330	3,2-trans-enoyl-coa isomerase	fatty acid lipid	lipid metabolism	fatty-acid metabolism	
+LmjF.11.0780	40s ribosomal protein s21				
+LmjF.31.0010	5-methyltetrahydropteroyltriglutamate--homocysteine methyltransferase, putative	amino acid methionine	amino acid metabolism		
+LmjF.08.0060	6-phosphofructo-2-kinase/fructose-2,6-biphoshhatase / phosphoglycerate mutase cofactor dependent-like	Carbohydrate | glycolysis | gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.26.2700	6-phosphogluconolactonase	carbohydrate metabolism HMP PPP			carbohydrate metabolism
+LmjF.16.0010	60S ribosomal protein l10, mitochondrial precursor	protein			
+LmjF.16.0460	60S ribosomal protein l21, probable				
+LmjF.23.0540	acetyl-CoA synthetase	fatty-acid synthesis		fatty-acid metabolism	
+LmjF.31.2970	acetyl-coenzyme a carboxylase like carboxylase, possible	Lipid metabolism | fatty acid synthesis	lipid metabolism	fatty-acid metabolism	
+LmjF.29.1570	acetylornithine deacetylase, probable	amino acid synthesis ornithine	amino acid metabolism		
+LmjF.18.0510	aconitase, probable	krebs	krebs cycle		
+LmjF.27.0290	ACPM, acyl carrier protein, putative	fatty acid synthesis | NADH deydrogenase | respiratory chain	respiratory chain	fatty-acid metabolism	
+LmjF.34.2600	acyl-coa binding protein, probable	lipid metabolism	lipid metabolism		
+LmjF.27.0930	acyl-coa dehydrogenase (long-chain specific)	lipid metabolism beta oxidation	lipid metabolism	fatty-acid metabolism	
+LmjF.06.0880	acyl-coa dehydrogenase (medium chain specific)	fatty acid | lipid metabolism beta oxidation	lipid metabolism	fatty-acid metabolism	
+LmjF.35.2730	acyl-coa dehydrogenase (short/branched chain specific)	lipid metabolism beta oxidation	lipid metabolism	fatty-acid metabolism	
+LmjF.28.2510	acyl-coa dehydrogenase, putative (very long chain)	lipid metabolism	lipid metabolism		
+LmjF.27.2290	Acyl-CoA oxidase, putative (hypothetical protein)	fatty acid oxidation		fatty-acid metabolism	
+LmjF.29.2280	acyltransferase	lipid metabolism	lipid metabolism		
+LmjF.26.0140	adenine phosphoribosyltransferase				
+LmjF.36.3910	adenosylhomocysteinase	amino acid methionine cysteine	amino acid metabolism		
+LmjF.36.1360	adenylate kinase	glycolysis	glycolysis		
+LmjF.21.1250	adenylate kinase, putative|Leishmania major	glycolysis	glycolysis		
+LmjF.04.0460	adenylosuccinate lyase				
+LmjF.19.0200	ADP/ATP carrier	energy metabolism	energy metabolism		
+LmjF.23.0070	agmatinase-like protein	urea cycle | amino acid metabolism polyamine	amino acid metabolism	urea cycle	
+LmjF.12.0630	Alanine amino transferase putative, hypothetical 55.0 Kd protein, probable	glycolysis amino-acid metabolism pyruvate alanine	amino acid metabolism		
+LmjF.25.1120	aldehyde dehydrogenase, mitochondrial precursor	anaerobic phenylalanine degradation pathway | aromatic amino acids			
+LmjF.35.0970	aldose 1-epimerase				
+LmjF.35.0980	aldose 1-epimerase				
+LmjF.30.0120	alkyl dihydroxyacetonephosphate synthase	lipid metabolism ether-lipid	lipid metabolism		
+LmjF.36.3800	aminomethyltransferase, mitochondrial precursor, putative	amino acid glycone synthesis	amino acid metabolism		
+LmjF.36.3810	aminomethyltransferase, mitochondrial precursor, putative (subunit of the glycine cleavage system) (2 copies)	folate metabolism| glycine cleavage system		folate metabolism	
+LmjF.04.0280	AMP deaminase	Purine salvage	purine salvage		
+LmjF.13.0980	AMP deaminase	Purine salvage	purine salvage		
+LmjF.32.2550	AMP deaminase	Purine salvage	purine salvage		
+LmjF.35.4800	AMP deaminase	Purine salvage	purine salvage		
+LmjF.31.0020	aquaglyceroporin	glycolysis glycerol fatty acid	glycolysis	fatty-acid metabolism	
+LmjF.32.2370	aquaporin, possible				
+LmjF.35.1480	arginase, putative	urea cycle | amino acid metabolism	amino acid metabolism	urea cycle	
+LmjF.23.0260	argininosuccinate synthase	urea cycle | amino acid metabolism	amino acid metabolism	urea cycle	
+LmjF.34.0070	ascorbate-dependent peroxidase	oxidant stress | ascorbate	oxidant stress	ascorbate metabolism	
+LmjF.36.4430	asparaginase-like protein|similar to	amino acid asparagine aspartate	amino acid metabolism		
+LmjF.26.0830	asparagine synthetase a	amino acid asparagine	amino acid metabolism		
+LmjF.24.0370	aspartate aminotransferase, putative	amino-acid metabolism oxaloacetate aspartate	amino acid metabolism		
+LmjF.35.0820	aspartate aminotransferase, putative broad specificity	amino-acid metabolism oxaloacetate aspartate tyrosine phenylalanine tryptophane	amino acid metabolism		
+LmjF.16.0540	aspartate carbamoyltransferase	pyrimidine biosynthesis		pyrimidine metabolism	
+LmjF.30.3600	ATP synthase delta chain, mitochondrial precursor-like protein	oxphos ATP synthesis		ATP synthesis	
+LmjF.21.1770	ATP synthase f1 subunit gamma, possible				
+LmjF.05.0510	ATPase alpha subunit	ATPase|respiratory chain|complex V | mitochondrial	respiratory chain		
+LmjF.25.1180	ATPase beta subunit, putative	ATPase|respiratory chain|complex V| mitochondrial	respiratory chain		
+LmjF.36.0620	ATPase epsilon subunit, possible	ATPase|respiratory chain|complex V| mitochondrial	respiratory chain		
+LmjF.33.2720	beta-ketoacyl synthase family protein	fatty acid synthesis lipid		fatty-acid metabolism	
+LmjF.35.5150	biopterin transporter, putative (12 copies)	folate metabolism		folate metabolism	
+LmjF.17.0580	Bis(5'-nucleosyl)-tetraphosphatase (asymmetrical)				
+LmjF.27.2030	branched chain amino transferase putative	carbohydrate methylglyoxal bypass ascorbate		ascorbate metabolism	carbohydrate metabolism
+LmjF.27.2040	branched-chain amino acid aminotransferase, putative	amino acid valine leucine isoleucine	amino acid metabolism		
+LmjF.29.2140	c-8 sterol isomerase	Lipid metabolism	lipid metabolism		
+LmjF.31.0460	calpain-like protein, putative	protein degradation	protein metabolism		
+LmjF.16.0590	carbamoyl-phosphate synthase (ammonia; glutamine-hydrolyzing)	amino acid ornithine citrulline urea cycle | pyrimidine	amino acid metabolism	urea cycle	
+LmjF.06.0610	carbonic anhydrase family protein, putative				
+LmjF.28.0480	carbonic anhydrase protein-like				
+LmjF.26.1620	cdp-diacylglycerol synthetase-like protein|Leishmania major|chr 26	phospholipid	lipid metabolism		
+LmjF.30.2820	chaperonin cpn60-2, mitochondrial precursor, putative, (Heat shock protein 60)	protein turnover	protein metabolism		
+LmjF.32.1850	chaperonin hsp60, mitochondrial precursor				
+LmjF.36.2020	chaperonin hsp60, mitochondrial precursor, putative				
+LmjF.16.0790	CHI-1||chitinase				
+LmjF.18.1330	cholinephosphate cytidylyltransferase-like protein | phosphatidylinositol synthase-like protein	phospholipid	lipid metabolism		
+LmjF.24.1440	citrate lyase beta chain / citryl-coa lyase subunit-like	krebs |fatty acid synthesis	krebs cycle	fatty-acid metabolism	
+LmjF.18.0680	citrate synthase	krebs | fatty acid synthesis	krebs cycle	fatty-acid metabolism	
+LmjF.06.1270	coproporphyrinogen iii oxidase, putative	haem synthesis	haem synthesis		
+LmjF.3.0100	COX11|Cytochrome c oxidase assembly protein, putative	respiratory chain| mitochondrial	respiratory chain		
+LmjF.14.0460	cystathionine beta-lyase	amino acid cysteine synthesis methionine degradation	amino acid metabolism		
+LmjF.17.0250	cystathionine beta-synthase, probable	amino acid cysteine synthesis methionine degradation	amino acid metabolism		
+LmjF.35.3230	cystathionine gamma-lyase	amino acid cysteine synthesis methionine degradation	amino acid metabolism		
+LmjF.27.1060	cysteine desulfurase, mitochondrial precursor, putative (cystathionine gamma-lyase)	amino acid cysteine synthesis methionine degradation | iron-sulfur cluster synthesis	amino acid metabolism	iron-sulfur cluster synthesis	
+LmjF.36.3590	cysteine synthase	amino acid synthase cysteine	amino acid metabolism		
+LmjF.26.1710	cytochrome c oxidase subunit 5, probable	respiratory chain| mitochondrial	respiratory chain		
+LmjF.12.0670	cytochrome c oxidase subunit iv	respiratory chain| mitochondrial	respiratory chain		
+LmjF.16.1320	cytochrome c, probable	respiratory chain| mitochondrial	respiratory chain		
+LmjF.13.0850	cytochrome c1 precursor-like	respiratory chain complex III| mitochondrial	respiratory chain		
+LmjF.36.3090	cytochrome c1 precursor-like	respiratory chain complex III| mitochondrial	respiratory chain		
+LmjF.07.0060	cytochrome c1, putative	respiratory chain complex III| mitochondrial	respiratory chain		
+LmjF.15.0390	cytoplasmic l-asparaginase i-like protein	amino acid asparagine aspartate	amino acid metabolism		
+LmjF.24.0770	cytosolic NADP-malic enzyme, putative | malic enzyme | NADP-malic enzyme, putative				
+LmjF.3.0030	D-3-phosphoglycerate dehydrogenase-like protein	amino acid synthesis serine	amino acid metabolism		
+LmjF.14.1340	delta 6 fatty acid desaturase-like,			fatty-acid metabolism	
+LmjF.03.0200	delta-1-pyrroline-5-carboxylate dehydrogenase, putative	amino-acid metabolism proline	amino acid metabolism		
+LmjF.06.1070	deoxyribose-phosphate aldolase, putative				
+LmjF.06.0860	DHFR-TS||dihydrofolate reductase-thymidylate synthase	folate metabolism		folate metabolism	
+LmjF.36.5900	Diacylglycerol cholinephosphotransferase	phospholipid	lipid metabolism		
+LmjF.35.5370	diacylglycerol kinase-like protein	phospholipid degradation	lipid metabolism		
+LmjF.32.3310	dihydrolipoamide dehydrogenase				
+LmjF.16.0580	dihydroorotase	pyrimidine biosynthesis		pyrimidine metabolism	
+LmjF.16.0530	dihydroorotate dehydrogenase	pyrimidine biosynthesis		pyrimidine metabolism	
+LmjF.34.1090	dihydroxyacetone phosphate acyltransferase, possible	lipid metabolism ether-lipid phospholipid	lipid metabolism		
+LmjF.18.0020	Diphosphomevalonate decarboxylase	isoprenoid terpene sterol	isoprenoid metabolism		
+LmjF.07.0600	electron transfer flavoprotein-ubiquinone oxidoreductase, putative	oxidoreductase|respiratory chain| mitochondrial	respiratory chain		
+LmjF.14.1160	enolase	glycolysis gluconeogenesis	glycolysis	gluconeogenesis	
+LmjF.32.0890	ethanolamine-phosphate cytidylyltransferase-like protein	phospholipid	lipid metabolism		
+LmjF.22.1360	farnesyl pyrophosphate synthase	isoprenoid terpene sterol	isoprenoid metabolism		
+LmjF.15.1020	farnesyl synthetase	isoprenoid terpene sterol mitochondrial	isoprenoid metabolism		
+LmjF.10.0010	fatty acid desaturase			fatty-acid metabolism	
+LmjF.17.1460	ferrochelatase-like protein	haem synthesis	haem synthesis		
+LmjF.26.2280	formamidase | nit protein 2, putative | formamide hydrolase	amino acid histidine	amino acid metabolism		
+LmjF.36.2610	FPGS||folylpolyglutamate synthetase	folate synthesis| folate metabolism		folate metabolism	
+LmjF.04.1160	fructose-1,6-bisphosphatase	gluconeogenesis, carbohydrate metabolism		gluconeogenesis	carbohydrate metabolism
+LmjF.36.1260	fructose-1,6-bisphosphate aldolase	carbohydrate glycolysis calvin gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.30.2600	FTHS (c-1-tetrahydrofolate synthase, cytoplasmic, putative)	folate metabolism		folate metabolism	
+LmjF.24.0320	fumarate hydratase	krebs carbohydrate	krebs cycle		carbohydrate metabolism
+LmjF.29.1960	Fumarate hydratase class I, anaerobic	krebs carbohydrate	krebs cycle		carbohydrate metabolism
+LmjF.34.0080	G6PD| glucose-6-phosphate 1-dehydrogenase	carbohydrate metabolism HMP PPP			carbohydrate metabolism
+LmjF.35.2740	galactokinase	carbohydrate galactose			carbohydrate metabolism
+LmjF.02.0650	gamma-glutamyl phosphate reductase-like protein	amino acid synthesis proline	amino acid metabolism		
+LmjF.18.1660	gamma-glutamylcysteine synthetase, probable	amino acid glutathione synthesis	amino acid metabolism		
+LmjF.22.0660	glucoamylase-like protein|Leishmania major				
+LmjF.36.2320	glucokinase	carbohydrate			carbohydrate metabolism
+LmjF.32.3260	glucosamine-6-phosphate deaminase				
+LmjF.06.0950	glucosamine-fructose-6-phosphate aminotransferase				
+LmjF.36.6300	glucose transporter, putative, probably LmGT1	glycolysis	glycolysis		
+LmjF.12.0530	glucose-6-phosphate isomerase	carbohydrate glycolysis gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.28.2910	glutamate dehydrogenase (NADP), putative				
+LmjF.15.1010	glutamate dehydrogenase precursor, probable	amino-acid metabolism proline| mitochondrial			
+LmjF.06.0370	glutamine synthetase, putative	amino acid glutamine glutamate	amino acid metabolism		
+LmjF.26.0800	glutathione (trypanothione) peroxidase	oxidant stress	oxidant stress		
+LmjF.30.2970	glyceraldehyde-3-phosphate dehydrogenase	carbohydrate glycolysis calvin gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.35.3080	glycerol kinase	carbohydrate glycolysis	glycolysis		carbohydrate metabolism
+LmjF.10.0510	glycerol-3-phosphate dehydrogenase (NAD)	carbohydrate glycolysis	glycolysis		carbohydrate metabolism
+LmjF.28.0240	glycerol-3-phosphate dehydrogenase, FAD dependent mitochondrial	carbohydrate glycolysis respiratory chain| mitochondrial	glycolysis		carbohydrate metabolism
+LmjF.20.0430	glycerol-3-phosphate dehydrogenase, possible mitochondrial	carbohydrate glycolysis respiratory chain| mitochondrial	glycolysis		carbohydrate metabolism
+LmjF.36.5960	glycerophosphoryl diester phosphodiesterase, probable	phospholipid	lipid metabolism		
+LmjF.35.0320	glycine acetyl transferase or aminoacetone synthase, probable	amino acid metabolism threonine	amino acid metabolism		
+LmjF.35.4720	glycine cleavage system H protein, putative	folate metabolism glycine formate		folate metabolism	
+LmjF.26.0030	glycine dehydrogenase	amino acid threonine serine glycine pyruvate folate metabolism	amino acid metabolism	folate metabolism	
+LmjF.24.0150	glycosomal membrane protein-like				
+LmjF.28.2260	glycosomal membrane putative				
+LmjF.12.0220	glyoxalase II?	methylglyoxal bypass			
+LmjF.30.2460	heat shock 70-related protein 1, mitochondrial precursor, putative	protein turnover	protein metabolism		
+LmjF.30.2490	heat shock 70-related protein 1, mitochondrial precursor, putative	protein turnover	protein metabolism		
+LmjF.21.0240	Hexokinase	glycolysis carbohydrate	glycolysis		carbohydrate metabolism
+LmjF.36.6310	homocysteine s-methyltransferase	amino acid methionine synthesis	amino acid metabolism		
+LmjF.07.0260	homoserine dehydrogenase-like	amino acid synthesis threonine methionine	amino acid metabolism		
+LmjF.30.3080	homoserine kinase-like protein	amino acid synthesis threonine	amino acid metabolism		
+LmjF.30.3190	hydroxy-3-methylglutaryl coenzyme a reductase				
+LmjF.28.1300	hypothetical predicted protein				
+LmjF.31.0910	hypothetical predicted protein				
+LmjF.21.1640	hypothetical protein				
+LmjF.27.0460	hypothetical protein				
+LmjF.34.2520	hypothetical protein	purine salvage	purine salvage		
+LmjF.29.0250	hypothetical protein 51% identical to T. brucei Isopenicillin N synthase or iron/ascorbate oxidoreductase	ascorbate | oxidant stress	oxidant stress	ascorbate metabolism	
+LmjF.36.4380	hypothetical protein, conserved (alternative oxidase - like)				
+LmjF.18.0470	hypothetical protein, conserved|				
+LmjF.19.1250	hypothetical protein, unknown function				
+LmjF.30.2080	hypothetical protein, unknown function				
+LmjF.28.0200	hypothetical protein, unknown function, 62% identical to T. brucei Isopenicillin epimerase				
+LmjF.21.0845	hypoxanthine-guanine phosphoribosyltransferase hgprt	purine salvage	purine salvage		
+LmjF.06.0460	inorganic polyphosphate ATP-NAD kinase, possible				
+LmjF.17.0725	inosine-5'-monophosphate dehydrogenase IMPdh	purine salvage	purine salvage		
+LmjF.19.1560	inosine-5'-monophosphate dehydrogenase IMPdh	purine salvage	purine salvage		
+LmjF.30.2770	iron superoxide dismutase (SOD?)	oxidant stress	oxidant stress		
+LmjF.32.1820	iron superoxide dismutase (SODB)	oxidant stress	oxidant stress		
+LmjF.32.1830	iron superoxide dismutase|(SODB2)	oxidant stress	oxidant stress		
+LmjF.35.3620	iron-sulfur cluster NifU-like protein	iron-sulfur cluster synthesis		iron-sulfur cluster synthesis	
+LmjF.10.0290	isocitrate dehydrogenase [NADP], mitochondrial precursor, putative	Krebs cycle	krebs cycle		
+LmjF.33.2550	isocitrate dehydrogenase, putative	krebs	krebs cycle		
+LmjF.35.5330	Isopentenyl-diphosphate delta-isomerase	isoprenoid terpene sterol	isoprenoid metabolism		
+LmjF.26.2240	kynureninase, possible	amino acid tryptophan	amino acid metabolism		
+LmjF.17.1360	L-gulonolactone oxidase | L-gulono-gamma-lactone oxidase, possible	carbohydrate | glycosylation | ascorbate synthesis	glycosylation	ascorbate metabolism	carbohydrate metabolism
+LmjF.36.0060	l-ribulokinase	PPP HMP carbohydrate			carbohydrate metabolism
+LmjF.24.1840	lysophospholipase-like	phospholipid	lipid metabolism		
+LmjF.19.0710	malate dehydrogenase (glycosomal)	carbohydrate			carbohydrate metabolism
+LmjF.28.2860	malate dehydrogenase cytosolic				
+LmjF.34.0140	malate dehydrogenase mitochondrial MDH	mitochondrial | krebs | tca cycle	krebs cycle		
+LmjF.34.0130	malate dehydrogenase mitochondrial or glycosomal HADH?				
+LmjF.23.0110	mannose-1-phosphate guanyltransferase| GDP-D-mannose pyrophosphorylase	glycosylation | ascorbate	glycosylation	ascorbate metabolism	
+LmjF.05.0970	mercaptopyruvate sulfurtransferase	amino acid synthesis cysteine | methionine amino acid metabolism	amino acid metabolism		
+LmjF.36.4720	methionine synthase reductase, mitochondrial precursor-like	amino acid methionine	amino acid metabolism		
+LmjF.07.0090	methionine synthase, putative	folate metabolism		folate metabolism	
+LmjF.32.2240	methionyl-trna formyltransferase, putative	folate metabolism		folate metabolism	
+LmjF.22.0340	methylenetetrahydrofolate dehydrogenase-like protein	Folate metabolism		folate metabolism	
+LmjF.36.6390	methylenetetrahydrofolate reductase, putative	folate metabolism		folate metabolism	
+LmjF.27.0300	methylmalonyl-coenzyme a mutase, putative	amino acid metabolism isoleucine methionine valine	amino acid metabolism		
+LmjF.31.0560	mevalonate kinase	lipid isoprenoids sterol	isoprenoid metabolism		
+LmjF.23.1370	mitochondrial carrier protein	metabolite carrier	metabolite carrier		
+LmjF.30.1050	mitochondrial carrier protein-like	metabolite carrier	metabolite carrier		
+LmjF.36.0510	mitochondrial carrier protein-like				
+LmjF.32.0110	mitochondrial carrier protein-like protein	metabolite carrier	metabolite carrier		
+LmjF.18.1290	mitochondrial carrier protein-like protein (ketoglutarate / 2-oxoglutarate/malate carrier or dicarboxylate carrier)	metabolite carrier | mitochondrial	metabolite carrier		
+LmjF.34.3060	mitochondrial carrier protein-like protein (uncoupling protein | ATP/ADP carrier?)	metabolite carrier	metabolite carrier		
+LmjF.02.0690	mitochondrial carrier protein, putative	metabolite carrier	metabolite carrier		
+LmjF.02.0670	mitochondrial carrier protein, putative (dicarboxylate)				
+LmjF.35.4430	mitochondrial carrier protein, putative (phosphate transporter)	metabolite carrier	metabolite carrier		
+LmjF.35.3330	mitochondrial carrier-like protein	metabilite carrier	metabolite carrier		
+LmjF.28.2080	mitochondrial DEAD box protein, putative				
+LmjF.24.1150	mitochondrial DNA-directed RNA polymerase, probable				
+LmjF.36.4450	mitochondrial intermediate peptidase, mitochondrial precursor-like	protein turnover	protein metabolism		
+LmjF.19.1380	mitochondrial metal transporter protein-like|				
+LmjF.25.0210	mitochondrial ornithine carrier protein-like protein	metabolite carrier	metabolite carrier		
+LmjF.16.0210	mitochondrial ornithine transporter 1, possible	metabolite carrier	metabolite carrier		
+LmjF.33.2610	mitochondrial processing peptidase alpha subunit, putative				
+LmjF.05.0790	mitochondrial protein-like				
+LmjF.34.2620	mitochondrial RNA helicase-like protein	synthesis			
+LmjF.23.0760	mitochondrial RNA-binding protein rbp38, probable	RNA metabolism	RNA metabolism		
+LmjF.24.0720	mitochondrial translocase subunit, putative	metabilite carrier			
+LmjF.05.0480	monocarboxylate transporter-like	glycolysis krebs	krebs cycle		
+LmjF.26.0320	MTFC/MTFD (C-1-tetrahydrofolate synthase, cytoplasmic, putative)	folate metabolism		folate metabolism	
+LmjF.17.1390	myo-inositol monophosphatase, putative|	phospholipid	lipid metabolism		
+LmjF.31.2450	n-acetyl-glutamate semialdehyde dehydrogenase, probable	amino-acid metabolism proline ?			
+LmjF.20.1560	n-acyl-l-amino acid amidohydrolase				
+LmjF.35.1180	NADH-dependent fumarate reductase, putative	krebs carbohydrate	krebs cycle		carbohydrate metabolism
+LmjF.36.5380	NDI1, NADH dehydrogenase, putative (rotenone insensitive subunit)	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.32.3170	NI8M, hypothetical protein, conserved	NADH dehydrogenase | respiratory chain	respiratory chain		
+LmjF.18.1480	NUAM, NADH-ubiquinone oxidoreductase 75 Kd subunit, mitochondrial precursor(ec 1.6.5.3), probable	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.05.0980	NUBM, NADH dehydrogenase, putative	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.18.0080	NUEM, NADH dehydrogenase, possible	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.17.0270	NUHM, NADH-ubiquinone oxidoreductase 24 kDa subunit, mitochondrial precursor-like protein	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.27.0740	NUKM, NADH-ubiquinone oxidoreductase 20 Kd subunit, mitochondrial precursor, putative	respiratory chain nadh| mitochondrial	respiratory chain		
+LmjF.04.0010	organelle-type calcium ATPase				
+LmjF.12.0280	ornithine decarboxylase, probable	urea cycle | polyamine metabolism ornithine		urea cycle	
+LmjF.16.0550	orotidine-5'-phosphate decarboxylase-orotatephosphoribosyltransferase, probable / decarboxylase linked with orotate phosphoribosyltransferase	pyrimidine biosynthesis		pyrimidine metabolism	
+LmjF.13.0720	oxidoreductase-like				
+LmjF.18.0580	peroxisomal enoyl-coa hydratase, probable	lipid	lipid metabolism		
+LmjF.30.2540	PEX1 | aaa family ATPase-like protein				
+LmjF.35.3260	PEX19 |hypothetical protein, conserved	glycosome biosynthesis			
+LmjF.25.2230	PEX2 ||glycosome import protein				
+LmjF.35.1420	PEX5 | peroxisomal targeting signal-1 receptor, putative				
+LmjF.05.0290	phosphate carrier protein, mitochondrial precursor-like	metabolite carrier	metabolite carrier		
+LmjF.19.1350	phosphatidic acid phosphatase protein-like	phospholipid	lipid metabolism		
+LmjF.31.2290	phosphatidylethanolamine n-methyltransferase-like protein	phospholipid	lipid metabolism		
+LmjF.26.2480	phosphatidylinositol synthase-like protein	phospholipid	lipid metabolism		
+LmjF.35.0040	Phosphatidylinositol-specific phospholipase-like protein	phospholipid	lipid metabolism		
+LmjF.35.4590	Phosphatidylserine decarboxylase proenzyme-like protein	phospholipid	lipid metabolism		
+LmjF.14.1200	phosphatidylserine synthase-like	phospholipid	lipid metabolism		
+LmjF.27.1810	phosphoenolpyruvate carboxykinase, glycosomal	carbohydrate			carbohydrate metabolism
+LmjF.29.2510	phosphofructokinase	carbohydrate glycolysis	glycolysis		carbohydrate metabolism
+LmjF.21.0640	Phosphoglucomutase	carbohydrate metabolism gluconeogenesis glycosylation	glycosylation	gluconeogenesis	carbohydrate metabolism
+LmjF.20.0110	phosphoglycerate kinase, cytosolic	carbohydrate glycolysis calvin gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.20.0100	phosphoglycerate kinase, glycosomal	carbohydrate glycolysis calvin gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.30.3380	phosphoglycerate kinase, glycosomal	carbohydrate glycolysis gluconeogenesis	glycolysis	gluconeogenesis	carbohydrate metabolism
+LmjF.35.3020	phospholipase A2 ?	phospholipid	lipid metabolism		
+LmjF.30.2950	phospholipase c-like protein	phospholipid	lipid metabolism		
+LmjF.34.3780	phosphomannomutase	carbohydrate metabolism, glycosylation | ascorbate	glycosylation	ascorbate metabolism	carbohydrate metabolism
+LmjF.36.1960	phosphomannomutase, putative	carbohydrate metabolism, glycosylation | ascorbate	glycosylation	ascorbate metabolism	carbohydrate metabolism
+LmjF.32.1580	phosphomannose isomerase	glycolysis | carbohydrate | glycolipid ancer | ascorbate	glycolysis	ascorbate metabolism	carbohydrate metabolism
+LmjF.15.1460	phosphomevalonate kinase	isoprenoid terpene sterol	isoprenoid metabolism		
+LmjF.28.1580	phosphonopyruvate decarboxylase				
+LmjF.08.1130	phosphoribosylpyrophosphate synthetase prpps	pyrimidine biosynthesis purine salvage	purine salvage	pyrimidine metabolism	
+LmjF.36.5390	phosphoribosylpyrophosphate synthetase prpps	pyrimidine biosynthesis purine salvage	purine salvage	pyrimidine metabolism	
+LmjF.26.0160	phosphoserine phosphatase (possible)	amino acid serine	amino acid metabolism		
+LmjF.32.0100	phosphoserine phosphatase (possible)	amino acid serine	amino acid metabolism		
+LmjF.14.0320	polyamine permease LMPOT1	polyamines			
+LmjF.28.0490	propionyl-coa carboxylase beta chain, putative	amino acid isoleucine methionine valine	amino acid metabolism		
+LmjF.06.1280	protoporphyrinogen oxidase-like	haem synthesis	haem synthesis		
+LmjF.23.0270	pteridine reductase PTR1	fatty acid synthesis| folate metabolism		fatty-acid metabolism	
+LmjF.11.0220	pterin-4-alpha-carbinolamine dehydratase, putative	Pteridine| folate metabolism| amino acid|biopterin	amino acid metabolism	folate metabolism	
+LmjF.14.0130	Purine nucleosidase	purine salvage	purine salvage		
+LmjF.18.1580	Purine nucleosidase	purine salvage	purine salvage		
+LmjF.21.1710	putative cytochrome c oxidase subunit vi	respiratory chain| mitochondrial	respiratory chain		
+LmjF.25.0120	putative electron transfer flavoprotein beta-subunit beta-etfflavoprotein small subunit	oxidoreductase | lipid metabolism	lipid metabolism		
+LmjF.26.2710	putative gamma-glutamyl kinase, probable	amino acid synthesis proline	amino acid metabolism		
+LmjF.32.1110	putative mitochondrial carrier protein-like protein (mitochondrial folate transporter?)	glycolysis krebs carbohydrate mitochondrion metabolite carrier	krebs cycle		carbohydrate metabolism
+LmjF.28.1280	putative phenylalanine-4-hydroxylase, putative	amino acid phenylalanine | tyrosine | amino-acid metabolism	amino acid metabolism		
+LmjF.06.0730	putative threonine dehydratase	amino acid metabolism threonine	amino acid metabolism		
+LmjF.31.2580	putative ubiquinol--cytochrome-c reductase, probable	respiratory chain complex III | mitochondrial	respiratory chain		
+LmjF.13.1680	pyrroline-5-carboxylate reductase	amino-acid metabolism proline | mitochondrial	amino acid metabolism		
+LmjF.32.3140	pyrroline-5-carboxylate synthetase-like protein	amino-acid metabolism proline synthesis | mitochondrial	amino acid metabolism		
+LmjF.11.1000	pyruvate : phosphate dikinase	carbohydrate pyrimidine biosynthesis purine salvage, ATP balance	purine salvage	pyrimidine metabolism	carbohydrate metabolism
+LmjF.18.1380	pyruvate dehydrogenase e1 alpha subunit, putative				
+LmjF.25.1710	pyruvate dehydrogenase e1 component beta subunit, mitochondrial precursor,				
+LmjF.34.3250	pyruvate/indole-pyruvate carboxylase, probable|	carbohydrate | gluconeogenesis		gluconeogenesis	carbohydrate metabolism
+LmjF.34.4510	QDPR||quinonoid dihydropteridine reductase (7 copies)	folate metabolism | biopterin |pteridin|pterin|amino acid|	amino acid metabolism	folate metabolism	
+LmjF.35.1510	reiske iron-sulfur protein precursor	respiratory chain mitochondrial| mitochondrial	respiratory chain		
+LmjF.27.0420	ribokinase-like protein	carbohydrate metabolism			carbohydrate metabolism
+LmjF.28.0890	ribonucleoside-diphosphate reductase large chain 1				
+LmjF.22.1290	ribonucleoside-diphosphate reductase small chain				
+LmjF.28.1970	ribose 5-phosphate isomerase	carbohydrate HMP PPP calvin			carbohydrate metabolism
+LmjF.33.1930	ribose-phosphate diphosphokinase	pyrimidine biosynthesis purine salvage	purine salvage	pyrimidine metabolism	
+LmjF.08.0280	ribosomal protein l2-like				
+LmjF.33.1570	Ribulose-phosphate 3-epimerase, putative	Carbohydrate metabolism PPP HMP calvin			carbohydrate metabolism
+LmjF.35.3680	Ribulose-phosphate 3-epimerase, putative	Carbohydrate metabolism PPP HMP calvin			carbohydrate metabolism
+LmjF.30.3520	s-adenosylmethionine synthase or meyhionine adenosyltransferase	amino acid methionine	amino acid metabolism		
+LmjF.26.1970	sco1 protein homolog, mitochondrial precursor, probable				
+LmjF.34.2850	serine acetyltransferase	amino acid matabolism | cysteine synthesis	amino acid metabolism		
+LmjF.14.1320	serine hydroxymethyltransferase, cytosolic	amino acid threonine serine glycine pyruvate folate	amino acid metabolism		
+LmjF.28.2370	serine hydroxymethyltransferase, mitochondrial	amino acid threonine serine glycine pyruvate folate	amino acid metabolism		
+LmjF.15.0100	similar to flavin containing monooxygenase 5				
+LmjF.22.1010	similarity with triose p/pi translocator cptr_soltu, possible	glycolysis calvin	glycolysis		
+LmjF.31.2940	squalene synthase	isoprenoid sterol terpene	isoprenoid metabolism		
+LmjF.36.2380	sterol 24-c-methyltransferase, putative				
+LmjF.36.2390	sterol 24-c-methyltransferase, putative				
+LmjF.24.1630	succinate dehydrogenase	krebs| mitochondrion	krebs cycle		
+LmjF.25.2130	succinyl-coa ligase alpha-chain, mitochondrial precursor), putative	mitochondrial | kerbs | tca cycle	krebs cycle		
+LmjF.25.2140	succinyl-coa ligase alpha-chain, mitochondrial precursor), putative	krebs| mitochondrion	krebs cycle		
+LmjF.36.2950	succinyl-coa ligase beta subunit, putative	krebs | mitochondrion	krebs cycle		
+LmjF.30.1940	succinyl-coa:3-ketoacid-coenzyme a transferase	amino acid leucine valine and acetate succinate cycle | mitochondrial	amino acid metabolism		
+LmjF.31.1890	succinyl-diaminopimelate desuccinylase, probable Doubtful identity!!!!!!!!!!!!	amino acid synthesis lysine	amino acid metabolism		
+LmjF.36.6180	sucrase-like protein-like|Leishmania major				
+LmjF.27.2340	sucrose hydrolase-like protein				
+LmjF.24.0680	sugar transporter-like	glycolysis	glycolysis		
+LmjF.18.0040	sugar transporter-like protein				
+LmjF.02.0030	tagatose-6-phosphate kinase				
+LmjF.25.2440	tagatose-6-phosphate kinase				
+LmjF.33.2540	thermostable carboxypeptidase 1	protein degradation	protein metabolism		
+LmjF.33.0240	thiol-dependent reductase 1	ascorbate synthesis reduction		ascorbate metabolism	
+LmjF.31.1640	thiolase protein-like (most likely trifunctional protein Beta subunit)	Lipid metabolism	lipid metabolism		
+LmjF.01.0480	Threonine aldolase?	amino acid synthesis threonine	amino acid metabolism		
+LmjF.14.0350	Threonine synthase-like	amino acid synthesis threonine	amino acid metabolism		
+LmjF.35.1410	Threonyl-tRNA synthetase, putative				
+LmjF.16.0760	transaldolase, probable	carbohydrate metabolism HMP PPP calvin			carbohydrate metabolism
+LmjF.24.2060	transketolase	carbohydrate metabolism HMP PPP calvin			carbohydrate metabolism
+LmjF.36.5240	trehalose phosphorylase-like protein	lysosomal degradation?			
+LmjF.1.0570	tricarboxylate carrier-like protein	mitochondrial			
+LmjF.24.0850	triosephosphate isomerase	glycolysis calvin gluconeogenesis	glycolysis	gluconeogenesis	
+LmjF.05.0350	trypanothione reductase	oxidant stress	oxidant stress		
+LmjF.15.1040	Tryparedoxin peroxidase | peroxiredoxin	oxidant stress	oxidant stress		
+LmjF.36.2360	tyrosine aminotransferase, putative	amino acid tyrosine phenylalanine	amino acid metabolism		
+LmjF.35.1370	ubiquinol-cytochrome c reductase complex core protein i-like protein	respiratory chain complex III| mitochondrial	respiratory chain		
+LmjF.23.0550	ubiquitin activating enzyme	protein degradation	protein metabolism		
+LmjF.32.0700	ubiquitin carrier protein 4	protein degradation	protein metabolism		
+LmjF.24.1710	ubiquitin conjugating enzyme	protein degradation	protein metabolism		
+LmjF.34.0900	ubiquitin-conjugating enzyme e2	protein degradation	protein metabolism		
+LmjF.33.2300	udp-glc 4'-epimerase	carbohydrate metabolism			carbohydrate metabolism
+LmjF.18.0990	udp-glucose pyrophosphorylase | UTP-glucose-1-phosphate uridylyltransferase 2	carbohydrate			carbohydrate metabolism
+LmjF.31.1220	vacuolar-type proton translocating pyrophosphatase 1 precursor,				
+LmjF.30.3130	valyl-trna synthetase, mitochondrial precursor, putative	protein synthesis	protein metabolism		
+LmjF.20.0810	vesicle-fusing ATPase				
+LmjF.21.0850	xanthine phosphoribosyltransferase xprt, probable	purine salvage	purine salvage		
+LmjF.36.0260	xylulokinase, putative	carbohydrate			carbohydrate metabolism

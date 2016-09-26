@@ -1,0 +1,55 @@
+```{r knitr_settings, include=FALSE}
+library('knitr')
+opts_knit$set(progress=FALSE, verbose=TRUE)
+opts_chunk$set(error=FALSE)
+options(digits=4)
+options(stringsAsFactors=FALSE)
+options(knitr.duplicate.label='allow')
+
+# If rmarkdown.pandoc.to not specified (for example, when kniting
+# piece-by-piece in Vim-R), have it default to 'latex' output.
+if (is.null(opts_knit$get("rmarkdown.pandoc.to"))) {
+    opts_knit$set(rmarkdown.pandoc.to='latex')
+}
+
+rm(list=ls())    # Clean up any existing variables
+```
+
+Libraries
+---------
+
+Let's start by loading all of the libraries that will be used throughout this
+analysis.
+
+```{r random_seed}
+# Make sure results are reproducible
+set.seed(1)
+```
+
+```{r child='includes_common.Rmd'}
+```
+
+```{r echo=FALSE, include=FALSE}
+# clear any existing bibliography
+cleanbib()
+```
+
+
+Parameters
+----------
+
+In order to simplify the process of rerunning the following analysis with
+different parameters, I have tried to abstract out many of the useful
+experimental design parameters, enabling them to all be adjusting in one
+location.
+
+The parameters are broken up into two parts: first are the general settings
+which apply to all analyses, regardless of species. The second set of settings
+are those which are specific to the species being analysed.
+
+```{r child='../settings/shared.Rmd'}
+```
+
+```{r child='../settings/differential_expression.Rmd'}
+```
+

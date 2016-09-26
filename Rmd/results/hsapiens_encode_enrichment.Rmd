@@ -1,0 +1,67 @@
+### ENCODE transcriptional regulatory network modules
+
+Next, we will look for enrichment of genes regulated by the same TF, as
+inferred from ENCODE data (Gernstein *et al*, 2012).
+
+```{r load_encode_tf_network_data, results='asis'}
+infile = file.path(Sys.getenv('REF'), 'gerstein_2012',
+                                      'enets2.Proximal_filtered_ensembl.txt')
+
+# read_table also works in more recent versions of R...
+dat = tbl_df(read.table(infile, col.names=c('A', 'type', 'B')))
+
+gene_tf_mapping = as.data.frame(dat %>% select(gene=B, category=A))
+
+if (CONFIG$verbose && CONFIG$include_tables) {
+    kable(head(gene_tf_mapping))
+}
+```
+
+Look for enrichment of co-regulated genes.
+
+```{r encode_coregulated_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Initialize CPUs
+cl = makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check each module for enrichment in co-regulated genes and save result in a list
+module_coreg_enrichment = foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+    # Measure enrichment for module
+    enriched = tryCatch({
+        in_module_geneids = gene_ids[module_colors == color]
+        enriched = test_gene_enrichment(in_module_geneids, gene_ids,
+                                        gene_tf_mapping, gene_lengths)
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        # Note: goseq will also fail if supplied with a dplyr tbl_df so first 
+        # make sure that is not the case
+        warning(sprintf("ENCODE co-regulation enrichment failed for module %s", color))
+        return(get_enrichment_placeholder())
+    })
+    enriched
+}
+
+names(module_coreg_enrichment) = unique(module_colors)
+
+# remove any null entries from the results
+module_coreg_enrichment = module_coreg_enrichment[!sapply(module_coreg_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r encode_enrichment_results, results='asis'}
+if (CONFIG$verbose && CONFIG$include_tables) {
+    print_enrichment_results(module_coreg_enrichment, module_sizes,
+                             'Transcription Factor')
+}
+```
+
+```{r save_hsapiens_annotations}
+# sort result
+sorted_result = tbl_df(result[with(result, order(color, description)),])
+
+# Also save a simplified version of the table for display in the HTML output
+simple_result = sorted_result
+```
+

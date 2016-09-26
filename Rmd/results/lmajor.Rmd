@@ -1,0 +1,81 @@
+### Possible Sources for Comparison
+
+- *L. infantum* exoproteome (Braga et al; 2014)
+  - Manuscript includes a table of secreted proteins with TriTrypDB IDs.
+
+Additional annotations for L. major
+-----------------------------------
+
+### Gene Conservation (dn/ds)
+
+Mukherjee *et al* (2015) explored the properties of *Leishmania*-specific
+"orphan genes". As part of their analyses, the average rate of non-synonymous
+to synonymous substitutions ([dn/ds](http://en.wikipedia.org/wiki/Ka/Ks_ratio))
+was calculated for each gene.
+
+Below, we will use this information to look for possible links between
+evolutionary conservation of protein-coding genes, and their topological
+properties in the co-expression network.
+
+**Reference:**
+
+- S. Mukherjee, A. Panda, and T. C. Ghosh, “Elucidating evolutionary features
+and functional implications of orphan genes in Leishmania major,” Infect.
+Genet. Evol., vol. 32, pp. 330–337, 2015.
+
+```{r lmajor_gene_conservation}
+# Load supplementary dataset from Mukherjee et al (2015)
+gene_conservation <- read_csv(file.path(input_dir, 'mukherjee_et_al_2015.csv'))
+
+# Add centrality measures
+#gene_conservation <- merge(merge(gene_conservation %>% select(gene_id, average_dnds),
+#                          hub_scores, by='gene_id'),
+#                          closeness_centrality, by='gene_id')
+gene_conservation <- merge(gene_conservation %>% select(gene_id, average_dnds),
+                          hub_scores, by='gene_id')
+
+# hub genes
+ggplot(gene_conservation, aes(average_dnds, hub_score)) + 
+    geom_point(size=0.3) +
+    geom_smooth()
+
+# degree
+gene_conservation <- merge(gene_conservation,
+                          data.frame(gene_id=gene_ids,
+                                     degree=rowSums(adjacency_matrix)),
+                          by='gene_id')
+ggplot(gene_conservation, aes(average_dnds, degree)) + 
+    geom_point(size=0.3) +
+    geom_smooth()
+
+print(cor(gene_conservation$degree, gene_conservation$average_dnds))
+print(cor(gene_conservation$hub_score, gene_conservation$average_dnds))
+# closeness centrality
+#ggplot(gene_conservation, aes(average_dnds, closeness)) + geom_point()
+```
+
+### Metabolic roles (Opperdoes et al. 2007)
+
+(Not currently being used, but keeping for future reference...)
+
+```{r lmajor_opperdoes2007}
+# Add column indicicating plausible metabolic role for various genes; based
+# on a supplementary table in Opperdoes et al (2007)
+metabolic_role <- read.csv(file.path(input_dir, 'opperdoes2007_clean.csv'),
+                          sep='\t', header=TRUE, na.strings="")
+
+# keep only the gene_id and functionX columns
+metabolic_role <- metabolic_role[,c(1,4,5,6)]
+
+# discard genes that have already been filtered out
+metabolic_role <- metabolic_role[metabolic_role$gene_id %in% result$gene_id,]
+
+# bind to annotation data frame
+result <- plyr::join(result, metabolic_role, by='gene_id')
+```
+
+### Other possible annotation sources
+
+- http://onlinelibrary.wiley.com/doi/10.1038/msb.2009.13/full (T. cruzi; bionformatic
+  & experimental -- no gene lists though)
+

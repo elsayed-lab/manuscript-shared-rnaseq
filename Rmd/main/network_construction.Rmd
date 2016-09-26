@@ -1,0 +1,195 @@
+### Network construction
+
+#### Overview
+
+Next we will construct a co-expression network using WGCNA. There are a large
+number of parameters that go in to the construction.
+
+#### Construct similarity matrix
+
+TODO: Update description.
+
+First, we construct a similarity matrix from the gene expression profiles.
+
+One simple way to measure the similarity between gene expression profiles is to
+take the pearson correlation of the each pair of profiles:
+
+$$
+s_{ij} = cor(x_i,x_j)
+$$
+
+where $x_i$ and $x_j$ are the expression profiles corresponding with genes $i$
+and $j$.
+
+```{r construct_similarity_matrix}
+message("Constructing co-expression network")
+
+# WGCNA count input
+wgcna_input <- exprs(network_counts$final)
+
+# Convert to float (necessary for cor)
+wgcna_input <- wgcna_input * 1.0
+
+# Pearson correlation / bi-midweight correlation
+if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
+    sim_measure <- get(CONFIG$similarity_measure)
+
+    if (CONFIG$similarity_measure == 'cor') {
+        similarity_matrix <- sim_measure(t(wgcna_input))
+    } else if (CONFIG$similarity_measure == 'bicor') {
+        # maxPOutliers discussion
+        # https://support.bioconductor.org/p/65124/
+        similarity_matrix <- sim_measure(t(wgcna_input), maxPOutliers=0.1)
+    }
+} else if (CONFIG$similarity_measure == 'spearman') {
+    # Spearman correlation
+    similarity_matrix <- cor(t(wgcna_input), method='spearman')
+
+    # 2015/12/19 Spearman sometimes returns values outside of [-1, 1]
+    # see: https://bugs.r-project.org/bugzilla3/show_bug.cgi?id=16638
+    similarity_matrix[similarity_matrix < -1] <- -1
+    similarity_matrix[similarity_matrix > 1] <- 1
+} else if (CONFIG$similarity_measure == 'cor-dist') {
+    # Combination of Pearson correlation and Euclidean distance
+    cor_matrix  <- cor(t(wgcna_input))
+    dist_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
+    dist_matrix <- log1p(dist_matrix)
+    dist_matrix <- 1 - (dist_matrix / max(dist_matrix))
+
+    similarity_matrix <- sign(cor_matrix) * ((abs(cor_matrix) + dist_matrix)/ 2)
+
+    # clean-up
+    rm(cor_matrix)
+    rm(dist_matrix)
+    gc()
+} else {
+    # Euclidean distance
+
+    # Old way of converting euclidean distance to a similarity measure:
+    # inverse of max-scaled log-euclidean-distance
+    similarity_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
+    similarity_matrix <- log1p(similarity_matrix)
+    similarity_matrix <- 1 - (similarity_matrix / max(similarity_matrix))
+
+    # Gaussian kernel distance
+    # Produces a matrix in the range [0,1]
+    # http://www.inside-r.org/packages/cran/KRLS/docs/gausskernel
+    #sigma <- median(rowSums(wgcna_input**2))
+    #similarity_matrix <- exp(-1 * as.matrix(dist(wgcna_input)^2)/sigma)
+
+    if (CONFIG$similarity_measure == 'dist') {
+        # For convenience, modify to range from [0,1] to [-1,1]; this will allow 
+        # downstream steps that expect output from cor() to behave the same
+        similarity_matrix <- (2 * similarity_matrix) - 1
+    } else if (CONFIG$similarity_matrix == 'signed-dist') {
+        similarity_matrix <- sign(cor(t(wgcna_input))) * similarity_matrix
+    }
+}
+
+# Preserve sign of correlations
+# (not currently used...)
+#neg_correlations <- similarity_matrix < 0
+
+# For unsigned networks, take the absolute value of the correlations
+if (CONFIG$network_type == 'unsigned') {
+    similarity_matrix <- abs(similarity_matrix)
+}
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(similarity_matrix)
+```
+
+```{r similarity_matrix_density, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi}
+if (CONFIG$include_plots) {
+    plot(density(similarity_matrix))
+}
+```
+
+```{r similarity_matrix_heatmap, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi, dev='png'}
+# Similarity matrix plot, downsampled to speed things up
+heatmap_indices <- sample(nrow(similarity_matrix), min(1600, nrow(similarity_matrix)))
+
+if (CONFIG$include_plots) {
+    heatmap.2(t(similarity_matrix[heatmap_indices, heatmap_indices]),
+                hclustfun=flashClust, col=redgreen(75), margin=c(7,7),
+                labRow=NA, labCol=NA, 
+                key.xlab=sprintf('Similarity\n(%s)', CONFIG$similarity_measure),
+                trace='none',
+                xlab='Gene', ylab='Gene',
+                #lwid=c(1, 4), lhei=c(1, 4),
+                cexRow=2, cexCol=2, keysize=1,
+                main='Similarity matrix',
+                density.info='none', revC=TRUE)
+}
+
+# Set the diagonal to zero to remove uninformative correlations
+diag(similarity_matrix) <- 0
+
+```
+
+#### Construct adjacency matrix
+
+Convert similarity matrix to an adjacency matrix.
+
+In the case of a signed network, in order to preserve the sign of the
+correlations, WGCNA's `adjacency()` function also shifts and scales the data
+from the range [-1,1] to [0,1]:
+
+$$
+a_{ij} = \left(\frac{1}{2} (1 + s_{ij})\right)^\gamma
+$$
+
+This enables us to use the topological overlap matrix functions downstream
+which expect signed correlations in this format (providing these functions with
+data in the range [-1,1] will not behave well, even when the functions are told
+to expect signed input.)
+
+Some additional reading regarding the use of power transformation:
+
+1. [http://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html](WGCNA FAQ) (E.g. item #5)
+2. [https://support.bioconductor.org/p/66101/#66195](Bioconductor Support - Question: Theoretical WGCNA Question)
+
+```{r construct_adjacency_matrix, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
+# Construct adjacency matrix
+adjacency_matrix <- adjacency.fromSimilarity(similarity_matrix,
+                                            power=CONFIG$adjmatrix_power,
+                                            type=CONFIG$network_type)
+
+# Delete similarity matrix to free up memory
+rm(similarity_matrix)
+gc()
+
+# Convert to matrix
+adjacency_matrix <- matrix(adjacency_matrix, nrow=nrow(adjacency_matrix))
+rownames(adjacency_matrix) <- gene_ids
+colnames(adjacency_matrix) <- gene_ids
+```
+
+```{r adjacency_matrix, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi, dev='png'}
+# scale colormap to improve contrast
+#green <- redgreen(10)[8]
+#cmap <- c(colorpanel(30, '#FF0000', '#000000', green),
+#            colorpanel(70, green, '#00FF00'))
+diag(adjacency_matrix) <- 1
+
+if (CONFIG$include_plots) {
+    hmap <- heatmap.2(adjacency_matrix[heatmap_indices, heatmap_indices],
+            hclustfun=flashClust, col=redgreen(75),
+            labRow=NA, labCol=NA, trace='none', revC=TRUE,
+            xlab='Gene', ylab='Gene', density.info='none',
+            main='Adjacency matrix')
+    # save column and row order for future plotting
+    heatmap_row_idx <- hmap$rowInd
+    heatmap_col_idx <- hmap$colInd
+}
+diag(adjacency_matrix) <- 0
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(adjacency_matrix)
+```
+
+Done! We now have a co-expression network to analyze. The next step is to
+cluster the genes in order to detect expression modules within the network.
+

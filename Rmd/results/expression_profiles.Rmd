@@ -1,0 +1,87 @@
+Expression Profiles
+-------------------
+
+To get a sense for how the genes were clustered, let's plot plot a subset of
+the expression profiles and highlight the genes in each module.
+
+**Note**: In order to improve the appearance of the expression profiles,
+samples have been averaged wihtin each condition to produce a single x-tick per
+condition. This is _not_ what is done during the actual clustering used to
+generate the network - in that case each replicate is kept as an individual
+variable in the gene expression vectors used for clustering. This mean,
+however, that there may be some cases where the expression profile
+visualizations give the appearance of grouping together genes which seem very
+different. This is likely the result of outlier samples pulling the
+within-condition averages up or down relative to the center of the clusters.
+
+For reference, below is an example expression profile plot for where samples
+have *not* been averaged by condition.
+
+```{r example_expr_plot}
+# example module expression
+module_color <- module_colors[sample(1:length(module_colors), 1)]
+module_expr <- exprs(network_counts$final)[module_colors == module_color,]
+
+# wide to long
+dat <- melt(module_expr)
+colnames(dat) <- c('gene_id', 'sample_id', 'log_cpm')
+dat$sample_id <- factor(dat$sample_id)
+#dat <- cbind(dat, condition=rep(condition, each=nrow(module_expr)))
+
+ggplot(data=dat,
+    aes(x=sample_id, y=log_cpm, group=gene_id), color='#333') +
+    geom_line(size=0.2) +
+    ggtitle(sprintf("Gene Expression Profiles (%s)", module_color)) +
+    xlab("Sample") +
+    ylab("Expression level (log2-CPM)") +
+    theme(axis.text=element_text(colour="#333333"), 
+            axis.text.x=element_text(angle=90, hjust=1, size=16))
+```
+
+### Combine replicates
+
+<!--
+QUESTION: Can the variance between replicates for a given gene tell us anything
+useful that with respect to network construction? For example, perhaps genes
+with less variance within replicates are more tightly regulated. On the flip
+side, genes with a larger variance may just be noise and not as interesting in
+the context of the network.
+-->
+
+```{r combine_replicates}
+combined_counts <- combine_replicates(exprs(network_counts$final), condition)
+combined_counts_table <- cbind(gene_id=rownames(network_counts$final),
+                               combined_counts)
+
+# convert to long
+counts_long <- melt_counts(combined_counts, CONFIG$condition_mapping)
+colnames(counts_long) <- c('gene_id', 'condition', 'log_cpm')
+
+# add clustering results and convert to a factor
+counts_long <- cbind(counts_long, cluster=as.factor(module_colors))
+
+# save result
+COEXPRESSION_NETWORK_RESULT$counts_long <- counts_long
+```
+
+```{r expression_profiles, fig.width=18, eval=TRUE, fig.show='hold', results='hide', message=FALSE}
+# Next, highlight a single cluster at a time
+# rather than displaying all of the clusters, let's just choose a few at
+# random to give an idea of what the picture looks like.
+
+# sort by order on dendrogram (left to right)
+module_order <- unique(module_colors[gene_tree$order])
+
+# TODO: deal with warnings
+
+## 1) Warning in if (is.na(module_order)) {: the condition has length > 1 and
+## only the first element will be used
+
+# 2) Aggregation function missing: defaulting to length (?)
+
+if (CONFIG$include_plots) {
+    module_expression_profile_plot(counts_long, module_colors, module_order,
+                                   max_plots=3)
+}
+```
+

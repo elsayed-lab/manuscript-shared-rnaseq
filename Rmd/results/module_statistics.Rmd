@@ -1,0 +1,14 @@
+Module Statistics
+-----------------
+
+Create a dataframe with module-specific statistics.
+
+```{r create_module_stats_df}
+# temporarily recreate correlation matrix to compute module stats
+correlation_matrix <- cor(t(wgcna_input))
+module_stats <- create_module_stats_df(result, correlation_matrix, wgcna_input,
+                                       main_contrast)
+# free up memory
+rm(correlation_matrix)
+gc()
+```

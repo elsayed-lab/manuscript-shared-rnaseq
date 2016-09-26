@@ -1,0 +1,110 @@
+Filter data
+-----------
+
+Next let's filter the data to remove unwanted or uninformative genes.
+Additionally, multicopy genes can be filtered at this step. Later on in the
+analysis we may do some additional filtering based on expression variance (for
+genes) or outlier analysis (for samples).
+
+Filtering targets:
+
+1. low-count genes
+2. multicopy genes (optional)
+3. noncoding RNAs
+
+Later on (post-normalization), there may also be an addition step of
+variance-based filtering applied.
+
+### Remove low-count genes
+
+TODO: Add explanation of filtering approach.
+
+```{r remove_lowcount_genes}
+reps_per_batch <- table(factor(condition))
+min_replicates <- min(reps_per_batch)
+de_counts$raw <- filter_lowcount_genes(de_counts$raw, 
+                                       threshold=CONFIG$low_count_threshold,
+                                       min_samples=min_replicates, verbose=TRUE)
+```
+
+```{r include=CONFIG$verbose, echo=CONFIG$verbose}
+print("Removing low count genes:")
+print(head(rownames(assay_data)[!rownames(assay_data) %in% rownames(de_counts$raw)]))
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(de_counts$raw))
+```
+
+### Filter noncoding RNAs
+
+Next, we will remove ncRNAs such as rRNAs, tRNAs, and snoRNAs, which are not
+regulated in the same manner as other coding genes. Since these are not
+polyadenylated, they should not be present in the samples in large numbers.
+
+```{r filter_noncoding_rnas}
+# TODO: Extend human/mouse filtering to include tRNAs
+# library('FDb.UCSC.tRNAs')
+# names(features(FDb.Hsapiens.UCSC.hg19.tRNAs))
+# Returns names from UCSC table, but not corresponding ENSEMBL ids?
+
+# Filter by gene id or type
+# Note that when filtering by type for T. cruzi, SRPs and SLRNAs are not
+# included
+ncrna_mask <- rep(FALSE, nrow(de_counts$raw))
+
+if (!is.null(CONFIG$id_filter_string)) {
+    ncrna_mask <- ncrna_mask | grepl(CONFIG$id_filter_string,
+                                     rownames(de_counts$raw))
+}
+
+if (!is.null(CONFIG$type_filter_string)) {
+    gene_types <- (gene_info %>% filter(gene_id %in% rownames(de_counts$raw)))$type
+    ncrna_mask <- ncrna_mask | grepl(CONFIG$type_filter_string, gene_types)
+}
+
+num_noncoding_rnas <- sum(ncrna_mask)
+print(sprintf("Removing %d non-coding RNAs", num_noncoding_rnas))
+de_counts$raw <- de_counts$raw[!ncrna_mask,]
+```
+
+```{r trim_gene_info}
+# Keep annotations for remaining genes only
+gene_info <- gene_info[gene_info$gene_id %in% rownames(de_counts$raw),]
+```
+
+```{r highly_expressed_genes_after, results='asis', include=!CONFIG$filter_multicopy, eval=!CONFIG$filter_multicopy}
+cat('\n### Highly expressed genes (after filtering)\n')
+
+num_reads_total <- sum(as.numeric(exprs(de_counts$raw)))
+
+gene_total_counts <- data.frame(sort(rowSums(exprs(de_counts$raw)), decreasing=TRUE))
+colnames(gene_total_counts) <- c("total_reads")
+gene_info_subset <- gene_info[match(rownames(gene_total_counts),
+                                    gene_info$gene_id),]
+gene_info_subset$num_reads <- gene_total_counts$total_reads
+gene_info_subset$num_reads_pct <- (gene_total_counts$total_reads / num_reads_total) * 100
+
+gene_info_subset <- gene_info_subset %>% 
+    select(-chromosome, -strand) %>%
+    rename(tx_len=transcript_length)
+
+if (CONFIG$include_tables) {
+    xkable(head(gene_info_subset, 10), 
+        caption='Genes with the highest average expression after filtering.',
+        str_max_width=20)
+}
+```
+
+```{r log2cpm_counts}
+# Create copies of raw count ExpressionSet
+de_counts$log2cpm <- de_counts$raw
+
+# Keep a copy of the Log2-CPM normalized counts for plotting purposes
+exprs(de_counts$log2cpm) <- log2(counts_per_million(exprs(de_counts$raw)) + 0.5)
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(de_counts$raw))
+```
+

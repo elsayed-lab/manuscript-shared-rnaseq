@@ -1,0 +1,12 @@
+```{r, message=FALSE, results='hide'}
+library('gridExtra')
+library('igraph')
+library('matrixStats')
+library('WGCNA')
+
+# Enable WGCNA multithreading
+allowWGCNAThreads()
+enableWGCNAThreads()
+
+source('../../R/wgcna.R')
+```

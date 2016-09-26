@@ -1,0 +1,21 @@
+### Remove multicopy genes
+
+```{r filter_multicopy_genes, results='asis'}
+num_multicopy <- sum(rownames(de_counts$raw) %in% multicopy_ids) 
+print(sprintf("\nRemoving **%d** multicopy genes.\n", num_multicopy))
+
+de_counts$raw <- de_counts$raw[!rownames(de_counts$raw) %in% multicopy_ids,]
+
+# Keep annotations for remaining genes only
+gene_info <- gene_info[gene_info$gene_id %in% rownames(de_counts$raw),]
+```
+
+```{r log2cpm_counts}
+# Update log2CPM counts
+de_counts$log2cpm <- de_counts$raw
+exprs(de_counts$log2cpm) <- log2(counts_per_million(exprs(de_counts$raw)) + 0.5)
+```
+
+```{r include=CONFIG$debug, echo=CONFIG$debug}
+sum(exprs(de_counts$raw))
+```

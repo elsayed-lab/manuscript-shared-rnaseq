@@ -1,0 +1,23 @@
+### SVA batch adjustment
+
+(INCOMPLETE...)
+
+#### Model matrices
+
+```{r sva_combat_model_matrices}
+# models with all variables and all variables except condition
+full_model <- model.matrix(~condition)
+null_model <- model.matrix(~1, data=CONFIG$samples)
+```
+
+#### Estimate latent variables (SVA)
+
+```{r sva, results='asis'}
+# Estimate number of surrogate variables
+nsv <- num.sv(exprs(de_counts$normed), full_model, method="be")
+cat(sprintf("\nNumber of latent variables detected: %d\n", nsv))
+
+# Estimate surrogate variables
+svobj <- sva(exprs(de_counts$normed), full_model, null_model, n.sv=nsv)
+```
+

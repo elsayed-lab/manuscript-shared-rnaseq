@@ -1,0 +1,61 @@
+Gene Ontology Enrichment Analysis
+---------------------------------
+
+Next, we will use the
+[goseq](http://www.bioconductor.org/packages/release/bioc/html/goseq.html)
+Bioconductor package to look for GO enrichment.
+
+### Differentially expressed genes
+
+First, let's look to see if there are any differences in enrichment between the
+genes which are differentially expressed in the two conditions considered.
+
+The first step for using `goseq` to perform enrichment analysis is to fit a
+probability weighting function representing the likelihood a given gene
+will be found differentially expressed solely based on its transcript length.
+The PWF allows goseq to correct for this source of bias (see GOSeq paper or
+vignette for more details).
+
+```{r gene_lengths}
+# Update gene id vector
+gene_ids <- rownames(de_counts$final)
+
+# Create gene lengths vector
+gene_lengths <- gene_info$transcript_length
+names(gene_lengths) <- gene_info$gene_id
+```
+
+```{r go_enrichment_diff_expr_genes, message=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$de_enrichment}
+# Initiallize parallelization
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Run goseq for each contrast tested
+go_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
+    gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+
+    # Skip contrasts with no differentially expressed genes
+    if (length(gene_subset) > 0) {
+        test_gene_enrichment(gene_subset, gene_ids, gene_go_mapping, gene_lengths)
+    }
+}
+names(go_results) <- names(sig_genes)
+
+# remove any null entries from the results
+# https://economics.wordpress.com/2010/07/12/remove-null-elements-from-a-list-in-r/
+go_results <- go_results[!sapply(go_results, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_go_enrichment_diff_expr, results='asis', eval=CONFIG$de_enrichment}
+# TODO 2015/12/17: Generalize printing so that module sizes isn't always
+# required
+de_sets <- data.frame(module_id=names(sig_genes), num_genes=num_de)
+
+if (CONFIG$include_tables) {
+    print_enrichment_results(go_results, de_sets, 'GO terms', go_term_id_mapping)
+}
+```
+

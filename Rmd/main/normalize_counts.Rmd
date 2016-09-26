@@ -1,0 +1,80 @@
+```{r voom_qnorm}
+# Apply voom/quantile normalization on counts
+counts$normed <- counts$raw
+
+# voom (includes log2-CPM transformation)
+if (use_voom) {
+    # quantile normalize?
+    norm_method <- ifelse(quantile_normalize, 'quantile', 'none')
+
+    # voom data
+    voom_result <- voom(exprs(counts$raw), design_condition_only,
+                        normalize.method=norm_method,
+                        plot=CONFIG$include_plots)
+
+    # create normed_counts
+    exprs(counts$normed) <- voom_result$E
+} else {
+    # Based on a suggestion from HCB, we will apply quantile normalization
+    # prior to logging when CPM is not used. This is in contrast to voom
+    # which applies qnorm after log-CPM transforming the data.
+    gene_ids <- rownames(counts$normed)
+
+    # Counts-per-million
+    if (use_cpm) {
+        exprs(counts$normed) <- counts_per_million(exprs(counts$raw))
+
+        # Log2 transformation
+        if (use_log2) {
+            exprs(counts$normed) <- log2(exprs(counts$normed) + 0.5)
+        }
+
+        # Quantile normalize?
+        if (quantile_normalize) {
+            exprs(counts$normed) <- normalize.quantiles(exprs(counts$normed))
+        }
+    } else {
+        # Quantile normalize?
+        if (quantile_normalize) {
+            exprs(counts$normed) <- normalize.quantiles(exprs(counts$normed))
+        }
+
+        # Log2 transformation
+        if (use_log2) {
+            exprs(counts$normed) <- log2(exprs(counts$normed) + 0.5)
+        }
+    }
+    rownames(counts$normed) <- gene_ids
+    colnames(counts$normed) <- sample_ids
+}
+```
+
+```{r results='asis', include=CONFIG$filter_zero_var, echo=CONFIG$filter_zero_var, eval=CONFIG$filter_zero_var}
+cat('\n### Filter zero-variance genes\n')
+
+# Check for genes with zero variance across samples
+zero_var_mask <- apply(exprs(counts$normed), 1, var) != 0
+num_zerovar_genes <- sum(!zero_var_mask)
+
+if (num_zerovar_genes > 0) {
+    cat(sprintf('\nRemoving %d genes with zero variance.\n', num_zerovar_genes))
+
+    # Remove zero-variance genes from each count table
+    for (x in names(counts)) {
+        counts[[x]] <- counts[[x]][zero_var_mask,]
+    }
+} else {
+    cat('\nNo zero-variance genes found.\n')
+}
+```
+
+```{r include=CONFIG$debug, eval=CONFIG$debug}
+sum(exprs(counts$normed))
+```
+
+```{r}
+# Depending on whether batch-adjustment is performed, this may be the final
+# version of the count table. We will store it as "final" for now and update
+# if batch adjustment is performed.
+counts$final <- counts$normed
+```

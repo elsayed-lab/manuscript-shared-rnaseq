@@ -1,0 +1,21 @@
+```{r num_reads}
+# Compute total number of raw reads for each gene
+log_num_reads <- log2(rowSums(exprs(de_counts$raw)) + 1)
+
+# Trim ends to improve color scale
+clip_lower <- as.numeric(quantile(log_num_reads, probs=0.02))
+clip_upper <- as.numeric(quantile(log_num_reads, probs=0.98))
+
+log_num_reads <- pmax(clip_lower, pmin(clip_upper, log_num_reads))
+
+# Rescale to 0-100
+log_num_reads <- log_num_reads - min(log_num_reads)
+log_num_reads <- log_num_reads / max(log_num_reads)
+log_num_reads <- round(log_num_reads * 100)
+
+# create palette for multicopy genes
+log_num_reads_pal <- colorRampPalette(brewer.pal(n=9, name='YlOrRd'))(100)
+
+# assign colors
+num_reads_colors <- log_num_reads_pal[log_num_reads]
+```

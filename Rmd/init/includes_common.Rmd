@@ -1,0 +1,49 @@
+```{r message=FALSE, results='hide'}
+# Load required libraries
+library('Biobase')
+library('biomaRt') 
+library('doParallel')
+library('flashClust')
+library('foreach')
+library('ggplot2')
+library('goseq')
+library('heatmap.plus')
+library('GO.db')
+library('gplots')
+library('knitcitations')
+library('limma')
+library('Matrix')
+library('plyr')
+library('dplyr')
+library('readr')
+library('tools')
+library('rtracklayer')
+library('preprocessCore')
+library('reshape2')
+library('RColorBrewer')
+library('RCurl')
+library('sva')
+library('hpgltools')
+
+# Load helper functions
+source('../../R/annotations.R')
+source('../../R/count_tables.R')
+source('../../R/differential_expression.R')
+source('../../R/enrichment_analysis.R')
+source('../../R/filtering.R')
+source('../../R/pca.R')
+source('../../R/plots.R')
+source('../../R/util.R')
+
+# Output format-specific options
+if (opts_knit$get("rmarkdown.pandoc.to") == 'html') {
+    # Interaction datatable used for HTML output
+    library('DT')
+
+    # Side-by-side plots (HTML)
+    combined_plot_width = '400px'
+} else {
+    # Side-by-side plots (PDF)
+    combined_plot_width = '3.5in'
+}
+```

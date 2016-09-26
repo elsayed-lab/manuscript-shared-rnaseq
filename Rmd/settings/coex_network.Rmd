@@ -1,0 +1,131 @@
+**Network count table transformation**
+
+* **network_cpm**:                Whether to apply counts-per-million
+                                  transformation to the count-table used for
+                                  co-expression network analysis.
+* **network_log2**:               Whether to apply a log2 transformation
+                                  to the count-table used for co-expression
+                                  network analysis.
+* **network_voom**:               Whether to apply a Voom transformation
+                                  to the count-table used for co-expression
+                                  network analysis.
+* **network_quantile_normalize**: Whether to apply quantile normalization
+                                  to the count-table used for co-expression
+                                  network analysis.
+* **network_ebayes_robust**:      Whether or not to use the 'robust' option
+                                  for the eBayes function available in recent
+                                  versions of Limma.
+* **network_batch_adjust**:       Method of batch adjustment to use prior to
+                                  performing co-expression network analysis 
+                                  [none|limma|combat].
+
+**Network filtering**
+
+* **filter_non_de_genes**:        If true, only genes which were found to be
+                                  differentially expressed (for a given
+                                  p-value) for one or more of the tested
+                                  contrasts will be used for network
+                                  construction.
+* **filter_non_de_genes_pvalue**: P-value cutoff to use for differential
+                                  expression based filtering, if enabled.
+* **min_var_percentile**          Minimum level of variance (percentile) for gene to
+                                  be included in analysis. For example, a value
+                                  of 0.25 will result in the 25%
+                                  lowest-variance genes being excluded. Set to
+                                  0 to include all genes. [0 - 1.0]
+
+**Network construction**
+
+* **network_type**:           Type of network to construct (signed|unsigned)
+* **similarity_measure**:     Measure of similarity between gene expression
+                              profiles, e.g. pearson correlation.
+* **adjmatrix_power**:        Power to raise similarity matrix to to generate
+                              an adjacency matrix.
+                              
+* **topological_overlap**:    If set to true, the topological overlap matrix will
+                              be used for clustering and network export. Otherwise
+                              the adjacency matrix will be used.
+
+**Module detection**
+
+* **cut_tree_method**:        Dynamic tree cut method to use (tree|hyrbrid)'
+* **min_module_size**:        Minimum module size to allow during module detection
+                              step.
+* **deep_split**:             Sensitivity of cluster splitting for hybrid tree
+                              split method. [0-4]
+* **pam_respects_dendro**:    Whether or not the dynamic tree cut algorithm should
+                              only group items on the same branch during the PAM
+                              stage (hyrbrid only).
+* **merge_correlation**:      Modules whose eigengenes have have correlations 
+                              above this value will be merged together.
+
+**Network export**
+
+* **edge_cutoff**:            Minimum adjacency score required for two nodes beBest,
+                              be joined by an edge in exported network.
+* **separate_export**:        If true, modules will be exported separately for
+                              downstream visualization and analysis.
+* **export_node_limit**:      The maximum sized module to include in exported
+                              network results.
+
+**Samples to include**
+
+* **samples**:                Table of samples to be used during variance
+                              estimation and differential expression analysis.
+* **wgcna_samples**:          Table of samples to be used for WGCNA; normalization
+                              and batch adjustment will first be done using the
+                              samples so that variance information can be
+                              borrowed from additional samples.
+
+```{r default_config_coex_network, echo=FALSE}
+#
+# Default configuration options: coexpression network analysis
+# 
+DEFAULT_CONFIG_COEX_NETWORK <- list(
+    # Samples to for co-expression network analysis; should all or a subset of
+    # the samples used for differential expression analysis.
+    "wgcna_samples"  = NULL, 
+
+    # Normalization / data transformation
+    'network_cpm'                = TRUE,   # If true, data will be CPM-transformed
+    'network_log2'               = TRUE,   # If true, data will be log2-transformed
+    'network_voom'               = TRUE,   # If true, data will be voom-adjusted
+    'network_quantile_normalize' = TRUE,   # If true, data will be quantile normalized
+    'network_ebayes_robust'      = TRUE,   # Limma eBayes 'robust' parameter.
+    'network_batch_adjust'       = 'none', # Type of batch adjustment to apply [none|limma|combat]
+
+    # Gene filtering
+    'filter_non_de_genes'        = TRUE, # Whether or not to filter out non-differentially-expressed genes
+    'filter_non_de_genes_pvalue' = 0.05, # P-value cutoff to use when filtering non-differentially-expressed genes
+    'min_var_percentile'         = 0,    # Minimum expression variance percentile required for a gene to be used
+
+    # Network construction
+    'network_type'        = 'signed',  # Type of network to generate [signed|unsigned]
+    'similarity_measure'  = 'cor',     # Similarity measure to use [cor|bicor|dist|cor-dist|spearman]
+    'adjmatrix_power'     = 1,         # Adjacency matrix power transformation exponent
+    'topological_overlap' = FALSE,     # Whether or not to apply the topological overlap transformation
+
+    # Module detection
+    'cut_tree_method'        = 'tree', # Branch cut method [tree|hybrid]
+    'min_module_size'        = 10,     # Minimum module size to allow
+    'deep_split'             = TRUE,   # Wheter to use the `deep_split` option for tree cut 
+    'pam_respects_dendro'    = TRUE,   # Wheter to use the `pam_respects_dendro` option for tree cut 
+    'merge_correlation'      = 1.0,    # Merges all co-expression modules with correlation equal to or greater than this number
+    'module_min_correlation' = 0,      # For each module, remove any genes with less than this correlation to module average
+
+    # Network export
+    'edge_cutoff'            = 0.80,   # Minimum edge weight for inclusion in network output
+    'separate_export'        = FALSE,  # Whether or not to export each co-expression module as a separate file
+    'export_node_limit'      = Inf,    # Maximum number of edges to include in network output
+
+    # UTR length defaults
+    "default_5utr_length"    = 90,     # Default 5'UTR length to assume for genes with unknown lengths
+    "default_3utr_length"    = 270,    # Default 3'UTR length to assume for genes with unknown lengths
+
+    # Enrichment analysis
+    "module_enrichment"       = TRUE,  # Whether or not to check for enrichment of co-expression modules
+
+    # Resampling analysis
+    "enable_resampling"       = FALSE, # Whether or not to randomly sub-sample genes before network construction (used for robustness analysis)
+    "resampling_sample_ratio" = 0.8    # Proportion of genes to include when resampling is enabled
+)

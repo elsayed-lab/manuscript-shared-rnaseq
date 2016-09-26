@@ -1,0 +1,119 @@
+```{r create_output_directories, include=FALSE}
+# create output directory
+timestring <- format(Sys.time(), "%Y%m%d")
+
+# output directory    
+output_dir <- file.path(CONFIG$output_dir, 
+                        sprintf("%s_%s", CONFIG$analysis_name, timestring))
+outdir <- file.path(output_dir, 'output')
+
+# Directory to store module enrichment results to
+module_output_dir <- file.path(outdir, 'modules')
+if (!dir.exists(module_output_dir)) {
+	dir.create(module_output_dir, recursive=TRUE)
+}
+```
+
+General dendrogram features
+---------------------------
+
+Here we will explore the relationship between co-expression status and general
+features such as expression variability and net change in expression across
+time.
+
+QUESTION: Can the variance between replicates for a given gene tell us anything
+useful that with respect to network construction? For example, perhaps genes
+with less variance within replicates are more tightly regulated. On the flip
+side, genes with a larger variance may just be noise and not as interesting in
+the context of the network.
+
+```{r combine_replicates}
+combined_counts <- combine_replicates(exprs(network_counts$final), condition)
+combined_counts_table <- cbind(gene_id=rownames(network_counts$final),
+                              combined_counts)
+```
+
+```{r dendrogram_net_expression_change}
+# Net change in expression over time
+net_expr <- combined_counts[,CONFIG$main_comparison[2]] - combined_counts[,CONFIG$main_comparison[1]]
+
+# general expression trends
+sum(net_expr < 0)
+sum(net_expr > 0)
+
+# Threshold to avoid having extremes dominate color scale
+net_expr_clip_lower <- as.numeric(quantile(net_expr, 0.01))
+net_expr_clip_upper <- as.numeric(quantile(net_expr, 0.99))
+
+net_expr <- pmax(net_expr_clip_lower, pmin(net_expr_clip_upper, net_expr))
+
+# Shift to all positive range
+midpoint <- abs(min(net_expr))
+midpoint_percentile <-  round(sum(net_expr <= 0) / length(net_expr) * 100)
+
+net_expr <- net_expr + midpoint
+
+#pal <- colorRampPalette(brewer.pal(n=11, name='RdBu'))(100)
+pal <- c(colorRampPalette(brewer.pal(n=9, name='Blues'))(midpoint_percentile),
+        colorRampPalette(brewer.pal(n=9, name='Reds'))(100 - midpoint_percentile))
+net_expr_colors <- pal[pmax(1, round((net_expr / max(net_expr)) * 100))]
+
+# Gene std deviations
+gene_std_devs <- log1p(sqrt(apply(exprs(network_counts$final), 1, var)))
+
+gene_std_devs_clip_lower <- as.numeric(quantile(gene_std_devs, 0.01))
+gene_std_devs_clip_upper <- as.numeric(quantile(gene_std_devs, 0.99))
+
+gene_std_devs <- pmax(gene_std_devs_clip_lower, 
+                     pmin(gene_std_devs_clip_upper, gene_std_devs))
+
+pal <- colorRampPalette(brewer.pal(n=9, name='Greens'))(100)
+std_dev_colors <- pal[pmax(1, round((gene_std_devs / max(gene_std_devs)) * 100))]
+
+# Include main DE contrast
+de_contrast <- lifecycle_stages[[main_contrast]]
+
+# If no DE genes for plot, add blank row
+if (is.null(de_contrast)) {
+    de_contrast <- rep(0, length(module_colors))
+}
+
+# Dendrogram colors and labels
+dendrogram_colors <- cbind(module_colors, de_contrast, net_expr_colors, std_dev_colors)
+dendrogram_labels <- c(dendrogram_module_labels,
+                       sprintf("Red = upregulated\n at %s", "72 hours"),
+                       'Net expression', 'Log standard deviation')
+
+#sprintf("%s vs. %s\n Red = Up-regulated\n Black = Down-regulated",
+if (CONFIG$include_plots) {
+    plotDendroAndColors(gene_tree, dendrogram_colors,
+                        groupLabels=dendrogram_labels, dendroLabels=FALSE,
+                        cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                        cex.axis=cex_axis, cex.lab=cex_lab, marAll=c(4,8,6,4),
+                        guideHang=0.05)
+}
+
+```
+
+Module sizes
+------------
+
+Create a dataframe mapping from module name to number of genes.
+
+```{r module_stats}
+module_counts <- c()
+for (color in unique(module_colors)) {
+    module_counts <- append(module_counts, sum(module_colors == color))
+}
+
+# create a mapping from module id to number of genes for later use
+module_sizes <- data.frame(
+    module_id=unique(module_colors),
+    num_genes=module_counts
+)
+```
+
+```{r echo=CONFIG$verbose, include=CONFIG$verbose}
+summary(module_counts)
+```
+

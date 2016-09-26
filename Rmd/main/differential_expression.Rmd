@@ -1,0 +1,91 @@
+Differential Expression Analysis
+--------------------------------
+
+Next we will test for differentially expressed genes using
+[Limma](http://www.bioconductor.org/packages/2.13/bioc/html/limma.html).
+
+```{r limma_diff_expr}
+# For limma batch adjustment, we include batch in the model and work with
+# the normed count; for ComBat we only include condition in the model, but
+# work with the batch_adjusted counts
+if (CONFIG$de_batch_adjust == 'combat') {
+    design <- design_condition_only
+    counts <- exprs(de_counts$batch_adjusted)
+} else if (CONFIG$de_batch_adjust == 'limma') {
+    design <- design_including_batch
+    counts <- exprs(de_counts$normed)
+} else if (CONFIG$de_batch_adjust == 'none') {
+    design <- design_condition_only
+    counts <- exprs(de_counts$normed)
+}
+limma_results <- run_pairwise_limma_analyses(CONFIG$de_comparisons,
+                                             counts, design,
+                                             max_pvalue=CONFIG$de_max_pvalue,
+                                             min_log2fc=CONFIG$de_min_log2fc,
+                                             robust=robust_ebayes)
+
+num_de <- c()
+
+for (contrast in names(limma_results$sig_genes)) {
+    num_de <- append(num_de, nrow(limma_results$sig_genes[[contrast]]))
+}
+limma_results$num_de <- num_de
+
+sig_genes <- limma_results$sig_genes
+top_genes <- limma_results$top_genes
+#num_de    <- limma_results$num_de
+
+# Extend results to include gene metadata and condition-specific average expression
+for (contrast in names(sig_genes)) {
+    # Add gene meta information (type, description, etc.)
+    meta_cols <- intersect(c('gene_id', 'description', 'type'),
+                           colnames(gene_info))
+
+    meta <- gene_info[match(sig_genes[[contrast]]$gene_id, gene_info$gene_id),] %>% 
+        select_(.dots=meta_cols)
+    sig_genes[[contrast]] <- merge(sig_genes[[contrast]], meta, by='gene_id')
+
+    # Add average expression for each condition
+    conds <- unlist(strsplit(contrast, '_vs_'))
+    gene_mask <- rownames(de_counts$final) %in% sig_genes[[contrast]]$gene_id
+
+    # limma assumes data is in log-space, and thus the topTable "logFC" column
+    # is just the difference of the averages of each condition.
+    cond1_key <- sprintf('LogMeanExpr_%s', conds[1])
+    cond2_key <- sprintf('LogMeanExpr_%s', conds[2])
+
+    cond1_ave_expr <- rowMeans(exprs(de_counts$final[gene_mask, condition == conds[1]]))
+    cond2_ave_expr <- rowMeans(exprs(de_counts$final[gene_mask, condition == conds[2]]))
+    sig_genes[[contrast]][cond1_key] <- cond1_ave_expr 
+    sig_genes[[contrast]][cond2_key] <- cond2_ave_expr 
+}
+
+# main contrast to use for remainder of analysis
+main_contrast <- paste(CONFIG$main_comparison[2],
+                       CONFIG$main_comparison[1], sep='_vs_')
+if (!main_contrast %in% names(sig_genes)) {
+    stop("Invalid main contrast specified.")
+}
+```
+
+### Differential Expression Results
+
+Positive fold-changes below indicated that the left condition in the comparison
+is up-regulated relative to the right condition.
+
+```{r diff_expr_results, results='asis'}
+if (CONFIG$include_tables) {
+    xkable(data.frame(comparison=names(sig_genes), diff_expr=num_de), 25, 
+        caption='Number of differentially expressed genes for each contrast.')
+}
+```
+
+### Mean-variance relationship for differentially expressed genes
+
+```{r mean_variance_plot, eval=CONFIG$include_plots}
+if (!is.null(top_genes[[main_contrast]])) {
+    maplot(de_counts$final, top_genes[[main_contrast]], 
+           sig_genes[[main_contrast]])
+}
+```
+

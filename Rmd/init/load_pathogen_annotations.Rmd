@@ -1,0 +1,201 @@
+### Load gene annotations
+
+Next, let's load gene annotation data from [TriTrypDB](http://tritrypdb.org/tritrypdb/)
+`r citep('10.1093/nar/gkp851')` and other helpful sources.
+
+```{r pathogen_annotation_filepaths}
+# Location of external annotation files
+species_dir <- tolower(sub('. ', '', CONFIG$pathogen))
+input_dir <- file.path('..', '..', 'data', species_dir)
+
+# Pathogen-specific data and annotations
+if (CONFIG$pathogen == "L. major") {
+    orf_counts            <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_ORF_counts.txt")
+    secreted_proteins     <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_SignalP.csv")
+    membrane_proteins     <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_TMHMM.csv")
+    gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_LmajorFriedlin_PredGPI.csv")
+    utr5_stats            <- file.path(input_dir, "lmajor_all_combined_5utr.csv")
+    utr3_stats            <- file.path(input_dir, "lmajor_all_combined_3utr.csv")
+} else if (CONFIG$pathogen == "T. cruzi") {
+    orf_counts            <- file.path(input_dir, "TriTrypDB-8.0_TcruziCLBrenerEsmeraldo_ORF_counts.txt")
+    secreted_proteins     <- file.path(input_dir, "TriTrypDB-9.0_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
+    membrane_proteins     <- file.path(input_dir, "TriTrypDB-9.0_TcruziCLBrenerEsmeraldo-like_TMHMM.csv")
+    gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_TcruziCLBrenerEsmeraldo-like_PredGPI.csv")
+    utr5_stats            <- file.path(input_dir, "tcruzi_combined_5utrs.csv")
+    utr3_stats            <- file.path(input_dir, "tcruzi_combined_3utrs.csv")
+}
+```
+
+```{r load_gene_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
+# Load gene annotations
+library(CONFIG$organism_db, character.only=TRUE)
+orgdb <- get(CONFIG$organism_db)
+
+# Fix AnnotationDbi namespace mess
+assign('select', dplyr::select, envir=.GlobalEnv)
+assign('get',    base::get, envir=.GlobalEnv)
+
+gene_info <- load_parasite_annotations(orgdb, rownames(count_table),
+                                       keytype=CONFIG$orgdb_key)
+
+# Get transcript lengths (sum of all exon lengths for each gene)
+txdb <- orgdb@txdbSlot
+transcript_lengths <- transcriptLengths(txdb)
+transcript_lengths <- transcript_lengths[transcript_lengths$gene_id %in%
+                                         gene_info$gene_id,]
+
+gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
+            'transcript_length'] <- transcript_lengths$tx_len
+gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
+
+if (CONFIG$debug) {
+    sum(gene_info$transcript_length)
+}
+
+# For L. major, include ribosome profiling detected ORFs
+if (CONFIG$pathogen == 'L. major') {
+    # Unannotated ORF ids (e.g. LmjF.01_108)
+    orf_ids <- rownames(count_table)[grepl('_', rownames(count_table))]        
+
+    # If count table includes entries for unannotated ORFs (e.g. those detected
+    # in our lab using ribosome profiling data), then add them to the
+    # annotation data frame.
+    if (length(orf_ids) > 0) {
+        # First 7 characters of ORF name indicates its corresponding chromosome
+        orf_chrs <- substr(orf_ids, 1, 7)
+        orf_entries <- data.frame(gene_id=orf_ids, chromosome=orf_chrs,
+                                  description=NA, strand=NA, type=NA,
+                                  transcript_length=NA)
+        gene_info <- rbind(gene_info, orf_entries)
+    }
+
+    # 2015/06/22 Add placeholder entry for LmjF.28.2965;
+    # currently excluded from annotation database because of potentially
+    # problematic annotation (strange exon structure). Contracted TriTrypDB
+    # regarding the gene.
+    gene_info <- rbind(gene_info,
+                       data.frame(gene_id='LmjF.28.2965',
+                                  chromosome='LmjF.28',
+                                  description=NA, strand=NA, type=NA, 
+                                  transcript_length=NA))
+}
+
+# Keep only the feature information remaining genes
+gene_info <- gene_info[gene_info$gene_id %in% rownames(count_table),]
+
+# For now, just grab the description for the first transcript
+gene_info <- gene_info[!duplicated(gene_info$gene_id),]
+
+# Species-specific additions
+if (CONFIG$pathogen == "L. major") {
+    # Work-around (2015/03/27)
+    # uORF transcript length support
+    # This second work-around updates the previous dataframe to include lengths
+    # for genes not in the main database. This is only necessary if the
+    # alternative L. major count tables which include the uORFs has been used.
+    if ("LmjF.01_20" %in% gene_info$gene_id) {
+        uorf_lengths <- read.csv(file.path(input_dir,
+                                          'lmajor_uorf_lengths.csv'))
+        for (i in 1:nrow(uorf_lengths)) {
+            gene_id     <- uorf_lengths[i, 'gene_id']
+            gene_length <- uorf_lengths[i, 'transcript_length']
+
+            if (gene_id %in% gene_info$gene_id) {
+                gene_info[gene_info$gene_id == gene_id,]$transcript_length <- gene_length
+            }
+        }
+
+    }
+}
+
+# Gene IDs
+gene_ids <- rownames(count_table)
+```
+
+```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
+# gene annotations
+if (CONFIG$include_tables) {
+    kable(head(gene_info), caption='Preview of gene annotations.')
+}
+```
+
+### Load GO annotations
+
+Next, we will load table of Gene Ontology (GO) `r citep('10.1038/75556')` terms
+associated with each parasite gene, extracted from TriTrypDB.
+
+```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
+# Load GO annotations
+go_terms <- load_go_terms(orgdb, rownames(count_table),
+                          keytype=CONFIG$orgdb_key)
+
+# Gene / GO term mapping
+gene_go_mapping <- as.data.frame(unique(
+    go_terms %>% select(get(CONFIG$orgdb_key), GO, ONTOLOGY)
+))
+colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
+
+# Mapping from GO ID to term and ontology
+go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
+colnames(go_term_id_mapping) <- c("category", "term", "ontology")
+```
+
+```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
+# Preview of GO term annotations
+if (CONFIG$include_tables) {
+    kable(head(go_terms), caption='Preview of GO term annotations.')
+}
+```
+
+### Load KEGG annotations
+
+Next, we will load a table of KEGG `r citep('10.1093/nar/27.1.29')` pathway
+annotations for each parasite gene.
+
+```{r load_kegg_annotations, message=FALSE, warning=FALSE}
+# L. major, T. cruzi, etc
+gene_kegg_mapping <- load_kegg_mapping(orgdb, rownames(count_table),
+                                        keytype=CONFIG$orgdb_key)
+kegg_pathways <- load_kegg_pathways(orgdb, rownames(count_table),
+                                    keytype=CONFIG$orgdb_key)
+
+# Rename gene/KEGG mapping columns to be consistent with GO mapping
+colnames(gene_kegg_mapping) <- c('gene', 'category')
+colnames(kegg_pathways)     <- c('category', 'name', 'class', 'description')
+
+kegg_pathways <- unique(kegg_pathways)
+```
+
+### Load multicopy genes
+
+```{r load_multicopy_genes, results='asis'}
+if (CONFIG$pathogen %in% c("L. major", "T. cruzi")) {
+    multicopy_families <- c('mucin', 'trans-sialidase', 'amastin', 'tuzin',
+                            'DGF-1', 'RHS', 'GP63')
+
+    multicopy_regex <- paste(multicopy_families, collapse='|')
+
+    raw_no_multicopy <- filter_multicopy_genes(count_table, gene_info,
+                                               multicopy_regex, orf_counts,
+                                               verbose=CONFIG$verbose)
+    # list of multicopy genes
+    multicopy_ids <- rownames(count_table)[!rownames(count_table) %in%
+                                            rownames(raw_no_multicopy)]
+
+    multicopy_genes <- gene_info %>% filter(gene_id %in% multicopy_ids)
+    cat(sprintf("\nNumber of multicopy genes detected: **%d**\n\n",
+                length(multicopy_ids)))
+
+    # print counts for each chromosome
+    multicopy_ch_counts <- as.data.frame(sort(table(multicopy_genes$chromosome), decreasing=TRUE))
+    colnames(multicopy_ch_counts) <- c("Number of genes")
+
+    # will only show top 15 chromosomes / contigs if more than this many contain
+    # multicopy genes.
+    if (CONFIG$include_tables) {
+        xkable(multicopy_ch_counts, 
+            caption='Number of multicopy genes located on each chromosome.')
+    }
+}
+```
+

@@ -1,0 +1,62 @@
+KEGG Enrichment analysis
+------------------------
+
+Other tools to consider in the future:
+
+- [NetPathMiner](http://bioconductor.org/packages/release/bioc/html/NetPathMiner.html)
+- [ReactomePA](http://bioconductor.org/packages/release/bioc/html/ReactomePA.html)
+- [KEGGprofile](http://www.bioconductor.org/packages/release/bioc/html/KEGGprofile.html)
+- [pathview](http://www.bioconductor.org/packages/release/bioc/html/pathview.html)
+
+First, create a mapping from gene ids to KEGG pathways, similar to what we did
+above with GO terms.
+
+<!--
+ 2015/11/13
+ T. cruzi KEGG problem:
+
+ Columns incorrectly names? (category saved as "description")
+ 
+> kegg_pathways$description
+ [1] "path:tcr00900" "path:tcr01100" "path:tcr01110" "path:tcr01130" 
+ [4] "path:tcr03010" "path:tcr00230" "path:tcr03050" "path:tcr04141" 
+ [8] "path:tcr01040" "path:tcr01212" "path:tcr04146" "path:tcr00100" 
+-->
+
+```{r kegg_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Check each module for enrichment in KEGG terms and save result in a list
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check for enrichment in KEGG terms and save result in a list
+kegg_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
+    gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+
+    # Measure KEGG enrichment for module
+    enriched <- tryCatch({
+        enriched <- test_gene_enrichment(gene_subset, gene_ids,
+                                        gene_kegg_mapping, gene_lengths)
+        enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
+                                by='category'))
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        warning("KEGG enrichment failed")
+        return(get_enrichment_placeholder())
+    })
+    enriched
+}
+names(kegg_results) <- names(sig_genes)
+
+# remove any null entries from the results
+kegg_enrichment <- kegg_results[!sapply(kegg_results, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_kegg_enrichment, results='asis'}
+if (CONFIG$include_tables) {
+    print_enrichment_results(kegg_enrichment, de_sets, 'KEGG pathway',
+                                kegg_pathways %>% select(-description))
+}
+```

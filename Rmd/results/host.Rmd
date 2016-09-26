@@ -1,0 +1,188 @@
+Comparison to external PPI, etc. networks
+-----------------------------------------
+
+If the co-expression network is determined due factors relating to underlying
+gene regulatory networks, protein-protein interaction networks, etc., then we
+might expect to see some of the edges for those networks recapitulated in our
+final co-expression network.
+
+To examine this, we will look at several highly-curated sources of human and
+mouse network information:
+
+1. IRefIndex (PPI)
+2. ConsensusPathDB (PPI)
+
+### IRefIndex
+
+Using the [iRefR](http://irefindex.org/wiki/index.php?title=iRefR) package in
+an external script (2015/92-load-irefindex), an edge list was generated for all
+ENSEMBL gene IDs that could be mapped from source proteins.
+
+Below, we will load this edge list in, convert it to an adjacency matrix, and
+then compare it to the co-expression network adjacency matrix.
+
+```{r load_irefindex_network}
+# input filepath
+if (CONFIG$host == 'H. sapiens') {
+    iref_filepath <- file.path(Sys.getenv('REF'), 'irefindex', '14.0',
+                            '9606.07042015.ensembl.csv.gz')
+} else if (CONFIG$host == 'M. musculus') {
+    iref_filepath <- file.path(Sys.getenv('REF'), 'irefindex', '14.0',
+                            '10090.07042015.ensembl.csv.gz')
+}
+
+# load network
+iref_edgelist <- read.csv(gzfile(iref_filepath))
+g <- graph.data.frame(iref_edgelist, directed=FALSE)
+
+# remove nodes and edges for genes that arent in the co-expression network
+num_before <- length(V(g))
+g <- delete.vertices(g, V(g)[!V(g)$name %in% gene_ids])
+num_after <- length(V(g))
+print(sprintf("Removed %d vertices from iRefIndex not found in co-expression network", 
+              num_before - num_after))
+
+# create a new matrix with the same dimensions as the co-expression network
+m <- Matrix(0, nrow=length(gene_ids), ncol=length(gene_ids), sparse=TRUE)
+colnames(m) <- gene_ids
+rownames(m) <- gene_ids
+
+g <- graph.union(g, graph.adjacency(m, mode='undirected'))
+
+# convert to an adjacency matrix
+iref_adjmatrix <- get.adjacency(g)
+
+# reorder rows and columns
+iref_adjmatrix <- iref_adjmatrix[gene_ids, gene_ids]
+
+# use binary irefindex adjacency matrix to mask co-expression adjmatrix
+#masked_adjmatrix <- ifelse(iref_adjmatrix, adjacency_matrix, 0)
+masked_adjmatrix <- adjacency_matrix
+masked_adjmatrix[!as.matrix(iref_adjmatrix)] <- 0
+```
+
+```{r irefindex_plots}
+# sum of irefindex supported edge weights
+iref_edge_sum <- sum(masked_adjmatrix)
+
+print(sprintf("Edge weight support by iRefIndex PPIs: %0.2f",
+              iref_edge_sum))
+print(sprintf("Ratio of total co-expression network edge weights: %f",
+              sum(masked_adjmatrix) / sum(adjacency_matrix)))
+print(sprintf("Number of edges with PPI support: %d", sum(masked_adjmatrix > 0)))
+
+# weight of supported edges
+sum(masked_adjmatrix > 0.8)
+sum(masked_adjmatrix > 0.5)
+sum(masked_adjmatrix > 0.3)
+sum(masked_adjmatrix > 0.1)
+
+# Heatmap
+if (CONFIG$include_plots) {
+    # Create a binary version of the matrix and reorder to match previous heatmaps
+    ppi_input <- masked_adjmatrix[heatmap_row_idx, heatmap_col_idx]
+    ppi_input[ppi_input > 0] <- 1
+
+    # make diagonal easy to see
+    diag(ppi_input) <- 1
+
+    heatmap.2(ppi_input, 
+              Rowv=NA, Colv=NA,
+              labRow=NA, labCol=NA, 
+              hclustfun=flashClust, col=c('#000000', '#00FF00'), margin=c(7,7),
+              key.xlab='iRefIndex supported co-expression network',
+              trace='none',
+              dendrogram='none',
+              xlab='Gene', ylab='Gene',
+              cexRow=2, cexCol=2, keysize=1,
+              density.info='none', revC=TRUE)
+
+    # clean-up plot input when finished
+    rm(ppi_input)
+}
+```
+
+```{r irefindex_cleanup}
+rm(masked_adjmatrix)
+gc()
+```
+
+### ConsensusPathDB pathway enrichment
+
+ConsensusPathDB (CPDB) integrated network information from numerous resources.
+Below, we will use the combined pathway mapping they offer to look for
+pathway enrichment of modules.
+
+```{r load_cpdb, results='asis'}
+# load data
+if (CONFIG$host == 'H. sapiens') {
+    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'human', '30',
+                            'CPDB_pathways_genes_human.tab')
+} else if (CONFIG$host == 'M. musculus') {
+    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'mouse', 'mm9',
+                            'CPDB_pathways_genes_mouse.tab')
+}
+
+# load full CPDB mapping
+cpdb <- read_tsv(cpdb_infile)
+
+# check for pre-parsed mapping
+cpdb_rdata <- sub('.tab', '.RData', cpdb_infile)
+
+if (file.exists(cpdb_rdata)) {
+    load(cpdb_rdata)
+} else {
+    # convert list of genes to a single dataframe
+    cpdb_mapping <- data.frame()
+
+    for (i in 1:nrow(cpdb)) {
+        category <- cpdb$external_id[i]
+        gene_id <- strsplit(cpdb$ensembl_ids[i], ',')[[1]]
+
+        if (length(gene_id) > 0) {
+            cpdb_mapping <- rbind(cpdb_mapping, cbind(category, gene_id))
+        }
+    }
+
+    # save binary version to speed up future analyses
+    save(cpdb_mapping, file=cpdb_rdata)
+}
+```
+
+```{r cpdb_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Initialize CPUs
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check each module for pathway enrichment and save result in a list
+cpdb_pathway_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+    # Measure enrichment for module
+    enriched <- tryCatch({
+        in_module_geneids <- gene_ids[module_colors == color]
+        enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                        cpdb_mapping, gene_lengths)
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        # Note: goseq will also fail if supplied with a dplyr tbl_df so first 
+        # make sure that is not the case
+        warning(sprintf("ConsensusPathDB enrichment failed for module %s", color))
+        return(get_enrichment_placeholder())
+    })
+    enriched
+}
+names(cpdb_pathway_enrichment) <- unique(module_colors)
+
+# remove any null entries from the results
+cpdb_pathway_enrichment <- cpdb_pathway_enrichment[!sapply(cpdb_pathway_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r cpdb_enrichment_results, results='asis'}
+if (CONFIG$include_tables) {
+    print_enrichment_results(cpdb_pathway_enrichment, module_sizes,
+                                'ConsensusPathDB Pathway',
+                                cpdb %>% select(category=external_id, pathway, source))
+}
+```

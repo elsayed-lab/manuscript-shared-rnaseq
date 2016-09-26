@@ -1,0 +1,484 @@
+CDS and UTR Lengths
+-------------------
+
+To see if there is any trend between UTR length (in particular, 3'UTR length)
+and module membership, we will color the modules based on the median UTR length
+for genes in that module.
+
+To determine this, we will make sure of UTR length information that was
+generated for *L. major* and *T. cruzi* in a separate analysis.
+
+### Load CDS length data
+
+```{r cds_lengths}
+module_cds <- result %>%
+    group_by(color) %>%
+    summarise(median_cds_len=median(transcript_length, na.rm=TRUE) * 1.0)
+
+log_cds_lengths <- log2(module_cds$median_cds_len + 1)
+log_cds_lengths <- log_cds_lengths - min(log_cds_lengths)
+```
+
+### Load UTR data
+
+Next, we will load a dataset containing UTR lengths, read support, and GC- and
+CT-richness for all genes for which UTR boundaries could be detected.
+
+```{r load_utr_lengths}
+# load 5' and 3'UTR lengths
+gene_5utrs <- read.csv(utr5_stats)
+gene_3utrs <- read.csv(utr3_stats)
+
+# Convert NA reads to 0's
+gene_5utrs$num_reads[is.na(gene_5utrs$num_reads)] <- 0
+gene_5utrs$num_reads_primary[is.na(gene_5utrs$num_reads_primary)] <- 0
+
+gene_3utrs$num_reads[is.na(gene_3utrs$num_reads)] <- 0
+gene_3utrs$num_reads_primary[is.na(gene_3utrs$num_reads_primary)] <- 0
+
+# drop secondary site reads column if present (L . major)
+if ('num_reads_secondary' %in% colnames(gene_5utrs)) {
+    gene_5utrs <- gene_5utrs %>% select(-num_reads_secondary)
+    gene_3utrs <- gene_3utrs %>% select(-num_reads_secondary)
+}
+
+colnames(gene_5utrs) <- c('name', 'utr5_len', 'utr5_num_reads',
+                         'utr5_num_reads_primary', 'utr5_gc_percent',
+                         'utr5_ct_percent')
+colnames(gene_3utrs) <- c('name', 'utr3_len', 'utr3_num_reads',
+                         'utr3_num_reads_primary', 'utr3_gc_percent',
+                         'utr3_ct_percent')
+
+# Add rows with NAs for genes which we have counts for, but no UTR info
+missing_genes <- result$gene_id[!result$gene_id %in% gene_5utrs$name]
+
+if (length(missing_genes) > 0) {
+    gene_5utrs <- rbind(gene_5utrs,
+                    data.frame(name=missing_genes, utr5_len=NA,
+                                utr5_num_reads=NA, utr5_num_reads_primary=NA,
+                                utr5_gc_percent=NA, utr5_ct_percent=NA))
+    gene_3utrs <- rbind(gene_3utrs,
+                    data.frame(name=missing_genes, utr3_len=NA,
+                                utr3_num_reads=NA, utr3_num_reads_primary=NA,
+                                utr3_gc_percent=NA, utr3_ct_percent=NA))
+}
+
+result <- merge(merge(result, gene_3utrs, by.x='gene_id', by.y='name'),
+               gene_5utrs, by.x='gene_id', by.y='name')
+
+# summary data frame
+module_utrs <- result %>%
+            group_by(color) %>%
+            summarise(median_utr5_len=median(utr5_len, na.rm=TRUE) * 1.0,
+                      median_utr3_len=median(utr3_len, na.rm=TRUE) * 1.0,
+                      median_utr5_num_reads=median(utr5_num_reads) * 1.0,
+                      median_utr3_num_reads=median(utr3_num_reads) * 1.0)
+```
+
+### UTR length for primary dendrogram sub-trees
+
+Since the primary divide in the clustering dendrogram often represents a split
+in genes that are up-regulated or down-regulated across time, we can first
+check to see if the genes in these two sub-trees differ in their UTR lengths.
+
+```{r utr_length_dendrogram_vs_diffexpr, results='asis'}
+# Left- and right-subtrees of the dendrogram
+dendro <- as.dendrogram(gene_tree)
+dendro_left  <- labels(dendro[[1]])
+dendro_right <- labels(dendro[[2]])
+
+# UTR length and branch info
+utr_lengths <- result %>% select(gene_id, utr5_len, utr3_len,
+                                utr5_num_reads, utr3_num_reads) %>%
+                mutate(branch=ifelse(gene_id %in% dendro_left, 'left', 'right'))
+
+dendro_vs_diffexpr <- data.frame(
+    "dendro_left"=c(sum(cond2_upreg %in% dendro_left),
+                    sum(cond2_downreg %in% dendro_left)),
+    "dendro_right"=c(sum(cond2_upreg %in% dendro_right),
+                     sum(cond2_downreg %in% dendro_right))
+)
+rownames(dendro_vs_diffexpr) <- c(
+    sprintf("upreg_at_%s_hrs", main_comparison_two_short),
+    sprintf("downreg_at_%s_hrs", main_comparison_two_short)
+)
+
+if (CONFIG$include_tables) {
+    xkable(dendro_vs_diffexpr)
+}
+```
+
+### 5'UTR
+
+```{r utr5_length_dendrogram_subtrees}
+# 5'UTR
+utr5_lengths_left  <- (utr_lengths %>% filter(gene_id %in% dendro_left))$utr5_len
+utr5_lengths_right <- (utr_lengths %>% filter(gene_id %in% dendro_right))$utr5_len
+median_5utr_length_left  <- median(utr5_lengths_left, na.rm=TRUE)
+median_5utr_length_right <- median(utr5_lengths_right, na.rm=TRUE)
+
+if (CONFIG$include_plots) {
+    ggplot(utr_lengths, aes(utr5_len, color=branch)) +
+        geom_density() +
+        ggtitle(sprintf("5'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
+                        median_5utr_length_left, median_5utr_length_right))
+}
+```
+
+### 3'UTR
+
+```{r utr3_length_dendrogram_subtrees}
+# 3'UTR
+utr3_lengths_left  <- (result %>% filter(gene_id %in% dendro_left))$utr3_len
+utr3_lengths_right <- (result %>% filter(gene_id %in% dendro_right))$utr3_len
+median_3utr_length_left  <- median(utr3_lengths_left, na.rm=TRUE)
+median_3utr_length_right <- median(utr3_lengths_right, na.rm=TRUE)
+
+#simple_result$logFC   <- round(simple_result$logFC, 2)
+if (CONFIG$include_plots) {
+    ggplot(utr_lengths, aes(utr3_len, color=branch)) +
+        geom_density() +
+        ggtitle(sprintf("3'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
+                        median_3utr_length_left, median_3utr_length_right))
+}
+```
+
+### UTR length for differentially expressed genes
+
+```{r utr_length_diffexpr_genes}
+#
+# Up- and down-regulated DE genes
+#
+# The way the DE contrasts have been set up, "CONFIG$main_comparison[2]" will
+# usually refer to the later time-point in the comparison, e.g. for the
+# contrast:
+#
+#   "72 vs. 4 hrs"
+#
+# comparison[2] will be 72 and comparison[1] will be 4.
+#
+utr_lengths_de <- utr_lengths %>%
+                    filter(gene_id %in% c(cond2_downreg, cond2_upreg)) %>%
+                    mutate(upreg=ifelse(gene_id %in% cond2_upreg,
+                                        CONFIG$main_comparison[2],
+                                        CONFIG$main_comparison[1]))
+if (nrow(utr_lengths_de) > 0) {
+
+    # 5'UTR
+    utr5_lengths_upreg   <- (utr_lengths_de %>% filter(gene_id %in% cond2_upreg))$utr5_len
+    utr5_lengths_downreg <- (utr_lengths_de %>% filter(gene_id %in% cond2_downreg))$utr5_len
+
+    median_5utr_length_upreg   <- median(utr5_lengths_upreg, na.rm=TRUE)
+    median_5utr_length_downreg <- median(utr5_lengths_downreg, na.rm=TRUE)
+
+    if (CONFIG$include_plots) {
+        ggplot(utr_lengths_de, aes(utr5_len, color=upreg)) +
+            geom_density() +
+            ggtitle(sprintf("Differentially Expressed genes 5'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
+                            median_5utr_length_upreg, median_5utr_length_downreg))
+    }
+
+    # 3'UTR
+    utr3_lengths_upreg   <- (utr_lengths_de %>% filter(gene_id %in% cond2_upreg))$utr3_len
+    utr3_lengths_downreg <- (utr_lengths_de %>% filter(gene_id %in% cond2_downreg))$utr3_len
+
+    median_3utr_length_upreg   <- median(utr3_lengths_upreg, na.rm=TRUE)
+    median_3utr_length_downreg <- median(utr3_lengths_downreg, na.rm=TRUE)
+
+    if (CONFIG$include_plots) {
+    ggplot(utr_lengths_de, aes(utr3_len, color=upreg)) +
+        geom_density() +
+        ggtitle(sprintf("Differentially Expressed genes 3'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
+                        median_3utr_length_upreg, median_3utr_length_downreg))
+    }
+}
+```
+
+```{r utr_length_dendrogram}
+# color palette
+pal <- colorRampPalette(rev(brewer.pal(n=11, name='RdBu')))(100)
+
+# rescale to range 1-100 to cx
+# UTR lengths
+log_utr5_lengths <- log2(module_utrs$median_utr5_len + 1)
+log_utr3_lengths <- log2(module_utrs$median_utr3_len + 1)
+
+log_utr5_lengths <- log_utr5_lengths - min(log_utr5_lengths, na.rm=TRUE)
+log_utr3_lengths <- log_utr3_lengths - min(log_utr3_lengths, na.rm=TRUE)
+
+# UTR number of reads
+
+# Clip extreme outliers before assigning color scale
+utr5_clip <- as.numeric(quantile(module_utrs$median_utr5_num_reads, 0.99,
+                                na.rm=TRUE))
+utr3_clip <- as.numeric(quantile(module_utrs$median_utr3_num_reads, 0.99,
+                                na.rm=TRUE))
+module_utrs$median_utr5_num_reads <- pmin(utr5_clip,
+                                         module_utrs$median_utr5_num_reads)
+module_utrs$median_utr3_num_reads <- pmin(utr3_clip,
+                                         module_utrs$median_utr3_num_reads)
+
+log_utr5_num_reads <- log2(module_utrs$median_utr5_num_reads + 1)
+log_utr3_num_reads <- log2(module_utrs$median_utr3_num_reads + 1)
+
+log_utr5_num_reads <- log_utr5_num_reads - min(log_utr5_num_reads, na.rm=TRUE)
+log_utr3_num_reads <- log_utr3_num_reads - min(log_utr3_num_reads, na.rm=TRUE)
+
+# module/color mapping
+module_utrs$utr5_len_colors <- pal[pmax(1, round((log_utr5_lengths / max(log_utr5_lengths, na.rm=TRUE)) * 100))]
+module_utrs$utr3_len_colors <- pal[pmax(1, round((log_utr3_lengths / max(log_utr3_lengths, na.rm=TRUE)) * 100))]
+
+module_utrs$utr5_num_reads_colors <- pal[pmax(1, round((log_utr5_num_reads / max(log_utr5_num_reads, na.rm=TRUE)) * 100))]
+module_utrs$utr3_num_reads_colors <- pal[pmax(1, round((log_utr3_num_reads / max(log_utr3_num_reads, na.rm=TRUE)) * 100))]
+
+# gene/color mapping
+utr5_len_colors <- module_utrs$utr5_len_colors[match(module_colors,
+                                                       module_utrs$color)]
+utr3_len_colors <- module_utrs$utr3_len_colors[match(module_colors,
+                                                       module_utrs$color)]
+
+utr5_num_reads_colors <- module_utrs$utr5_num_reads_colors[match(module_colors,
+                                                          module_utrs$color)]
+utr3_num_reads_colors <- module_utrs$utr3_num_reads_colors[match(module_colors,
+                                                          module_utrs$color)]
+
+# cds module/color mapping
+cds_clip <- as.numeric(quantile(log_cds_lengths, 0.99, na.rm=TRUE))
+log_cds_lengths <- pmin(cds_clip, log_cds_lengths)
+
+module_cds$cds_len_colors <- pal[pmax(1, round((log_cds_lengths / max(log_cds_lengths)) * 100))]
+cds_len_colors <- module_cds$cds_len_colors[match(module_colors,
+                                                 module_cds$color)]
+
+# get contrast
+de_contrast <- lifecycle_stages[[main_contrast]]
+
+# If no DE genes for plot, add blank row
+if (is.null(de_contrast)) {
+    de_contrast <- rep(0, length(module_colors))
+}
+
+
+if (CONFIG$include_plots) {
+    plotDendroAndColors(gene_tree,
+                        cbind(module_colors, de_contrast,
+                              cds_len_colors,
+                              utr5_len_colors, utr5_num_reads_colors,
+                              utr3_len_colors, utr3_num_reads_colors),
+                        groupLabels=c(sprintf("Modules (n=%s)", num_modules),
+                                    sprintf("Red = upregulated\n at %s", "72 hours"),
+                                    "CDS Length",
+                                    "5'UTR lengths", "5'UTR # reads",
+                                    "3'UTR lengths", "3'UTR # reads"),
+                        dendroLabels=FALSE,
+                        cex.colorLabels=cex_color_labels,
+                        cex.main=cex_main,
+                        cex.axis=cex_axis,
+                        cex.lab=cex_lab,
+                        marAll=c(4,8,6,4),
+                        guideHang=0.05)
+}
+```
+
+**Color scales**
+
+```{r utr_length_colorscale}
+if (CONFIG$include_plots) {
+    print(plot_color_bar(pal, min=min(log_utr5_lengths, na.rm=TRUE),
+                         max=max(log_utr5_lengths, na.rm=TRUE), 
+                         title="5'UTR colors"))
+    print(plot_color_bar(pal, min=min(log_utr3_lengths, na.rm=TRUE),
+                         max=max(log_utr3_lengths, na.rm=TRUE), 
+                         title="3'UTR colors"))
+}
+```
+
+Just to be safe, let's check to make sure that the length is not just
+correlated with coverage, and there there is an underlying difference in
+acceptor sites mapped for the two groups of genes that are producing the above
+result.
+
+```{r utr_length_check}
+# 5'UTR
+utr5_num_reads_left  <- (result %>% filter(gene_id %in% dendro_left))$utr5_num_reads
+utr5_num_reads_right <- (result %>% filter(gene_id %in% dendro_right))$utr5_num_reads
+median_5utr_coverage_left  <- median(utr5_num_reads_left, na.rm=TRUE)
+median_5utr_coverage_right <- median(utr5_num_reads_right, na.rm=TRUE)
+
+if (CONFIG$include_plots) {
+    ggplot(utr_lengths, aes(log2(utr5_num_reads + 1), color=branch)) +
+        geom_density() +
+        ggtitle(sprintf("UTR'5 Acceptor Site Coverage (median left: %0.2f, right: %0.2f)",
+                        median_5utr_coverage_left, median_5utr_coverage_right))
+}
+
+# 3'UTR
+utr3_num_reads_left  <- (result %>% filter(gene_id %in% dendro_left))$utr3_num_reads
+utr3_num_reads_right <- (result %>% filter(gene_id %in% dendro_right))$utr3_num_reads
+median_3utr_coverage_left  <- median(utr3_num_reads_left, na.rm=TRUE)
+median_3utr_coverage_right <- median(utr3_num_reads_right, na.rm=TRUE)
+
+if (CONFIG$include_plots) {
+    ggplot(utr_lengths, aes(log2(utr3_num_reads + 1), color=branch)) +
+        geom_density() +
+        ggtitle(sprintf("UTR'3 Acceptor Site Coverage (median left: %0.2f, right: %0.2f)",
+                        median_3utr_coverage_left, median_3utr_coverage_right))
+}
+```
+
+```{r results='asis', echo=CONFIG$verbose, include=CONFIG$verbose}
+cat(sprintf("- Coverage fraction on left: %0.2f\n",
+            sum(utr5_num_reads_left) / sum(utr_lengths$utr5_num_reads)))
+cat(sprintf("- Coverage fraction on right: %0.2f\n",
+            sum(utr5_num_reads_right) / sum(utr_lengths$utr5_num_reads)))
+cat(sprintf("- Coverage fraction on left: %0.2f\n",
+            sum(utr3_num_reads_left) / sum(utr_lengths$utr3_num_reads)))
+cat(sprintf("- Coverage fraction on right: %0.2f\n",
+            sum(utr3_num_reads_right) / sum(utr_lengths$utr3_num_reads)))
+```
+
+### Relationship between net expression change and CDS/UTR length (4-72hrs)
+
+#### CDS length vs. Net Expression Change
+
+```{r net_expr_utr_length_correlation_cds}
+gene_log_cds_lengths <- log2(gene_info$transcript_length + 1)
+gene_log_cds_lengths <- gene_log_cds_lengths - min(gene_log_cds_lengths,
+                                                   na.rm=TRUE)
+#qplot(gene_log_cds_lengths, net_expr, geom=c("point", "smooth"),
+#      formula=y~x, method='lm')
+qplot(gene_log_cds_lengths, net_expr, geom=c("point", "smooth"))
+```
+
+#### 5'UTR length vs. Net Expression Change
+
+```{r net_expr_utr_length_correlation_5utr}
+#qplot(log1p(utr_lengths$utr5_len), net_expr, geom=c("point", "smooth"),
+#      formula=y~x, method='lm')
+qplot(log1p(utr_lengths$utr5_len), net_expr, geom=c("point", "smooth"))
+```
+
+#### 3'UTR length vs. Net Expression Change
+
+```{r num_reads_utr_length_correlation_3utr}
+#qplot(log1p(utr_lengths$utr3_len), net_expr, geom=c("point", "smooth"),
+#      formula=y~x, method='lm')
+qplot(log1p(utr_lengths$utr3_len), net_expr, geom=c("point", "smooth"))
+```
+
+### Relationship between number of reads and CDS/UTR length
+
+#### Log2 CDS length vs. Log2 Number of reads
+
+```{r num_reads_utr_length_correlation_cds}
+gene_log_num_reads <- log2(rowSums(exprs(network_counts$raw)) + 0.5)
+qplot(gene_log_cds_lengths, gene_log_num_reads, geom=c("point", "smooth"))
+      #formula=y~x, method='lm')
+```
+
+#### Log2 5'UTR length vs. Log2 Number of reads
+
+```{r num_reads_utr_length_correlation_5utr}
+qplot(log1p(utr_lengths$utr5_len), gene_log_num_reads, geom=c("point", "smooth"))
+      #formula=y~x, method='lm')
+```
+
+#### Log2 3'UTR length vs. Log2 Number of reads
+
+```{r num_reads_utr_length_correlation_3utr}
+qplot(log1p(utr_lengths$utr3_len), gene_log_num_reads, geom=c("point", "smooth"))
+      #formula=y~x, method='lm')
+```
+
+GC and CT richness
+------------------
+
+```{r gc_ct_richnes}
+module_base_compositions <- result %>%
+            group_by(color) %>%
+            summarise(median_5utr_gc_percent=median(utr5_gc_percent, na.rm=TRUE),
+                      median_3utr_gc_percent=median(utr3_gc_percent, na.rm=TRUE),
+                      median_5utr_ct_percent=median(utr5_ct_percent, na.rm=TRUE),
+                      median_3utr_ct_percent=median(utr3_ct_percent, na.rm=TRUE))
+
+# rescale to range 1-100
+# if trimmed=TRUE, outliers will be trimmed first to reduce their influence on
+# the resulting colorscale
+rescale <- function (x, trimmed=TRUE, trim_quantile=0.99) {
+    if (trimmed) {
+        lower_bound <- quantile(x, 1 - trim_quantile, na.rm=TRUE)
+        upper_bound <- quantile(x, trim_quantile, na.rm=TRUE)
+
+        x <- pmax(pmin(x, upper_bound), lower_bound)
+
+        return(pmax(1, ((x-min(x, na.rm=TRUE)) / (max(x, na.rm=TRUE) - min(x, na.rm=TRUE))) * 100))
+    }
+    # no trimming
+    return(pmax(1, ((x-min(x, na.rm=TRUE)) / (max(x, na.rm=TRUE) - min(x, na.rm=TRUE))) * 100))
+}
+
+# module/color mapping
+module_base_compositions$utr5_gc_colors <- pal[
+    round(rescale(module_base_compositions$median_5utr_gc_percent))
+]
+module_base_compositions$utr3_gc_colors <- pal[
+    round(rescale(module_base_compositions$median_3utr_gc_percent))
+]
+module_base_compositions$utr5_ct_colors <- pal[
+    round(rescale(module_base_compositions$median_5utr_ct_percent))
+]
+module_base_compositions$utr3_ct_colors <- pal[
+    round(rescale(module_base_compositions$median_3utr_ct_percent))
+]
+
+# gene/color mapping
+utr5_gc_colors <- module_base_compositions$utr5_gc_colors[match(module_colors,
+                                                         module_base_compositions$color)]
+utr3_gc_colors <- module_base_compositions$utr3_gc_colors[match(module_colors,
+                                                         module_base_compositions$color)]
+utr5_ct_colors <- module_base_compositions$utr5_ct_colors[match(module_colors,
+                                                         module_base_compositions$color)]
+utr3_ct_colors <- module_base_compositions$utr3_ct_colors[match(module_colors,
+                                                         module_base_compositions$color)]
+# utr5_len_colors
+if (CONFIG$include_plots) {
+    plotDendroAndColors(gene_tree,
+                        cbind(module_colors, de_contrast, multicopy_status,
+                            utr5_gc_colors, utr3_gc_colors, utr5_ct_colors,
+                            utr3_ct_colors),
+                        groupLabels=c(sprintf("Modules (n=%s)", num_modules),
+                                    sprintf("Red = upregulated\n at %s", "72 hours"),
+                                    "Multicopy genes",
+                                    "5'UTR\nGC Richness (%)", "3'UTR\n GC Richness (%)",
+                                    "5'UTR\nCT Richness (%)", "3'UTR\n CT Richness (%)"),
+                        dendroLabels=FALSE,
+                        cex.colorLabels=cex_color_labels,
+                        cex.main=cex_main,
+                        cex.axis=cex_axis,
+                        cex.lab=cex_lab,
+                        marAll=c(4,8,6,4),
+                        guideHang=0.05)
+}
+
+# median richness for left and right sub-trees
+#med_gc_left =
+```
+
+```{r sequence_composition_stats}
+sequence_composition <- result %>% select(gene_id,
+                                         utr5_gc_percent, utr3_gc_percent,
+                                         utr5_ct_percent, utr3_ct_percent,
+                                         utr5_num_reads,  utr3_num_reads) %>%
+    mutate(branch=ifelse(gene_id %in% dendro_left, 'left', 'right'),
+           is_de=gene_id %in% c(cond2_downreg, cond2_upreg))
+
+# 5'UTR (GC richness)
+sequence_composition %>%
+    group_by(is_de) %>%
+    summarise(
+        median_5utr_gc_richness=median(utr5_gc_percent, na.rm=TRUE) * 1.0,
+        median_3utr_gc_richness=median(utr3_gc_percent, na.rm=TRUE) * 1.0,
+        median_5utr_ct_richness=median(utr5_ct_percent, na.rm=TRUE) * 1.0,
+        median_3utr_ct_richness=median(utr3_ct_percent, na.rm=TRUE) * 1.0
+    )
+```

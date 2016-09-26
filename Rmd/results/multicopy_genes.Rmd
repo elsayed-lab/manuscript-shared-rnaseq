@@ -1,0 +1,30 @@
+```{r multicopy_genes}
+# multicopy genes
+multicopy_status <- rep(0, length(gene_ids))
+multicopy_status[gene_ids %in% multicopy_ids] <- "#333333"
+
+# known families (L. major and T. cruzi)
+match_desc <- function(genes, desc) {
+    return((genes[grepl(desc, genes$description),])$gene_id)
+}
+
+known_families <- c('ATG', 'heatshock', 'phosphoglycanbeta', 'amastin', 'tuzin',
+                   'tryparedoxinperoxidase', '(MASP)', '(MASP, pseudogene)',
+                   'trans-sialidase (pseudogene), putative', 'trans-sialidase, Group V',
+                   'trans-sialidase, putative', 'trans-sialidate, Group II',
+                   'trans-sialidase, Group VIII',
+                   'trans-sialidase, putative (fragment)', 
+                   'mucin TcMUCII, putative', 'mucin TcMUCII (pseudogene)', 
+                   'DGF-1', 'DGF-1, pseudogene', '(DGF-1), putative (fragment)',
+                   'retrotransposon hot spot (RHS) protein', '(RHS, pseudogene)', 
+                   'surface protease GP63, putative', 'surface protease GP63 (pseudogene)', 
+                   'quinonoiddihydropteridinereductase',
+                   'ATP-bindingcassetteproteinsubfamily')
+
+# create palette for multicopy genes
+multicopy_pal <- colorRampPalette(brewer.pal(n=12, name='Set1'))(length(known_families))
+
+for (i in 1:length(known_families)) {
+    multicopy_status[gene_ids %in% match_desc(multicopy_genes, known_families[i])] <- multicopy_pal[i]
+}
+```

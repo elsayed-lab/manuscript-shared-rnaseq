@@ -1,0 +1,139 @@
+**General**
+
+* **host**:                   Host species
+* **pathogen**:               Pathogen species
+* **target**:                 Species being analyzed (host|pathogen)
+* **analysis_name**:          Name to use for the current analysis run; used in
+                              naming the output directory.
+* **use_cache**:              Whether or not to use knitr caching.
+* **verbose**:                If true, addtional information and tables will be
+                              printed.
+* **debug**:                  If true, additional information about data counts
+                              and dimensions will be printed.
+* **save_results**:           Whether or not to save outfile graphs, CSV files,
+                              etc.
+* **include_plots**:          Whether or not to generate plots.
+* **include_tables**:         Whether or not to include table output
+
+**Sample variables of interest**
+
+* **sample_id**:              Name of count table column corresponding to
+                              sample ID
+* **condition**:              Name of count table column corresponding to
+                              sample experimental condition.
+* **batch**:                  Name of count table column corresponding to
+                              a known sample batch covariate (e.g. RNA-Seq
+                              library preparation date.)
+
+**Covariates**
+
+* **covariates**:             A vector containing one or more column names
+                              corresponding to possible sample covariates
+                              (gender, age, infection rate, etc.)
+
+**Plotting**
+
+* **dpi**                     Default plot DPI.
+* **fig_width**               Default figure width to use for plotting.
+* **fig_height**              Default figure height to use for plotting.
+
+**Count tables**
+
+* **input_count_tables**:     Wildcard string specifying location of count
+                              table(s). May be specified as a single CSV or
+                              RData file, or as multiple sample-specific CSV
+                              files.
+
+**Gene filtering**
+
+* **id_filter_string**        Regular expression to use for filtering genes by
+                              id, or NULL if none.
+* **type_filter_string**      Regular expression to use for filtering genes by
+                              type, or NULL if none.
+* **filter_multicopy**:       If set to TRUE, multicopy genes (e.g. MASP) will be
+                              excluded from analysis.
+* **filter_zero_var**:        If enabled, genes with zero-variance across the
+                              samples used will be removed from analysis
+                              following normalization. (default: FALSE).
+
+**Output filepaths**
+
+* **output_dir**:             Base directory to use for saved output.
+
+**Annotations**
+
+* **organism_db**:            Name of Bioconductor OrganismDb package for the 
+                              target species.
+* **organism_genome**:        Genome and version abbreviation (e.g. hg19)
+* **orgdb_key**:              Keytype to use when querying OrganismDb database 
+                              (e.g. "GID" or "ENSEMBL")
+
+**Condition mapping**
+
+* **condition_mapping**       Dataframe specifying condition names to use for 
+                              plots.
+
+```{r default_config_shared, echo=FALSE}
+#
+# Default configuration options: shared settings
+#
+# These are some default options to be used when processing and analyzing
+# transcriptomics data.
+#
+# Some of the settings are data-specific and do not have default values, and
+# must be manually set. These are indicated by NULL values or empty strings, 
+# vectors, or lists.
+# 
+DEFAULT_CONFIG_SHARED <- list(
+    # General
+    'pathogen'            = '',    # Pathogen species name (Example: "T. cruzi")
+    'host'                = '',    # Host species name (Example: "H. sapiens")
+    'target'              = '',    # Target of the analysis [host|pathogen]
+    'analysis_name'       = '',    # Analysis name - a short name to be used for the output folder.
+    'debug'               = FALSE, # If true, will print some extra information to aid in debugging
+    'include_plots'       = TRUE,  # Whether or not to include plots in the output
+    'include_tables'      = TRUE,  # Whether or not to include tables in the output
+    'save_results'        = TRUE,  # Whether or not to save the output results in a separate folder
+    'use_cache'           = TRUE,  # If true, knitr caching will be used to speed up the analysis on subsequent runs
+    'verbose'             = TRUE,  # If true, additional outputs (tables, etc.) will be included in the results
+
+    # Sample variables of interest
+    'sample_id'           = 'HPGL_ID',   # Column name indicating sample ID
+    'condition'           = 'Condition', # Column name indicating sample condition
+    'batch'               = 'Batch',     # Column name indicating sample batch
+
+    # Covariates
+    'covariates'          = c('Batch'),  # Vector of one or more sample covariates to test for correlation with expression
+
+    # Plotting
+    'dpi'                 = 96,       # Default figure DPI
+    'fig_width'           = 1080,     # Default figure width in pixels
+    'fig_height'          = 1080,     # Default figure height in pixels
+
+    # Gene filtering
+    'type_filter_string'  = 'rRNAencoding|snRNAencoding|snoRNAencoding|tRNAencoding', # Regular expression for filtering genes out by type (Optional)
+    'id_filter_string'    = NULL,  # Regular expression for filtering genes by ID (Optional)
+    'low_count_threshold' = 1,     # Minimum number of reads required for a sample to be counted when determining low-count genes
+    'filter_multicopy'    = FALSE, # Whether or not to filter out multicopy genes (parasite only)
+    'filter_zero_var'     = FALSE, # Whether or not to exclude genes with zero variance
+
+    # String indicating one or more count tables to load
+    # Valid options include an RData file with a pre-computed count matrix,
+    # a single CSV file with one column per sample, or a wildcard string
+    # indicating multiple single-sample counts to be loaded.
+    "input_count_tables"  = '',
+
+    # Root directory to use when storing results
+    "output_dir"          = '',
+
+    # Annotations
+    "organism_db"         = "",    # OrganismDb package name containing gene annotations (Example "Homo.sapiens")
+    "organism_genome"     = "",    # Organism genome abbreviation (e.g. hg19, mm10)
+    "orgdb_key"           = "GID", # OrganismDb key type
+
+    # Alternate condition values to use for plotting, etc.
+    # Should consits of a list with "long" and "short" keys indicating
+    # condition aliases to use for plotting, etc.
+    "condition_mapping"   = NULL
+)
+```

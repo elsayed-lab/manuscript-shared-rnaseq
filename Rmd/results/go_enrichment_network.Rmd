@@ -1,0 +1,70 @@
+### Co-expression network modules
+
+Next, let's look for enrichment in the modules detected using WGCNA.
+
+```{r gene_lengths_network}
+# Redefine gene lengths in case DE enrichment was not run
+gene_ids <- rownames(network_counts$final)
+
+# Create gene lengths vector
+gene_lengths <- gene_info$transcript_length
+names(gene_lengths) <- gene_info$gene_id
+```
+
+```{r go_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$module_enrichment}
+# Initiallize parallelization
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check each module for enrichment in GO terms and save result in a list
+module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+    # Measure GO enrichment for module
+    enriched <- tryCatch({
+        # module gene ids
+        in_module_geneids <- gene_ids[module_colors == color]
+    
+        enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                         gene_go_mapping, gene_lengths)
+
+        # Add descriptions
+        #enriched <- merge(enriched, go_term_id_mapping, by='category')
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        # to avoid errors we will just return an empty result set
+        warning(sprintf("GO enrichment failed for module %s", color))
+        cbind(
+            get_enrichment_placeholder(),
+            term=numeric(0),
+            ontology=numeric(0)
+        )
+    })
+    enriched
+}
+names(module_go_enrichment) <- unique(module_colors)
+
+# remove any null entries from the results
+module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_go_enrichment_modules, results='asis', eval=CONFIG$module_enrichment}
+# Print enrichment results
+# TODO: Refactor enrichment results printing logic
+tmp <- cbind(gene=gene_ids, color=module_colors)
+gene_mapping <- merge(gene_go_mapping, tmp, by='gene')
+
+if (CONFIG$include_tables) {
+    print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
+                            go_term_id_mapping, gene_mapping, 'output/modules', 'go',
+                            include_gene_lists=TRUE)
+}
+
+enriched_colors_go <- get_enriched_modules(module_go_enrichment)
+
+# save results
+COEXPRESSION_NETWORK_RESULT$enriched_colors_go <- enriched_colors_go
+COEXPRESSION_NETWORK_RESULT$module_go_enrichment <- module_go_enrichment
+COEXPRESSION_NETWORK_RESULT$go_term_id_mapping <- go_term_id_mapping
+```

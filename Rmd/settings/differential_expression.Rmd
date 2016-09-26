@@ -1,0 +1,62 @@
+**Differential expression count table transformation**
+
+* **de_cpm**:                 Whether to apply counts-per-million
+                              transformation to the count-table used for
+                              differential expression analysis.
+* **de_log2**:                Whether to apply a log2 transformation
+                              to the count-table used for differential
+                              expression analysis.
+* **de_voom**:                Whether to apply a Voom transformation
+                              to the count-table used for differential
+                              expression analysis.
+* **de_quantile_normalize**:  Whether to apply quantile normalization
+                              to the count-table used for differential
+                              expression analysis.
+* **de_ebayes_robust**:       Whether or not to use the 'robust' option
+                              for the eBayes function available in recent
+                              versions of Limma.
+* **de_batch_adjust**:        Method of batch adjustment to use prior to
+                              performing differential expression analysis 
+                              [none|limma|combat].
+
+**Differential expression**
+
+* **de_comparisons**:         A list of two-way differential expression
+                              contrasts to test. This does not play a role in
+                              the construction of the network itself, but can
+                              be used for annotation.
+* **main_comparison**:        When only including a single DE contrast for a
+                              given plot or output, which one should be used?
+
+**Samples to include**
+
+* **samples**:                Table of samples to be used during variance
+                              estimation and differential expression analysis.
+
+```{r default_config_dea, echo=FALSE}
+#
+# Default configuration options: differential expression analysis
+# 
+DEFAULT_CONFIG_DEA <- list(
+    # Dataframe of samples to be analyzed
+    "samples" = NULL,
+
+    # Normalization / data transformation
+    'de_cpm'                = TRUE,   # If true, data will be CPM-transformed
+    'de_log2'               = TRUE,   # If true, data will be log2-transformed
+    'de_voom'               = TRUE,   # If true, data will be voom-adjusted
+    'de_quantile_normalize' = TRUE,   # If true, data will be quantile normalized
+    'de_ebayes_robust'      = TRUE,   # Limma eBayes 'robust' parameter.
+    'de_batch_adjust'       = 'none', # Type of batch adjustment to apply [none|limma|combat]
+
+    # Differential expression
+    "de_max_pvalue"   = 0.05, # Maximum p-value to consider significant for DEA results
+    "de_min_log2fc"   = 0,    # Minimum foldchange required for a gene to be considered significant
+
+    "de_comparisons"  = NULL, # List of 2-element vectors indicating contrasts to analyze
+    "main_comparison" = NULL, # Primary contrast of interst to use when generating figures, etc.
+
+    # Enrichment analysis
+    "de_enrichment"   = TRUE  # Whether or not to check for enrichment of differentially expressed genes
+)
+```

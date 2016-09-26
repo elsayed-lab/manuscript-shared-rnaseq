@@ -1,0 +1,49 @@
+Network properties
+------------------
+
+### Create graph
+
+```{r create_igraph_instance}
+# Create an igraph graph instance
+# NOTE: The amount of memory required to generate an igraph graph instance
+# can be prohibitively high. For instance -- for a ~7000 node weighted network,
+# more than 30GB may be needed.
+g <- graph.adjacency(adjacency_matrix, mode='undirected', weighted=TRUE,
+                    diag=FALSE)
+
+```
+
+### Closeness centrality
+
+First let's compute the closeness centrality for each gene in the network.
+
+(skipping for now because of quadratic scaling...)
+
+```{r closeness_centrality, results='asis', eval=FALSE, include=FALSE}
+closeness_centrality <- cbind(
+    closeness=closeness.estimate(g, cutoff=2),
+    gene_info %>% dplyr::select(gene_id, description)
+)
+# Genes with the highest kleinberg centrality
+if (CONFIG$include_tables) {
+    xkable(closeness_centrality %>% arrange(-closeness))
+}
+```
+
+### Kleinberg's centrality
+
+Next, we will compute Kleinberg's centrality (a modified version of of
+eigenvector centrality.)
+
+```{r kleinberg_centrality, results='asis'}
+hub_scores <- data.frame(hub.score(g)$vector)
+hub_scores <- merge(hub_scores, gene_info %>% dplyr::select(gene_id, description),
+                   by.x='row.names', by='gene_id')
+colnames(hub_scores) <- c('gene_id', 'hub_score', 'description')
+
+# Genes with the highest kleinberg centrality
+if (CONFIG$include_tables) {
+    xkable(hub_scores %>% arrange(-hub_score))
+}
+```
+

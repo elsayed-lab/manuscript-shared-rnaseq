@@ -1,0 +1,60 @@
+### ComBat batch correction
+
+Next, we will use the `ComBat` function from
+[sva](https://bioconductor.org/packages/release/bioc/html/sva.html)
+`r citep('10.1093/bioinformatics/19.2.185')` to model and subtract out
+unwanted variance in our samples due to batch effects.
+
+```{r combat_correction, error=FALSE}
+# For combat, we don't need to include batch just yet and can just fit
+# an intercept term
+combat_model <- model.matrix(~1, data=data.frame(design_condition_only))
+
+# Work-around 2016/06/04: Remove genes with zero variance and those with
+# expression for only one batch
+# See: https://github.com/jtleek/sva-devel/pull/13 and
+#      https://github.com/jtleek/sva-devel/issues/14
+dat <- exprs(counts$normed)
+
+# zero variance
+good_rows <- apply(dat, 1, var) != 0
+
+# zero expression for all batches but one
+for (x in levels(batch)) {
+    good_rows <- good_rows & rowVars(dat[,batch != x]) != 0
+}
+problem_rows <- !good_rows
+
+if (sum(problem_rows) > 0) {
+    cat(sprintf("Found %d genes with problematic variance; these will not be adjusted for batch.\n", sum(problem_rows)))
+
+    # keep a copy of the original data matrix and remove zero var rows
+    dat_orig <- dat
+    dat <- dat[!problem_rows,]
+}
+
+combat_counts <- ComBat(dat=dat, batch=batch,
+                        mod=combat_model, par.prior=TRUE, mean.only=TRUE)
+
+# if genes genes with uniform expression were held out, add them back in now
+if (sum(problem_rows) > 0) {
+    # keep a copy of the original data matrix and remove zero var rows
+    dat_orig[!problem_rows,] <- combat_counts
+    combat_counts <- dat_orig
+}
+
+# Check to make sure output is not all NAs
+if(all(is.na(combat_counts))) {
+    stop("ComBat failed to produce valid output!")
+}
+
+# Remove any rows containing NaN's
+# This should be pretty uncommon (e.g. for par.prior=FALSE, found 1 gene
+# with NaNs after ComBat correction; in this case a gene which had non-zero
+# expression for the old samples, but 0 reads for all of the newer ones.)
+filter_ind <- apply(combat_counts, 1, function(x) { sum(is.na(x)) > 0 })
+combat_counts <- combat_counts[!filter_ind,]
+
+# Replace non-batch-corrected count table
+exprs(counts$batch_adjusted) <- combat_counts
+```

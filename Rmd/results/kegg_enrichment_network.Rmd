@@ -1,0 +1,96 @@
+KEGG Enrichment analysis
+------------------------
+
+Other tools to consider in the future:
+
+- [NetPathMiner](http://bioconductor.org/packages/release/bioc/html/NetPathMiner.html)
+- [ReactomePA](http://bioconductor.org/packages/release/bioc/html/ReactomePA.html)
+- [KEGGprofile](http://www.bioconductor.org/packages/release/bioc/html/KEGGprofile.html)
+- [pathview](http://www.bioconductor.org/packages/release/bioc/html/pathview.html)
+
+First, create a mapping from gene ids to KEGG pathways, similar to what we did
+above with GO terms.
+
+Note that in earlier versions of this analyses, some KEGG identifiers not
+corresponding to genes (e.g. "md:lma_M00005") were included. This has been
+corrected in the current version and thus may lead to different results
+(2015/03/02).
+
+```{r kegg_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Check each module for enrichment in KEGG terms and save result in a list
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check each module for enrichment in GO terms and save result in a list
+module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+    # Measure KEGG enrichment for module
+    enriched <- tryCatch({
+        in_module_geneids <- gene_ids[module_colors == color]
+        enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                        gene_kegg_mapping, gene_lengths)
+        # 2015/11/13
+        # T. cruzi KEGG problem:
+        #
+        # Columns incorrectly names? (category saved as "description")
+        # 
+        #> kegg_pathways$description
+        # [1] "path:tcr00900" "path:tcr01100" "path:tcr01110" "path:tcr01130" "path:tcr03010" "path:tcr00230" "path:tcr03050" "path:tcr04141" "path:tcr01040" "path:tcr01212"
+        #[11] "path:tcr04146" "path:tcr00100" "path:tcr03015" "path:tcr05142" "path:tcr00330" "path:tcr03013" "path:tcr03040" "path:tcr00480" "path:tcr00220" "path:tcr00250"
+        enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
+                                by='category'))
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        warning(sprintf("KEGG enrichment failed for module %s", color))
+        return(get_enrichment_placeholder())
+    })
+    enriched
+}
+
+names(module_kegg_enrichment) <- unique(module_colors)
+
+# remove any null entries from the results
+module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+```
+
+```{r print_kegg_enrichment_modules, results='asis'}
+if (CONFIG$include_tables) {
+    print_enrichment_results(module_kegg_enrichment, module_sizes, 'KEGG pathway',
+                                kegg_pathways %>% select(-description),
+                                'output/modules', 'kegg')
+}
+
+enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)
+
+# save results
+COEXPRESSION_NETWORK_RESULT$enriched_colors_kegg <- enriched_colors_kegg
+COEXPRESSION_NETWORK_RESULT$module_kegg_enrichment <- module_kegg_enrichment
+COEXPRESSION_NETWORK_RESULT$kegg_pathways <- kegg_pathways
+```
+
+```{r enrichment_status}
+go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
+kegg_enrichment_status <- as.numeric(module_colors %in% enriched_colors_kegg)
+```
+
+```{r module_dendrogram_annotated, results='asis', echo=CONFIG$include_plots, eval=CONFIG$include_plots}
+
+cat('\n### Dendrogram with annotated modules\n')
+
+# testing 2014/11/07
+unassigned_modules <- as.numeric(module_colors == 'grey')
+
+plotDendroAndColors(gene_tree,
+                    cbind(module_colors, go_enrichment_status,
+                          kegg_enrichment_status, unassigned_modules),
+                    groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
+                                  #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
+                                  "GO enrichment", "KEGG enrichment", "Unassigned"),
+                    cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                    cex.axis=cex_axis, cex.lab=cex_lab,
+                    dendroLabels=FALSE,
+                    marAll=c(4,8,6,4),
+                    guideHang=0.05)
+```

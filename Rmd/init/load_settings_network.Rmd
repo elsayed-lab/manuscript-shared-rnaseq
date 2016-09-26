@@ -1,0 +1,17 @@
+```{r}
+# Combine into a single configuration
+CONFIG <- merge.list(CONFIG, merge.list(DEFAULT_CONFIG_SHARED,
+                                        merge.list(DEFAULT_CONFIG_DEA,
+                                                   DEFAULT_CONFIG_COEX_NETWORK)))
+rm(DEFAULT_CONFIG_SHARED, DEFAULT_CONFIG_DEA, DEFAULT_CONFIG_COEX_NETWORK)
+```
+
+```{r child='../settings/check_defaults.Rmd'}
+```
+
+```{r knitr_opts}
+opts_chunk$set(fig.width=CONFIG$fig_width/CONFIG$dpi,
+               fig.height=CONFIG$fig_height/CONFIG$dpi,
+               fig.retina=1,
+               dpi=CONFIG$dpi)
+```
