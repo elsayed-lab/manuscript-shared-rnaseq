@@ -181,8 +181,6 @@ print_enrichment_results <- function(results, subset_sizes,
         # keep track of the number of enriched annotations along with their
         # average adjusted p-value.
         total_enriched <- total_enriched + nrow(over_rep) + nrow(under_rep)
-        pvalues <- append(pvalues, c(over_rep$over_represented_pvalue_adj,
-                                    under_rep$over_represented_pvalue_adj))
 
         # module size
         num_genes <- subset_sizes[subset_sizes$module_id == result_name, 'num_genes']
@@ -221,6 +219,9 @@ print_enrichment_results <- function(results, subset_sizes,
             print(kable(out %>% rename(adj_pval=over_represented_pvalue_adj)))
             cat('\n')
 
+            # Add adjusted pvalues to vector for averaging purposes
+            pvalues <- append(pvalues, over_rep$over_represented_pvalue_adj)
+
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
                 cat("\n**Genes responsible for enrichment:**\n")             
@@ -241,6 +242,9 @@ print_enrichment_results <- function(results, subset_sizes,
 
             print(kable(out %>% rename(adj_pval=under_represented_pvalue_adj)))
             cat('\n')
+
+            # Add adjusted pvalues to vector for averaging purposes
+            pvalues <- append(pvalues, under_rep$under_represented_pvalue_adj)
 
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
