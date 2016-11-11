@@ -39,7 +39,10 @@ covariates <- CONFIG$samples %>% select_(.dots=CONFIG$covariates)
 
 # Design matrix; this may be updated later if batch adjustment is enabled
 design_condition_only  <- model.matrix(~0+condition)
-design_including_batch <- model.matrix(~0+condition+batch)
+
+if (length(levels(batch)) > 0) {
+    design_including_batch <- model.matrix(~0+condition+batch)
+}
 ```
 
 ### Load count tables
