@@ -24,7 +24,7 @@ gg_color_hue <- function(n) {
 #' @param datatable_theme Theme to use when rendering the table with datatable
 #'
 #' @return None
-xkable <- function (dat, nrows=15, caption=NULL, digits=getOption("digits"), 
+xkable <- function (dat, nrows=Inf, caption=NULL, digits=getOption("digits"), 
                     str_max_width=Inf, output_format=NA,
                     datatable_style='bootstrap') {
     # Conver to data.frame (necessary for handling mixed datatypes properly)

@@ -19,12 +19,15 @@ for (contrast in names(sig_genes)) {
 
 ```{r save_output}
 # Save raw and final version of the count table
-raw_counts_outfile <- file.path(output_dir, sprintf('%s_counts_raw.csv', 
+raw_counts_unfiltered_outfile <- file.path(output_dir, sprintf('%s_counts_raw_all_genes.csv', 
+                                                    CONFIG$analysis_name)) 
+raw_counts_filtered_outfile <- file.path(output_dir, sprintf('%s_counts_raw_filtered.csv', 
                                                     CONFIG$analysis_name)) 
 final_counts_outfile <- file.path(output_dir, sprintf('%s_counts_final.csv', 
                                                       CONFIG$analysis_name))
 
-write.csv(exprs(de_counts$raw), file=raw_counts_outfile, quote=FALSE)
+write.csv(count_table, file=raw_counts_unfiltered_outfile, quote=FALSE)
+write.csv(exprs(de_counts$raw), file=raw_counts_filtered_outfile, quote=FALSE)
 write.csv(exprs(de_counts$final), file=final_counts_outfile, quote=FALSE)
 
 # Counts by condition (raw)
@@ -38,7 +41,7 @@ for (contrast in names(sig_genes)) {
     x$FC <- 2**(x$logFC)
 
     # Add average expression per condition
-    x <- cbind(x, cond_counts)
+    x <- merge(x, cond_counts, by.x='gene_id', by.y='row.names')
 
     # combine with gene metadata
     output <- join(result, x, by='gene_id')

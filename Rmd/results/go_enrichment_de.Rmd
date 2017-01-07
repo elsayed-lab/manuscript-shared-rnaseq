@@ -55,7 +55,8 @@ stopCluster(cl)
 de_sets <- data.frame(module_id=names(sig_genes), num_genes=num_de)
 
 if (CONFIG$include_tables) {
-    print_enrichment_results(go_results, de_sets, 'GO terms', go_term_id_mapping)
+    print_enrichment_results(go_results, de_sets, 'GO terms',
+                             go_term_id_mapping, str_max_width=50)
 }
 ```
 
