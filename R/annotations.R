@@ -101,6 +101,34 @@ load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL') {
     # Deduplicate (some terms have multiple evidence types)
     go_terms <- go_terms[!duplicated(go_terms),]
 
+    # Get ancestors for each term
+    bp <- as.list(GOBPANCESTOR)
+    mf <- as.list(GOMFANCESTOR)
+    cc <- as.list(GOCCANCESTOR)
+
+    for (i in 1:nrow(go_terms)) {
+        gid   <- go_terms[i, 'GID']
+        go_id <- go_terms[i, 'GO']
+
+        # determine which ontology term is associated with and retrieve
+        # ancestors accordingly
+        if (go_id %in% names(bp)) {
+            ancestors <- bp[[go_id]]
+        } else if (go_id %in% names(mf)) {
+            ancestors <- mf[[go_id]]
+        } else {
+            ancestors <- cc[[go_id]]
+        }
+        go_terms <- rbind(go_terms, data.frame(GID=gid, GO=ancestors))
+    }
+
+    # Drop genes with no associated GO terms
+    go_terms <- go_terms[complete.cases(go_terms),]
+
+    # Deduplicate ancestor terms and drop "all" entries
+    go_terms <- go_terms[!duplicated(go_terms),]
+    go_terms <- go_terms[!go_terms$GO == 'all',]
+
     # OrgDb query results may already include an ONTOLOGY field
     fields <- c('TERM', 'GOID')
 

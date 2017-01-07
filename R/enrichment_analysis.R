@@ -357,15 +357,15 @@ test_gene_enrichment <- function(gene_subset, all_genes,
         result <- goseq(pwf, gene2cat=gene_annotation_mapping)
 
         colnames(result) <- c('category', 'over_represented_pvalue',
-                             'under_represented_pvalue', 'num_in_subset',
-                             'num_total', 'term', 'ontology')
+                              'under_represented_pvalue', 'num_in_subset',
+                              'num_total', 'term', 'ontology')
     } else {
         # Other annotation enrichment
         result <- goseq(pwf, gene2cat=gene_annotation_mapping)
 
         colnames(result) <- c('category', 'over_represented_pvalue',
-                             'under_represented_pvalue', 'num_in_subset',
-                             'num_total')
+                              'under_represented_pvalue', 'num_in_subset',
+                              'num_total')
     }
 
     # Adjust for multiple testing using Benjamini and Hochberg method
