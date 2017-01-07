@@ -145,7 +145,8 @@ print_enrichment_results <- function(results, subset_sizes,
                                      output_dir=NULL,
                                      enrichment_type="",
                                      exclude_unclustered=TRUE,
-                                     include_gene_lists=FALSE) {
+                                     include_gene_lists=FALSE,
+                                     str_max_width=Inf) {
     # counters
     total_enriched <- 0
     pvalues <- c()
@@ -216,7 +217,8 @@ print_enrichment_results <- function(results, subset_sizes,
                 out <- merge(out, annotation_mapping, by='category')
             }
 
-            print(kable(out %>% rename(adj_pval=over_represented_pvalue_adj)))
+            print(xkable(out %>% rename(adj_pval=over_represented_pvalue_adj), 
+                         str_max_width=str_max_width))
             cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
@@ -225,7 +227,8 @@ print_enrichment_results <- function(results, subset_sizes,
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
                 cat("\n**Genes responsible for enrichment:**\n")             
-                print(kable(gene_mapping %>% filter(category %in% out$category & color==result_name)))
+                print(xkable(gene_mapping %>% filter(category %in% out$category & color==result_name),
+                             str_max_width=str_max_width))
                 cat('\n')
             }
         }
@@ -240,7 +243,8 @@ print_enrichment_results <- function(results, subset_sizes,
                 out <- merge(out, annotation_mapping, by='category')
             }
 
-            print(kable(out %>% rename(adj_pval=under_represented_pvalue_adj)))
+            print(xkable(out %>% rename(adj_pval=under_represented_pvalue_adj),
+                         str_max_width=str_max_width))
             cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
@@ -249,7 +253,8 @@ print_enrichment_results <- function(results, subset_sizes,
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
                 cat("\n**Genes responsible for enrichment:**\n")             
-                print(kable(gene_mapping %>% filter(category %in% out$category & color==result_name)))
+                print(xkable(gene_mapping %>% filter(category %in% out$category & color==result_name),
+                             str_max_width=str_max_width))
                 cat('\n')
             }
         }
@@ -257,7 +262,7 @@ print_enrichment_results <- function(results, subset_sizes,
 
     # Summary
     cat(sprintf("\n#### Total enriched %s\n", annotation_name))
-    cat(sprintf("\nTotal: %d (Mean pval=%f)\n", total_enriched,
+    cat(sprintf("\nTotal: %d (Mean adjusted pval=%f)\n", total_enriched,
                   mean(pvalues)))
 }
 
