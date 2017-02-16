@@ -16,6 +16,7 @@ if (CONFIG$pathogen == "L. major") {
     gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_LmajorFriedlin_PredGPI.csv")
     utr5_stats            <- file.path(input_dir, "lmajor_all_combined_5utr.csv")
     utr3_stats            <- file.path(input_dir, "lmajor_all_combined_3utr.csv")
+    go_term_mapping       <- file.path(input_dir, "TriTrypDB-28_LmajorFriedlin_go_terms.csv")
 } else if (CONFIG$pathogen == "T. cruzi") {
     orf_counts            <- file.path(input_dir, "TriTrypDB-8.0_TcruziCLBrenerEsmeraldo_ORF_counts.txt")
     secreted_proteins     <- file.path(input_dir, "TriTrypDB-9.0_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
@@ -23,6 +24,9 @@ if (CONFIG$pathogen == "L. major") {
     gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_TcruziCLBrenerEsmeraldo-like_PredGPI.csv")
     utr5_stats            <- file.path(input_dir, "tcruzi_combined_5utrs.csv")
     utr3_stats            <- file.path(input_dir, "tcruzi_combined_3utrs.csv")
+    go_term_mapping       <- file.path(input_dir, "TriTrypDB-28_TcruziCLBrenerEsmeraldo-like_go_terms.csv")
+} else if (CONFIG$pathogen == "T. brucei") {
+    go_term_mapping       <- file.path(input_dir, "TriTrypDB-30_TbruceiTREU927_go_terms.csv")
 }
 ```
 
@@ -126,18 +130,27 @@ associated with each parasite gene, extracted from TriTrypDB.
 
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations
-go_terms <- load_go_terms(orgdb, rownames(count_table),
-                          keytype=CONFIG$orgdb_key)
+if (file.exists(go_term_mapping)) {
+    go_terms <- read.csv(go_term_mapping, row.names=1)
+} else {
+    # generate gene / go term mapping
+    go_terms <- load_go_terms(orgdb, keys(orgdb, keytype=CONFIG$orgdb_key),
+                              keytype=CONFIG$orgdb_key)
+    colnames(go_terms) <- c('category', 'gene', 'term', 'ontology')
 
-# Gene / GO term mapping
-gene_go_mapping <- as.data.frame(unique(
-    go_terms %>% select(get(CONFIG$orgdb_key), GO, ONTOLOGY)
-))
-colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
+    # cache for future use
+    write.csv(go_terms, file=go_term_mapping)
+}
 
-# Mapping from GO ID to term and ontology
-go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
-colnames(go_term_id_mapping) <- c("category", "term", "ontology")
+# Exclude genes not found in count table
+go_terms <- go_terms[go_terms$gene %in% rownames(count_table),]
+
+# gene / go term mapping
+gene_go_mapping <- as.data.frame(unique(go_terms %>% select(-term)))
+
+
+# go id / term mapping
+go_term_id_mapping <- as.data.frame(unique(go_terms %>% select(-gene)))
 ```
 
 ```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
