@@ -13,6 +13,19 @@
 #' description, strand, and type.
 load_parasite_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
                                       fields=c('CHR', 'GENEDESCRIPTION', 'TXSTRAND', 'TYPE')) {
+
+    # Work-around 2017/02/16
+    # With recent versions of GenomicFeatures, TXTYPE is used in place of TYPE
+    type_query <- AnnotationDbi::select(orgdb, keys=gene_ids, keytype=keytype,
+                                        columns='TYPE')
+
+    if (all(is.na(type_query$TYPE))) {
+        type_var <- 'TXTYPE'
+        fields <- sub('TYPE', 'TXTYPE', fields)
+    } else {
+        type_var <- 'TYPE'
+    }
+
     # Gene info
     # Note querying by "GENEID" will exclude noncoding RNAs
     gene_info <- AnnotationDbi::select(orgdb,
@@ -27,7 +40,7 @@ load_parasite_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
             chromosome  = CHR,
             description = GENEDESCRIPTION,
             strand      = TXSTRAND,
-            type        = TYPE
+            type        = get(type_var)
         )
 }
 
