@@ -26,45 +26,33 @@ CT-richness for all genes for which UTR boundaries could be detected.
 
 ```{r load_utr_lengths}
 # load 5' and 3'UTR lengths
-gene_5utrs <- read.csv(utr5_stats)
-gene_3utrs <- read.csv(utr3_stats)
-
-# Convert NA reads to 0's
-gene_5utrs$num_reads[is.na(gene_5utrs$num_reads)] <- 0
-gene_5utrs$num_reads_primary[is.na(gene_5utrs$num_reads_primary)] <- 0
-
-gene_3utrs$num_reads[is.na(gene_3utrs$num_reads)] <- 0
-gene_3utrs$num_reads_primary[is.na(gene_3utrs$num_reads_primary)] <- 0
-
-# drop secondary site reads column if present (L . major)
-if ('num_reads_secondary' %in% colnames(gene_5utrs)) {
-    gene_5utrs <- gene_5utrs %>% select(-num_reads_secondary)
-    gene_3utrs <- gene_3utrs %>% select(-num_reads_secondary)
-}
-
-colnames(gene_5utrs) <- c('name', 'utr5_len', 'utr5_num_reads',
-                         'utr5_num_reads_primary', 'utr5_gc_percent',
-                         'utr5_ct_percent')
-colnames(gene_3utrs) <- c('name', 'utr3_len', 'utr3_num_reads',
-                         'utr3_num_reads_primary', 'utr3_gc_percent',
-                         'utr3_ct_percent')
+gene_5utrs <- read.csv(utr5_stats) %>% 
+    select(gene_id=gene, utr5_len=length, utr5_num_reads=num_reads,
+           utr5_gc_percent=gc, utr5_ct_percent=ct)
+gene_3utrs <- read.csv(utr3_stats) %>%
+    select(gene_id=gene, utr3_len=length, utr3_num_reads=num_reads,
+           utr3_gc_percent=gc, utr3_ct_percent=ct)
 
 # Add rows with NAs for genes which we have counts for, but no UTR info
-missing_genes <- result$gene_id[!result$gene_id %in% gene_5utrs$name]
+missing_5utr <- result$gene_id[!result$gene_id %in% gene_5utrs$gene_id]
 
-if (length(missing_genes) > 0) {
+if (length(missing_5utr) > 0) {
     gene_5utrs <- rbind(gene_5utrs,
-                    data.frame(name=missing_genes, utr5_len=NA,
-                                utr5_num_reads=NA, utr5_num_reads_primary=NA,
-                                utr5_gc_percent=NA, utr5_ct_percent=NA))
-    gene_3utrs <- rbind(gene_3utrs,
-                    data.frame(name=missing_genes, utr3_len=NA,
-                                utr3_num_reads=NA, utr3_num_reads_primary=NA,
-                                utr3_gc_percent=NA, utr3_ct_percent=NA))
+                        data.frame(gene_id=missing_5utr, utr5_len=NA,
+                                   utr5_num_reads=NA, utr5_gc_percent=NA,
+                                   utr5_ct_percent=NA))
 }
 
-result <- merge(merge(result, gene_3utrs, by.x='gene_id', by.y='name'),
-               gene_5utrs, by.x='gene_id', by.y='name')
+missing_3utr <- result$gene_id[!result$gene_id %in% gene_3utrs$gene_id]
+
+if (length(missing_3utr) > 0) {
+    gene_3utrs <- rbind(gene_3utrs,
+                        data.frame(gene_id=missing_3utr, utr3_len=NA,
+                                   utr3_num_reads=NA, utr3_gc_percent=NA,
+                                   utr3_ct_percent=NA))
+}
+
+result <- merge(merge(result, gene_3utrs, by='gene_id'), gene_5utrs, by='gene_id')
 
 # summary data frame
 module_utrs <- result %>%
