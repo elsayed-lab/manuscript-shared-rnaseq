@@ -63,6 +63,33 @@ module_utrs <- result %>%
                       median_utr3_num_reads=median(utr3_num_reads) * 1.0)
 ```
 
+### UTR length by stage and DE status
+
+```{r utr_length_correlation_with_stage_dea, results='asis'}
+for (stage in names(top_genes)) {
+    x <- top_genes[[stage]]
+    x$de_status <- 'Non-DE'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- 'Up-regulated'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- 'Down-regulated'
+
+    cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage,
+                sum(x$de_status == 'Up-regulated'),
+                sum(x$de_status == 'Down-regulated')))
+
+    utr_info <- result %>% select(gene_id, utr5_len, utr3_len)
+    x <- merge(x, utr_info, by='gene_id') 
+
+    x %>% 
+        group_by(de_status) %>%
+        summarise(
+            median_5utr_len=median(utr5_len, na.rm=TRUE) * 1.0,
+            median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0
+        ) %>%
+        kable %>%
+        print
+}
+```
+
 ### UTR length for primary dendrogram sub-trees
 
 Since the primary divide in the clustering dendrogram often represents a split
@@ -459,14 +486,32 @@ sequence_composition <- result %>% select(gene_id,
                                          utr5_num_reads,  utr3_num_reads) %>%
     mutate(branch=ifelse(gene_id %in% dendro_left, 'left', 'right'),
            is_de=gene_id %in% c(cond2_downreg, cond2_upreg))
+```
 
-# 5'UTR (GC richness)
-sequence_composition %>%
-    group_by(is_de) %>%
-    summarise(
-        median_5utr_gc_richness=median(utr5_gc_percent, na.rm=TRUE) * 1.0,
-        median_3utr_gc_richness=median(utr3_gc_percent, na.rm=TRUE) * 1.0,
-        median_5utr_ct_richness=median(utr5_ct_percent, na.rm=TRUE) * 1.0,
-        median_3utr_ct_richness=median(utr3_ct_percent, na.rm=TRUE) * 1.0
-    )
+### GC and CT richness by stage and DE status
+
+```{r correlation_with_stage_dea, results='asis'}
+for (stage in names(top_genes)) {
+    cat(sprintf('\n#### %s\n\n', stage))
+    x <- top_genes[[stage]]
+    x$de_status <- 'Non-DE'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- 'Up-regulated'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- 'Down-regulated'
+
+    utr_info <- result %>% select(gene_id, 
+                                  utr5_gc_percent, utr5_ct_percent,
+                                  utr3_gc_percent, utr3_ct_percent)
+    x <- merge(x, utr_info, by='gene_id') 
+
+    x %>% 
+        group_by(de_status) %>%
+        summarise(
+            median_5utr_gc_richness=median(utr5_gc_percent, na.rm=TRUE) * 1.0,
+            median_3utr_gc_richness=median(utr3_gc_percent, na.rm=TRUE) * 1.0,
+            median_5utr_ct_richness=median(utr5_ct_percent, na.rm=TRUE) * 1.0,
+            median_3utr_ct_richness=median(utr3_ct_percent, na.rm=TRUE) * 1.0
+        ) %>%
+        kable %>%
+        print
+}
 ```
