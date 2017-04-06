@@ -24,16 +24,11 @@ limma_results <- run_pairwise_limma_analyses(CONFIG$de_comparisons,
                                              min_log2fc=CONFIG$de_min_log2fc,
                                              robust=robust_ebayes)
 
-num_de <- c()
-
-for (contrast in names(limma_results$sig_genes)) {
-    num_de <- append(num_de, nrow(limma_results$sig_genes[[contrast]]))
-}
-limma_results$num_de <- num_de
-
 sig_genes <- limma_results$sig_genes
 top_genes <- limma_results$top_genes
-#num_de    <- limma_results$num_de
+
+num_de <- sapply(sig_genes, nrow)
+limma_results$num_de <- num_de
 
 # Extend results to include gene metadata and condition-specific average expression
 for (contrast in names(sig_genes)) {
