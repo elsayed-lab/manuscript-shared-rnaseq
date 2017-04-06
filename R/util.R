@@ -16,7 +16,7 @@ gg_color_hue <- function(n) {
 #' @author V. Keith Hughitt, \email{khughitt@umd.edu}
 #'
 #' @param dat Data to display
-#' @param nrows Maximum number of rows to show
+#' @param nrows Maximum number of rows to show per page for HTML output
 #' @param caption Caption to use for table
 #' @param digits Number of digits to disply for numeric
 #' @param str_max_width Maximum width for string columns
@@ -24,7 +24,7 @@ gg_color_hue <- function(n) {
 #' @param datatable_theme Theme to use when rendering the table with datatable
 #'
 #' @return None
-xkable <- function (dat, nrows=Inf, caption=NULL, digits=getOption("digits"), 
+xkable <- function (dat, nrows=10, caption=NULL, digits=getOption("digits"), 
                     str_max_width=Inf, output_format=NA,
                     datatable_style='bootstrap') {
     # Conver to data.frame (necessary for handling mixed datatypes properly)
@@ -70,6 +70,6 @@ xkable <- function (dat, nrows=Inf, caption=NULL, digits=getOption("digits"),
                       options=list(pageLength=nrows))
     } else {
         # Static output
-        kable(head(dat, nrows), caption=caption)
+        kable(dat, caption=caption)
     }
 }
