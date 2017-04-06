@@ -18,8 +18,8 @@ assign('get',    base::get, envir=.GlobalEnv)
 # Temp work-around for downed main server (2016/04/25)
 gene_info <- load_host_annotations(orgdb, rownames(count_table),
                                    keytype=CONFIG$orgdb_key,
-                                   biomart_dataset=CONFIG$biomart_dataset,
-                                   biomart_host='useast.ensembl.org')
+                                   biomart_dataset=CONFIG$biomart_dataset)
+                                   #biomart_host='useast.ensembl.org')
                                    #biomart_host='dec2015.archive.ensembl.org')
 
 # Keep only the feature information remaining genes
@@ -58,9 +58,10 @@ package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.htm
 `r citep('10.1038/75556')` terms associated with each parasite gene.
 
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
-# Load GO annotations
+# Load GO annotations (for host species, exclude ancestor terms to speed things
+# up; goseq will handle this for us later on)
 go_terms <- load_go_terms(orgdb, rownames(count_table),
-                          keytype=CONFIG$orgdb_key)
+                          keytype=CONFIG$orgdb_key, include_ancestors=FALSE)
 
 # Gene / GO term mapping
 gene_go_mapping <- as.data.frame(unique(
