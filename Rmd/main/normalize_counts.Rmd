@@ -10,7 +10,8 @@ if (use_voom) {
     # voom data
     voom_result <- voom(exprs(counts$raw), design_condition_only,
                         normalize.method=norm_method,
-                        plot=CONFIG$include_plots)
+                        plot=FALSE)
+                        #plot=CONFIG$include_plots)
 
     # create normed_counts
     exprs(counts$normed) <- voom_result$E
