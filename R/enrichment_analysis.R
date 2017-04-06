@@ -318,6 +318,48 @@ summarize_enrichment_result <- function(enrichment_result) {
     ))
 }
 
+
+#' Function to check for GO enrichment for Human/Mouse
+#'
+#' @author V. Keith Hughitt, \email{khughitt@umd.edu}
+#'
+#' @param gene_subset Subset of gene ids to check for enrichment
+#' @param all_genes All gene ids
+#' @param gene_annotation_mapping Maping from gene ids to annotations (GO
+#'                                terms, KEGG pathways, etc.)
+#' @param gene_lengths Dataframe mapping gene ids to transcript lengths
+#'
+#' @return Dataframe containing enrichment results from a single GOSeq run.
+test_host_go_enrichment <- function(gene_subset, all_genes,
+                                    genome='hg19', id='ensGene') {
+
+    # Subset membership status
+    genes <- as.numeric(all_genes %in% gene_subset)
+    names(genes) <- all_genes
+
+    pwf <- nullp(genes, genome, id, plot.fit=FALSE)
+    result <- goseq(pwf, genome, id)
+
+    colnames(result) <- c('category', 'over_represented_pvalue',
+                            'under_represented_pvalue', 'num_in_subset',
+                            'num_total', 'term', 'ontology')
+
+    result <- cbind(result,
+                   over_represented_pvalue_adj=p.adjust(
+                       result$over_represented_pvalue, method="BH"),
+                   under_represented_pvalue_adj=p.adjust(
+                       result$under_represented_pvalue, method="BH")
+                  )
+
+    # Drop non-significant results
+    result <- result[
+        result$under_represented_pvalue_adj < 0.05 |
+        result$over_represented_pvalue_adj  < 0.05,]
+    
+    return(result)
+}
+
+
 #' Function to check for annotation enrichment in gene subset
 #'
 #' NOTE: GOSeq does not support dplyr tbl_df instances for the gene2cat field
@@ -352,7 +394,7 @@ test_gene_enrichment <- function(gene_subset, all_genes,
 
     # GO enrichment
     if (go_enrichment) {
-        # Note: test.cats parameter is ignore when a gene/term mapping is
+        # Note: test.cats parameter is ignored when a gene/term mapping is
         # specified manually
         result <- goseq(pwf, gene2cat=gene_annotation_mapping)
 
