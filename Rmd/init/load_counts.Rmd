@@ -100,7 +100,7 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
         # Load from sample-specific count tables
         # ids <- regmatches(count_files, regexpr('(HPGL)?[0-9]{4,}', count_files))
         ids <- file_path_sans_ext(basename(count_files))
-        count_table <- hpgl_read_files(ids, count_files)
+        count_table <- expt_read_counts(ids, count_files)
     }
 
     # Make sure HTSeq meta-columns are removed (should be taken care of in
@@ -132,7 +132,7 @@ Sample Overview
 ### Library sizes
 
 ```{r libsizes, include=CONFIG$include_plots, eval=CONFIG$include_plots}
-hpgl_libsize(count_table, design=design_condition_only, scale=FALSE)
+plot_libsize(count_table, condition, scale=FALSE)
 ```
 
 ### Outlier check
