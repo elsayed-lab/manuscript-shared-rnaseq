@@ -98,15 +98,23 @@ load_host_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
 #' 
 #' @param orgdb An OrganismDb instance
 #' @param gene_ids Identifiers of the genes to retrieve annotations for
+#' @param keytype Identifier type
+#' @param include_ancestors If true, ancestor annotations will be included in
+#' mapping.
 #'
 #' @author V. Keith Hughitt, \email{khughitt@umd.edu}
 #'
 #' @return Tibble containing a mapping from gene ID's to GO terms, along with
 #' some additional information about each GO term.
-load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL') {
+load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL', include_ancestors=TRUE) {
     # Each gene may be associated with multiple GO terms (1:many)
     go_terms <- AnnotationDbi::select(orgdb, keys=gene_ids, keytype=keytype,
                                       columns=c("GO"))
+
+    # Remove EVIDENCE/ONTOLOGY fields if they are present to normalize handling
+    # of GO annotations (ONTOLOGY will be added back in later on); Host queries
+    # usually included these fields while parasite databases do not.
+    go_terms <- go_terms[,c(keytype, 'GO')]
 
     # Drop genes with no associated GO terms
     go_terms <- go_terms[complete.cases(go_terms),]
@@ -115,24 +123,35 @@ load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL') {
     go_terms <- go_terms[!duplicated(go_terms),]
 
     # Get ancestors for each term
-    bp <- as.list(GOBPANCESTOR)
-    mf <- as.list(GOMFANCESTOR)
-    cc <- as.list(GOCCANCESTOR)
+    if (include_ancestors) {
+        bp <- as.list(GOBPANCESTOR)
+        mf <- as.list(GOMFANCESTOR)
+        cc <- as.list(GOCCANCESTOR)
 
-    for (i in 1:nrow(go_terms)) {
-        gid   <- go_terms[i, 'GID']
-        go_id <- go_terms[i, 'GO']
+        for (i in 1:nrow(go_terms)) {
+            gene_id   <- go_terms[i, keytype]
+            go_id <- go_terms[i, 'GO']
 
-        # determine which ontology term is associated with and retrieve
-        # ancestors accordingly
-        if (go_id %in% names(bp)) {
-            ancestors <- bp[[go_id]]
-        } else if (go_id %in% names(mf)) {
-            ancestors <- mf[[go_id]]
-        } else {
-            ancestors <- cc[[go_id]]
+            # determine which ontology term is associated with and retrieve
+            # ancestors accordingly. 
+            ancestors = NULL
+
+            if (go_id %in% names(bp)) {
+                ancestors <- bp[[go_id]]
+            } else if (go_id %in% names(mf)) {
+                ancestors <- mf[[go_id]]
+            } else if (go_id %in% names(cc)) {
+                ancestors <- cc[[go_id]]
+            }
+
+            # In some cases, there may be GO terms which have not yet been
+            # included in GO.db and therefor will be skipped.
+            if (!is.null(ancestors)) {
+                rows <- cbind(gene_id, ancestors)
+                colnames(rows) <- c(keytype, 'GO')
+                go_terms <- rbind(go_terms, rows)
+            }
         }
-        go_terms <- rbind(go_terms, data.frame(GID=gid, GO=ancestors))
     }
 
     # Drop genes with no associated GO terms
