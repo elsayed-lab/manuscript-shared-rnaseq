@@ -15,12 +15,12 @@ orgdb <- get(CONFIG$organism_db)
 assign('select', dplyr::select, envir=.GlobalEnv)
 assign('get',    base::get, envir=.GlobalEnv)
 
-# Temp work-around for downed main server (2016/04/25)
+# main ensembl host is down fairly often, so alt host may be needed.
 gene_info <- load_host_annotations(orgdb, rownames(count_table),
                                    keytype=CONFIG$orgdb_key,
-                                   biomart_dataset=CONFIG$biomart_dataset)
-                                   #biomart_host='useast.ensembl.org')
-                                   #biomart_host='dec2015.archive.ensembl.org')
+                                   biomart_dataset=CONFIG$biomart_dataset,
+								   biomart_host='useast.ensembl.org')
+                                   #biomart_host='dec2016.archive.ensembl.org')
 
 # Keep only the feature information remaining genes
 gene_info <- gene_info[gene_info$gene_id %in% rownames(count_table),]

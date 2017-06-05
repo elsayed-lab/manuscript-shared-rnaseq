@@ -153,8 +153,8 @@ Some additional reading regarding the use of power transformation:
 ```{r construct_adjacency_matrix, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
 # Construct adjacency matrix
 adjacency_matrix <- adjacency.fromSimilarity(similarity_matrix,
-                                            power=CONFIG$adjmatrix_power,
-                                            type=CONFIG$network_type)
+                                             power=CONFIG$adjmatrix_power,
+                                             type=CONFIG$network_type)
 
 # Delete similarity matrix to free up memory
 rm(similarity_matrix)

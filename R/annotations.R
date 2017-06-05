@@ -124,6 +124,7 @@ load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL', include_ancestors=
 
     # Get ancestors for each term
     if (include_ancestors) {
+        # Requires GO.db to be loaded
         bp <- as.list(GOBPANCESTOR)
         mf <- as.list(GOMFANCESTOR)
         cc <- as.list(GOCCANCESTOR)
@@ -136,6 +137,11 @@ load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL', include_ancestors=
             # ancestors accordingly. 
             ancestors = NULL
 
+            # this can take a while...
+            if (i %% 1000 == 0) {
+                message(sprintf("Retrieving ancestor terms for entry %d/%d", i, nrow(go_terms)))
+            }
+
             if (go_id %in% names(bp)) {
                 ancestors <- bp[[go_id]]
             } else if (go_id %in% names(mf)) {
@@ -145,7 +151,7 @@ load_go_terms <- function(orgdb, gene_ids, keytype='ENSEMBL', include_ancestors=
             }
 
             # In some cases, there may be GO terms which have not yet been
-            # included in GO.db and therefor will be skipped.
+            # included in GO.db and therefore will be skipped.
             if (!is.null(ancestors)) {
                 rows <- cbind(gene_id, ancestors)
                 colnames(rows) <- c(keytype, 'GO')

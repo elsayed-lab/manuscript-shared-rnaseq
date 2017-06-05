@@ -42,7 +42,9 @@ gene_ids <- rownames(count_table)
 # 2. Because the annotations have not been filtered to remove ncRNAs, many of
 # the genes associated with lncRNAs, etc. will not have a length associated
 # with them.
-ens_ids <- paste0(gene_ids, '.1')
+
+#ens_ids <- paste0(gene_ids, '.1')
+ens_ids <- gene_ids
 gene_info$transcript_length <- getlength(ens_ids, CONFIG$organism_genome, "ensGene")
 
 # Location of external annotation files

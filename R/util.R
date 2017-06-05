@@ -66,8 +66,11 @@ xkable <- function (dat, nrows=10, caption=NULL, digits=getOption("digits"),
 
     # HTML output
     if (nrow(dat) > nrows && output_format == 'html') {
-        DT::datatable(dat, style=datatable_style, caption=caption, 
-                      options=list(pageLength=nrows))
+        options(DT.options=list(pageLength=nrows))
+        # 2017/04/24: printr package not working as expected, reverting to
+        # calling datatable directly
+        #kable(dat, 'html', caption=caption)
+        datatable(dat, caption=caption)
     } else {
         # Static output
         kable(dat, caption=caption)
