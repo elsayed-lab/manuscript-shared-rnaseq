@@ -33,11 +33,11 @@ load_parasite_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
     # Convert to tbl_df and reorganize
     tbl_df(gene_info) %>%
         select(
-            gene_id     = get(keytype),
+            gene_id     = .data[[keytype]],
             chromosome  = CHR,
             description = GENEDESCRIPTION,
             strand      = TXSTRAND,
-            type        = get(type_var)
+            type        = .data[[type_var]]
         )
 }
 
@@ -72,7 +72,7 @@ load_host_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
     # Convert to tbl_df and reorganize
     gene_info <- tbl_df(gene_info) %>%
         select(
-            gene_id     = get(keytype),
+            gene_id     = .data[[keytype]],
             chromosome  = TXCHROM,
             description = GENENAME,
             strand      = TXSTRAND
