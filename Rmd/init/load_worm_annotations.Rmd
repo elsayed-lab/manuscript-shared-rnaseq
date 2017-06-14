@@ -66,7 +66,7 @@ go_terms <- load_go_terms(orgdb, mixed_ids,
 
 # Gene / GO term mapping
 gene_go_mapping <- as.data.frame(unique(
-    go_terms %>% select(get(CONFIG$orgdb_key), GO, ONTOLOGY)
+    go_terms %>% select(.data[[CONFIG$orgdb_key]], GO, ONTOLOGY)
 ))
 colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
 go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
