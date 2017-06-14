@@ -1,5 +1,4 @@
-KEGG Enrichment analysis
-------------------------
+### Co-expression network modules
 
 Other tools to consider in the future:
 

@@ -217,6 +217,7 @@ print_enrichment_results <- function(results, subset_sizes,
                 out <- merge(out, annotation_mapping, by='category')
             }
 
+            cat('\n')
             print(xkable(out %>% rename(adj_pval=over_represented_pvalue_adj), 
                          str_max_width=str_max_width))
             cat('\n')
