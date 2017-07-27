@@ -61,8 +61,8 @@ package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.htm
 
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations
-go_terms <- load_go_terms(orgdb, mixed_ids,
-                          keytype=CONFIG$orgdb_key)
+go_terms <- load_go_terms(orgdb, mixed_ids, keytype=CONFIG$orgdb_key,
+                          include_ancestors=FALSE)
 
 # Gene / GO term mapping
 gene_go_mapping <- as.data.frame(unique(

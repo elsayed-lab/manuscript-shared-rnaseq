@@ -28,6 +28,7 @@ side, genes with a larger variance may just be noise and not as interesting in
 the context of the network.
 
 ```{r combine_replicates}
+# expression averaged across replicates
 combined_counts <- combine_replicates(exprs(network_counts$final), condition)
 combined_counts_table <- cbind(gene_id=rownames(network_counts$final),
                               combined_counts)

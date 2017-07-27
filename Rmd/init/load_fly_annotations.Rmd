@@ -28,7 +28,6 @@ assign('get',    base::get, envir=.GlobalEnv)
 
 ## For now, just grab the description for the first transcript
 #gene_info <- gene_info[!duplicated(gene_info$gene_id),]
-
 gene_info <- read.table(gzfile('../../data/dmelanogaster/fly_genes.txt.gz'),
                         header=TRUE)
 colnames(gene_info) <- c('gene_id', 'external_gene_id', 'chromosome', 'start', 'end',
@@ -69,7 +68,7 @@ package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.htm
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations
 go_terms <- load_go_terms(orgdb, rownames(count_table),
-                          keytype=CONFIG$orgdb_key)
+                          keytype=CONFIG$orgdb_key, include_ancestors=FALSE)
 
 # Gene / GO term mapping
 gene_go_mapping <- as.data.frame(unique(

@@ -37,11 +37,11 @@ go_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
     # Skip contrasts with no differentially expressed genes
     if (length(gene_subset) > 0) {
         # for host go enrichment, take advantage of goseq's internal mapping
-        if (CONFIG$target == 'host') {
+        if (CONFIG$target == 'host' && CONFIG$host != 'C. elegans') {
             test_host_go_enrichment(gene_subset, gene_ids,
                                     CONFIG$organism_genome)
         } else {
-            # parasite GO enrichment
+            # parasite, c. elegans GO enrichment
             test_gene_enrichment(gene_subset, gene_ids, gene_go_mapping, gene_lengths)
         }
     }
