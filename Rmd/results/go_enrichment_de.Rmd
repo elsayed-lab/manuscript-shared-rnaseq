@@ -49,7 +49,6 @@ go_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
 names(go_results) <- names(sig_genes)
 
 # remove any null entries from the results
-# https://economics.wordpress.com/2010/07/12/remove-null-elements-from-a-list-in-r/
 go_results <- go_results[!sapply(go_results, is.null)]
 
 # unregister cpus
@@ -63,7 +62,8 @@ de_sets <- data.frame(module_id=names(sig_genes), num_genes=num_de)
 
 if (CONFIG$include_tables) {
     print_enrichment_results(go_results, de_sets, 'GO terms',
-                             go_term_id_mapping, str_max_width=50)
+                             str_max_width=50,
+                             enrichment_type='go')
 }
 ```
 

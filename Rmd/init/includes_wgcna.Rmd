@@ -4,6 +4,10 @@ library('igraph')
 library('matrixStats')
 library('WGCNA')
 
+# Fix namespace changes
+pmax <- base::pmax
+pmin <- base::pmin
+
 # Enable WGCNA multithreading
 allowWGCNAThreads()
 enableWGCNAThreads()

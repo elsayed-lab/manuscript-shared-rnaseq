@@ -49,7 +49,7 @@ module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq'
 }
 names(module_go_enrichment) <- unique(module_colors)
 
-# remove any null entries from the results
+# remove any null/empty entries from the results
 module_go_enrichment <- module_go_enrichment[!sapply(module_go_enrichment, is.null)]
 
 # unregister cpus
@@ -58,14 +58,13 @@ stopCluster(cl)
 
 ```{r print_go_enrichment_modules, results='asis', eval=CONFIG$module_enrichment}
 # Print enrichment results
-# TODO: Refactor enrichment results printing logic
 tmp <- cbind(gene=gene_ids, color=module_colors)
 gene_mapping <- merge(gene_go_mapping, tmp, by='gene')
 
 if (CONFIG$include_tables) {
     print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
-                            go_term_id_mapping, gene_mapping, 'output/modules', 'go',
-                            include_gene_lists=FALSE)
+                             NULL, gene_mapping, 'output/modules', 'go',
+                             include_gene_lists=FALSE)
 }
 
 enriched_colors_go <- get_enriched_modules(module_go_enrichment)

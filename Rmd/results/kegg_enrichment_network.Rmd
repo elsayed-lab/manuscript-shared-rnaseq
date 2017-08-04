@@ -47,7 +47,7 @@ module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('gose
 
 names(module_kegg_enrichment) <- unique(module_colors)
 
-# remove any null entries from the results
+# remove any null/empty entries from the results
 module_kegg_enrichment <- module_kegg_enrichment[!sapply(module_kegg_enrichment, is.null)]
 
 # unregister cpus
@@ -56,9 +56,10 @@ stopCluster(cl)
 
 ```{r print_kegg_enrichment_modules, results='asis'}
 if (CONFIG$include_tables) {
-    print_enrichment_results(module_kegg_enrichment, module_sizes, 'KEGG pathway',
-                                kegg_pathways %>% select(-description),
-                                'output/modules', 'kegg')
+    print_enrichment_results(module_kegg_enrichment, module_sizes, 
+                             'KEGG pathway',
+                             output_dir='output/modules',
+                             enrichment_type='kegg')
 }
 
 enriched_colors_kegg <- get_enriched_modules(module_kegg_enrichment)

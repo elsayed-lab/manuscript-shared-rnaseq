@@ -57,7 +57,6 @@ stopCluster(cl)
 ```{r print_kegg_enrichment, results='asis'}
 if (CONFIG$include_tables) {
     print_enrichment_results(kegg_enrichment, de_sets, 'KEGG pathway',
-                             kegg_pathways %>% select(-description),
                              str_max_width=28)
 }
 ```

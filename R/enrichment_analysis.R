@@ -156,8 +156,10 @@ print_enrichment_results <- function(results, subset_sizes,
         if (!is.null(gene_mapping)) {
             gene_mapping$category <- sprintf("<a href='http://amigo.geneontology.org/amigo/term/%s'>%s</a>",
                                              gene_mapping$category, gene_mapping$category)
+        }
+        if (!is.null(annotation_mapping)) {
             annotation_mapping$category <- sprintf("<a href='http://amigo.geneontology.org/amigo/term/%s'>%s</a>",
-                                             annotation_mapping$category, annotation_mapping$category)
+                                                   annotation_mapping$category, annotation_mapping$category)
         }
     }
 
@@ -167,6 +169,16 @@ print_enrichment_results <- function(results, subset_sizes,
         # Skip unclustered genes if enabled
         if (exclude_unclustered && result_name == 'grey') {
             next
+        }
+
+        # Skip entries with no enrichment
+        if (nrow(result) == 0) {
+            next
+        }
+
+        # add additional fields
+        if (!is.null(annotation_mapping)) {
+            result <- merge(result, annotation_mapping, by='category')
         }
 
         # For GO enrichment results, make GO: categories hyperlinks
@@ -209,15 +221,14 @@ print_enrichment_results <- function(results, subset_sizes,
 
         # Over-represented terms
         if (nrow(over_rep) > 0) {
-            cat(sprintf("\n**Over-represented %s:**\n", annotation_name))
-            out <- over_rep[,c('category', 'over_represented_pvalue_adj',
-                              'num_in_subset', 'num_total')]
-            # add additional fields and print
-            if (!is.null(annotation_mapping)) {
-                out <- merge(out, annotation_mapping, by='category')
-            }
+            # fields to display
+            out <- over_rep %>% select(-over_represented_pvalue,
+                                       -under_represented_pvalue,
+                                       -under_represented_pvalue_adj)
 
-            cat('\n')
+            cat(sprintf("\n**Over-represented %s:**\n", annotation_name))
+
+            # print
             print(xkable(out %>% rename(adj_pval=over_represented_pvalue_adj), 
                          str_max_width=str_max_width))
             cat('\n')
@@ -228,21 +239,23 @@ print_enrichment_results <- function(results, subset_sizes,
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
                 cat("\n**Genes responsible for enrichment:**\n")             
-                print(xkable(gene_mapping %>% filter(category %in% out$category & color==result_name),
-                             str_max_width=str_max_width))
+                gene_list <- gene_mapping %>% filter(category %in% out$category & 
+                                                     color==result_name)
+                gene_list <- gene_list[!duplicated(gene_list),]
+                                         
+                print(xkable(gene_list, str_max_width=str_max_width))
                 cat('\n')
             }
         }
 
         # Under-represented terms
         if (nrow(under_rep) > 0) {
+            # fields to display
+            out <- under_rep %>% select(-under_represented_pvalue,
+                                        -over_represented_pvalue,
+                                        -over_represented_pvalue_adj)
+
             cat(sprintf("\n**Under-represented %s:**\n", annotation_name))
-            out <- under_rep[,c('category', 'under_represented_pvalue_adj', 
-                               'num_in_subset', 'num_total')]
-            # add additional fields and print
-            if (!is.null(annotation_mapping)) {
-                out <- merge(out, annotation_mapping, by='category')
-            }
 
             print(xkable(out %>% rename(adj_pval=under_represented_pvalue_adj),
                          str_max_width=str_max_width))
@@ -254,8 +267,11 @@ print_enrichment_results <- function(results, subset_sizes,
             # Print specific genes responsible, if requested
             if (include_gene_lists) {
                 cat("\n**Genes responsible for enrichment:**\n")             
-                print(xkable(gene_mapping %>% filter(category %in% out$category & color==result_name),
-                             str_max_width=str_max_width))
+                gene_list <- gene_mapping %>% filter(category %in% out$category & 
+                                                     color==result_name)
+                gene_list <- gene_list[!duplicated(gene_list),]
+                                         
+                print(xkable(gene_list, str_max_width=str_max_width))
                 cat('\n')
             }
         }
