@@ -70,7 +70,12 @@ xkable <- function (dat, nrows=10, caption=NULL, digits=getOption("digits"),
         # 2017/04/24: printr package not working as expected, reverting to
         # calling datatable directly
         #kable(dat, 'html', caption=caption)
-        datatable(dat, caption=caption)
+
+        # 2017/08/04 datatable not rendering to HTML and instead opening in
+        # browser
+        #datatable(dat, caption=caption)
+        #renderDataTable(dat, caption=caption)
+        kable(dat, caption=caption)
     } else {
         # Static output
         kable(dat, caption=caption)

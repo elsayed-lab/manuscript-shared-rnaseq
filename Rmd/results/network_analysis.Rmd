@@ -26,7 +26,7 @@ closeness_centrality <- cbind(
 )
 # Genes with the highest kleinberg centrality
 if (CONFIG$include_tables) {
-    xkable(closeness_centrality %>% arrange(-closeness))
+    datatable(closeness_centrality %>% arrange(-closeness))
 }
 ```
 
@@ -43,7 +43,7 @@ colnames(hub_scores) <- c('gene_id', 'hub_score', 'description')
 
 # Genes with the highest kleinberg centrality
 if (CONFIG$include_tables) {
-    xkable(hub_scores %>% arrange(-hub_score))
+    datatable(hub_scores %>% arrange(-hub_score))
 }
 ```
 

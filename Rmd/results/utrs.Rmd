@@ -119,7 +119,7 @@ rownames(dendro_vs_diffexpr) <- c(
 )
 
 if (CONFIG$include_tables) {
-    xkable(dendro_vs_diffexpr)
+    datatable(dendro_vs_diffexpr)
 }
 ```
 
