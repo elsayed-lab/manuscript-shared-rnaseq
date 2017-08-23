@@ -66,27 +66,80 @@ module_utrs <- result %>%
 ### UTR length by stage and DE status
 
 ```{r utr_length_correlation_with_stage_dea, results='asis'}
+# create lists to store 5' and 3' UTR length bar plots
+utr5_plts <- list()
+utr3_plts <- list()
+
+# iterate over contrasts
 for (stage in names(top_genes)) {
     x <- top_genes[[stage]]
-    x$de_status <- 'Non-DE'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- 'Up-regulated'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- 'Down-regulated'
 
-    cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage,
-                sum(x$de_status == 'Up-regulated'),
-                sum(x$de_status == 'Down-regulated')))
+    num_up <- sum(x$adj.P.Val < 0.05 & x$logFC > 0)
+    num_down <- sum(x$adj.P.Val < 0.05 & x$logFC < 0)
+
+    # skip contrasts with few/no up- and down-regulated genes
+    if (num_up < 10 || num_down < 10) {
+        next
+    }
+
+    # split into up- and down-regulated sets
+    x$de_status <- 'Non-DE'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-regulated (%d genes)', num_up)
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-regulated (%d genes)', num_down)
+
+    cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
     utr_info <- result %>% select(gene_id, utr5_len, utr3_len)
     x <- merge(x, utr_info, by='gene_id') 
 
-    x %>% 
+    # table output
+    xx <- x %>% 
         group_by(de_status) %>%
         summarise(
             median_5utr_len=median(utr5_len, na.rm=TRUE) * 1.0,
             median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0
-        ) %>%
-        kable %>%
-        print
+        )
+
+    print(kable(xx))
+    cat('\n')
+
+    # add newline between de status and gene numbers in plot
+    xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
+
+    # bar plots for contrasts with differing UTR lengths
+    if (abs(xx$median_5utr_len[3] - xx$median_5utr_len[1]) > 10) {    
+        utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_len)) +
+            geom_bar(stat = "identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
+    }
+
+    if (abs(xx$median_3utr_len[3] - xx$median_3utr_len[1]) > 10) {    
+        utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_len)) +
+            geom_bar(stat = "identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
+    }
+}
+```
+
+```{r utr5_length_by_de_status, results='asis'}
+if (length(utr5_plts) > 0) {
+    grid.arrange(grobs=utr5_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 5' UTR length")
+}
+```
+
+```{r utr3_length_by_de_status, results='asis'}
+if (length(utr3_plts) > 0) {
+    grid.arrange(grobs=utr3_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 3' UTR length")
 }
 ```
 
@@ -278,13 +331,15 @@ if (CONFIG$include_plots) {
     plotDendroAndColors(gene_tree,
                         cbind(module_colors, de_contrast,
                               cds_len_colors,
-                              utr5_len_colors, utr5_num_reads_colors,
-                              utr3_len_colors, utr3_num_reads_colors),
+                              #utr5_len_colors, utr5_num_reads_colors,
+                              #utr3_len_colors, utr3_num_reads_colors),
+                              utr5_len_colors, utr3_len_colors),
                         groupLabels=c(sprintf("Modules (n=%s)", num_modules),
                                     sprintf("Red = upregulated\n at %s", "72 hours"),
                                     "CDS Length",
-                                    "5'UTR lengths", "5'UTR # reads",
-                                    "3'UTR lengths", "3'UTR # reads"),
+                                    #"5'UTR lengths", "5'UTR # reads",
+                                    #"3'UTR lengths", "3'UTR # reads"),
+                                    "5'UTR lengths", "3'UTR lengths"),
                         dendroLabels=FALSE,
                         cex.colorLabels=cex_color_labels,
                         cex.main=cex_main,
@@ -457,15 +512,29 @@ utr3_ct_colors <- module_base_compositions$utr3_ct_colors[match(module_colors,
                                                          module_base_compositions$color)]
 # utr5_len_colors
 if (CONFIG$include_plots) {
+    if (CONFIG$filter_multicopy) {
+        groups <- cbind(module_colors, de_contrast,
+                        utr5_gc_colors, utr3_gc_colors, utr5_ct_colors,
+                        utr3_ct_colors)
+        group_labels <- c(sprintf("Modules (n=%s)", num_modules),
+                          sprintf("Red = upregulated\n at %s", "72 hours"),
+                          "5'UTR\nGC Richness (%)", "3'UTR\n GC Richness (%)",
+                          "5'UTR\nCT Richness (%)", "3'UTR\n CT Richness (%)")
+    } else {
+        groups <- cbind(module_colors, de_contrast, multicopy_status,
+                        utr5_gc_colors, utr3_gc_colors, utr5_ct_colors,
+                        utr3_ct_colors)
+        group_labels <- c(sprintf("Modules (n=%s)", num_modules),
+                          sprintf("Red = upregulated\n at %s", "72 hours"),
+                          "Multicopy genes",
+                          "5'UTR\nGC Richness (%)", "3'UTR\n GC Richness (%)",
+                          "5'UTR\nCT Richness (%)", "3'UTR\n CT Richness (%)")
+    }
+
+    # render plot
     plotDendroAndColors(gene_tree,
-                        cbind(module_colors, de_contrast, multicopy_status,
-                            utr5_gc_colors, utr3_gc_colors, utr5_ct_colors,
-                            utr3_ct_colors),
-                        groupLabels=c(sprintf("Modules (n=%s)", num_modules),
-                                    sprintf("Red = upregulated\n at %s", "72 hours"),
-                                    "Multicopy genes",
-                                    "5'UTR\nGC Richness (%)", "3'UTR\n GC Richness (%)",
-                                    "5'UTR\nCT Richness (%)", "3'UTR\n CT Richness (%)"),
+                        groups,
+                        groupLabels=group_labels,
                         dendroLabels=FALSE,
                         cex.colorLabels=cex_color_labels,
                         cex.main=cex_main,
@@ -491,27 +560,129 @@ sequence_composition <- result %>% select(gene_id,
 ### GC and CT richness by stage and DE status
 
 ```{r correlation_with_stage_dea, results='asis'}
+# create lists to store 5' and 3' UTR length bar plots
+utr5_plts <- list()
+utr3_plts <- list()
+
 for (stage in names(top_genes)) {
     cat(sprintf('\n#### %s\n\n', stage))
     x <- top_genes[[stage]]
+
+    # Split into up- and down-regulated sets
+    num_up <- sum(x$adj.P.Val < 0.05 & x$logFC > 0)
+    num_down <- sum(x$adj.P.Val < 0.05 & x$logFC < 0)
+
+    # skip contrasts with few/no up- and down-regulated genes
+    if (num_up < 10 || num_down < 10) {
+        next
+    }
+
     x$de_status <- 'Non-DE'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- 'Up-regulated'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- 'Down-regulated'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-reg\n(%d genes)', num_up)
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-reg\n(%d genes)', num_down)
+
+    cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
     utr_info <- result %>% select(gene_id, 
                                   utr5_gc_percent, utr5_ct_percent,
                                   utr3_gc_percent, utr3_ct_percent)
     x <- merge(x, utr_info, by='gene_id') 
 
-    x %>% 
+    xx <- x %>% 
         group_by(de_status) %>%
         summarise(
             median_5utr_gc_richness=median(utr5_gc_percent, na.rm=TRUE) * 1.0,
             median_3utr_gc_richness=median(utr3_gc_percent, na.rm=TRUE) * 1.0,
             median_5utr_ct_richness=median(utr5_ct_percent, na.rm=TRUE) * 1.0,
             median_3utr_ct_richness=median(utr3_ct_percent, na.rm=TRUE) * 1.0
-        ) %>%
-        kable %>%
-        print
+        )
+    print(kable(xx))
+
+    # add newline between de status and gene numbers in plot
+    xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
+
+    # bar plots
+    if (abs(xx$median_5utr_gc_richness[3] - xx$median_5utr_gc_richness[1]) > 0.035) {    
+        utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_gc_richness)) +
+            geom_bar(stat="identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage)))
+    }
+
+    if (abs(xx$median_3utr_gc_richness[3] - xx$median_3utr_gc_richness[1]) > 0.035) {    
+        utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_gc_richness)) +
+            geom_bar(stat="identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage)))
+    }
 }
 ```
+
+```{r utr5_gc_richness_by_de_status, results='asis'}
+if (length(utr5_plts) > 0) {
+    grid.arrange(grobs=utr5_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 5' UTR GC-richness'")
+}
+```
+
+```{r utr3_gc_richness_by_de_status, results='asis'}
+if (length(utr3_plts) > 0) {
+    grid.arrange(grobs=utr3_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 3' UTR GC-richness'")
+}
+```
+
+### Expression of Genes with Long and Short UTR's
+
+#### 5' UTR
+
+```{r gene_expression_grouped_by_utr_length, results='asis'}
+# expression of top N genes with longest/shortest UTR's
+n <- 50 
+
+short_utrs <- (result %>% arrange(utr5_len) %>% head(n))$gene_id
+long_utrs <- (result %>% arrange(desc(utr5_len)) %>% head(n))$gene_id
+
+dat <- counts_long %>% 
+    filter(gene_id %in% c(short_utrs, long_utrs)) %>%
+    mutate(utr_length=ifelse(gene_id %in% short_utrs, 'short', 'long'))
+
+ggplot(dat, aes(condition, log_cpm, group=gene_id, color=utr_length)) +
+    geom_line()
+
+# average expression of top N genes with longest/shortest UTR's
+dat2 <- dat %>% 
+    group_by(utr_length, condition) %>% 
+    summarise(expr=mean(log_cpm))
+
+ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
+    geom_line()
+```
+
+#### 3' UTR
+
+```{r gene_expression_grouped_by_utr_length, results='asis'}
+# expression of top N genes with longest/shortest UTR's
+n <- 50
+
+short_utrs <- (result %>% arrange(utr3_len) %>% head(n))$gene_id
+long_utrs <- (result %>% arrange(desc(utr3_len)) %>% head(n))$gene_id
+
+dat <- counts_long %>% 
+    filter(gene_id %in% c(short_utrs, long_utrs)) %>%
+    mutate(utr_length=ifelse(gene_id %in% short_utrs, 'short', 'long'))
+
+ggplot(dat, aes(condition, log_cpm, group=gene_id, color=utr_length)) +
+    geom_line()
+
+# average expression of top N genes with longest/shortest UTR's
+dat2 <- dat %>% 
+    group_by(utr_length, condition) %>% 
+    summarise(expr=mean(log_cpm))
+
+ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
+    geom_line()
+```
+
+### UTR lengths by DE status
+
