@@ -10,11 +10,12 @@
 #' @param similarity_matrix Co-expression similarity matrix
 #' @param wgcna_input Original counts used as input to WGCNA
 #' @param main_contrast String specifying primary DE contrast of interest
+#' @param ... List of all relevant enrichment results
 #'
 #' @return Data frame containing module statistics such as median count,
 #'              average total expression, etc.
 create_module_stats_df <- function(result, similarity_matrix, wgcna_input,
-                                   main_contrast) {
+                                   main_contrast, ...) {
     # Module statistics data frame
     # Using dplyr standard-evaluation mode to allow for dynamic variables
     # See http://cran.r-project.org/web/packages/dplyr/vignettes/nse.html
@@ -27,7 +28,7 @@ create_module_stats_df <- function(result, similarity_matrix, wgcna_input,
                             sprintf('round(sum(de_%s) / n(), 2)', main_contrast),
                             mean_expr='round(mean(expr_mean), 2)', 
                             mean_gene_var='round(mean(expr_variance),2)',
-                            mean_tx_len='round(mean(transcript_length), 2)'
+                            mean_tx_len='round(mean(transcript_length, na.rm=TRUE), 2)'
                     )
         colnames(module_stats) <- c('color', 'num_genes', 'num_de', 'ratio_de',
                                     'mean_expr', 'mean_gene_var', 'mean_tx_len')
@@ -71,21 +72,24 @@ create_module_stats_df <- function(result, similarity_matrix, wgcna_input,
         intra_module_var <- append(intra_module_var, round(mean(var(t(expr))), 2))
     }
 
-    # Add GO/KEGG enrichment info
-    num_enriched_go   <- c()
-    num_enriched_kegg <- c()
+    # Create result data frame
+    df <- cbind(module_stats, min_correlation, max_correlation,
+                    mean_correlation, median_correlation, intra_module_var)
 
-    for (color in module_stats$color) {
-        num_enriched_go <- append(num_enriched_go, 
-                                nrow(module_go_enrichment[[color]]))
-        num_enriched_kegg <- append(num_enriched_kegg, 
-                                nrow(module_kegg_enrichment[[color]]))
+    # Add GO/KEGG/etc. enrichment info
+    for (enrichment_type in names(...)) {
+        df <- cbind(df, as.vector(sapply(...[[enrichment_type]], nrow)))
+        cname <- sprintf("num_enriched_%s", enrichment_type)
+        colnames(df) <-  c(colnames(df)[1:ncol(df) - 1], cname)
     }
 
-    # Add columns to module statistics table
-    cbind(module_stats, min_correlation, max_correlation, mean_correlation,
-          median_correlation, num_enriched_go, intra_module_var,
-          num_enriched_kegg)
+    # Add total enriched column
+    df$num_enriched_total <-  df %>% 
+        select(starts_with("num_enriched")) %>% 
+        rowSums 
+
+    # Return result, ordered by number of enrichment results
+    df %>% arrange(desc(num_enriched_total))
 }
 
 #' Outputs separate GraphML files for each co-expression module in the network.
