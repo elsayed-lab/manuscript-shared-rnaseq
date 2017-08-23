@@ -108,6 +108,9 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
     count_table <- count_table[!grepl('^X__', rownames(count_table)),]
 }
 
+# Exclude any missing samples
+#sample_ids <- sample_ids[sample_ids %in% colnames(count_table)]
+
 # Filter out samples not needed for this analysis
 count_table <- count_table[,sample_ids]
 

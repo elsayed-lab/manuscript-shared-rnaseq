@@ -9,6 +9,7 @@ outdir <- file.path(output_dir, 'output')
 
 # Directory to store module enrichment results to
 module_output_dir <- file.path(outdir, 'modules')
+
 if (!dir.exists(module_output_dir)) {
 	dir.create(module_output_dir, recursive=TRUE)
 }

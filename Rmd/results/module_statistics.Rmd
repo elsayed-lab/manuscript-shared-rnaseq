@@ -4,11 +4,39 @@ Module Statistics
 Create a dataframe with module-specific statistics.
 
 ```{r create_module_stats_df}
+# create a list including all enrichment results
+module_enrichment_results <- list(
+    go=module_go_enrichment,
+    kegg=module_kegg_enrichment
+)
+
+if ('leishcyc_pathway_enrichment' %in% ls()) {
+    module_enrichment_results[['leishcyc']] <- leishcyc_pathway_enrichment
+}
+
+if ('cpdb_pathway_enrichment' %in% ls()) {
+    module_enrichment_results[['cpdb']] <- cpdb_pathway_enrichment
+}
+
+if ('module_coreg_enrichment' %in% ls()) {
+    module_enrichment_results[['marbach']] <- module_coreg_enrichment
+}
+
 # temporarily recreate correlation matrix to compute module stats
 correlation_matrix <- cor(t(wgcna_input))
 module_stats <- create_module_stats_df(result, correlation_matrix, wgcna_input,
-                                       main_contrast)
+                                       main_contrast, module_enrichment_results)
 # free up memory
 rm(correlation_matrix)
 gc()
+```
+
+### Functionally enriched modules
+
+```{r results='asis'}
+module_stats %>% 
+    select(-mean_expr, -mean_gene_var, -min_correlation, -max_correlation,
+           -mean_correlation, -median_correlation, -intra_module_var) %>%
+    filter(num_enriched_total > 0) %>%
+    xkable
 ```
