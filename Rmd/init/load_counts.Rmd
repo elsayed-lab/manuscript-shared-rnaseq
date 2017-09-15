@@ -114,6 +114,7 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
 # Filter out samples not needed for this analysis
 count_table <- count_table[,sample_ids]
 
+
 # Drop any rows with NA's (should only occur when comparing counts across
 # experiments where different reference GFF's were used)
 count_table <- count_table[complete.cases(count_table),]
@@ -134,8 +135,14 @@ Sample Overview
 
 ### Library sizes
 
-```{r libsizes, include=CONFIG$include_plots, eval=CONFIG$include_plots}
-plot_libsize(count_table, condition, scale=FALSE)
+```{r libsizes, include=CONFIG$include_plots, eval=CONFIG$include_plots, warning=FALSE}
+# color scheme for plots
+num_conditions <- length(unique(condition))
+
+pal <- colorRampPalette(brewer.pal(num_conditions, 'Dark2'))(num_conditions)
+colors <- pal[as.numeric(condition)]
+
+plot_libsize(count_table, condition, colors=colors, scale=FALSE)
 ```
 
 ### Outlier check

@@ -69,8 +69,8 @@ gene_info_subset$num_reads <- gene_total_counts$total_reads
 gene_info_subset$num_reads_pct <- (gene_total_counts$total_reads / num_reads_total) * 100
 
 gene_info_subset <- gene_info_subset %>% 
-    select(-chromosome, -strand) %>%
-    rename(tx_len=transcript_length)
+    dplyr::select(-chromosome, -strand) %>%
+    dplyr::rename(tx_len=transcript_length)
 
 if (CONFIG$include_tables) {
     xkable(head(gene_info_subset, 10), 

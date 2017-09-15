@@ -103,16 +103,10 @@ Module sizes
 Create a dataframe mapping from module name to number of genes.
 
 ```{r module_stats}
-module_counts <- c()
-for (color in unique(module_colors)) {
-    module_counts <- append(module_counts, sum(module_colors == color))
-}
-
 # create a mapping from module id to number of genes for later use
-module_sizes <- data.frame(
-    module_id=unique(module_colors),
-    num_genes=module_counts
-)
+module_sizes <- setNames(as.data.frame(module_colors), 'module_id') %>% 
+    group_by(module_id) %>% 
+    summarize(num_genes=n())
 ```
 
 ```{r echo=CONFIG$verbose, include=CONFIG$verbose}

@@ -186,3 +186,112 @@ if (CONFIG$include_tables) {
                                 cpdb %>% select(category=external_id, pathway, source))
 }
 ```
+
+Transcript and UTR length impact on expression
+----------------------------------------------
+
+```{r}
+# gene utr lengths
+utr5 <- fiveUTRsByTranscript(orgdb, use.names=TRUE)
+utr5_lengths <- mean(width(ranges(utr5)))
+utr5_lengths <- setNames(as.data.frame(utr5_lengths), 'utr5_len') %>%
+    tibble::rownames_to_column('TXNAME')
+
+utr3 <- threeUTRsByTranscript(orgdb, use.names=TRUE)
+utr3_lengths <- mean(width(ranges(utr3)))
+utr3_lengths <- setNames(as.data.frame(utr3_lengths), 'utr3_len') %>%
+    tibble::rownames_to_column('TXNAME')
+
+# ENSEMBL gene / RefSeq tx mapping
+gene_tx <- AnnotationDbi::select(orgdb, keys=gene_info$gene_id,
+                                 keytype='ENSEMBL', columns='TXNAME')
+
+# Add tx length info
+gene_tx <- merge(gene_tx, merge(utr5_lengths, utr3_lengths, by='TXNAME'),
+                 by='TXNAME')
+
+# UTR lengths at the gene level
+utr_info <- gene_tx %>% 
+    group_by(gene_id=ENSEMBL) %>%
+    summarize(utr5_len=mean(utr5_len), utr3_len=mean(utr3_len))
+```
+
+### UTR length by stage and DE status
+
+```{r utr_length_correlation_with_stage_dea, results='asis'}
+# create lists to store 5' and 3' UTR length bar plots
+utr5_plts <- list()
+utr3_plts <- list()
+
+# iterate over contrasts
+for (stage in names(top_genes)) {
+    x <- top_genes[[stage]]
+
+    num_up <- sum(x$adj.P.Val < 0.05 & x$logFC > 0)
+    num_down <- sum(x$adj.P.Val < 0.05 & x$logFC < 0)
+
+    # skip contrasts with few/no up- and down-regulated genes
+    if (num_up < 10 || num_down < 10) {
+        next
+    }
+
+    # split into up- and down-regulated sets
+    x$de_status <- 'Non-DE'
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-regulated (%d genes)', num_up)
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-regulated (%d genes)', num_down)
+
+    cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
+
+    x <- merge(x, utr_info, by='gene_id') 
+
+    # table output
+    xx <- x %>% 
+        group_by(de_status) %>%
+        summarise(
+            median_5utr_len=median(utr5_len, na.rm=TRUE) * 1.0,
+            median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0
+        )
+
+    print(kable(xx))
+    cat('\n')
+
+    # add newline between de status and gene numbers in plot
+    xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
+
+    # bar plots for contrasts with differing UTR lengths
+    if (abs(xx$median_5utr_len[3] - xx$median_5utr_len[1]) > 10) {    
+        utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_len)) +
+            geom_bar(stat = "identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
+    }
+
+    if (abs(xx$median_3utr_len[3] - xx$median_3utr_len[1]) > 10) {    
+        utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_len)) +
+            geom_bar(stat = "identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
+    }
+}
+```
+
+```{r utr5_length_by_de_status, results='asis'}
+if (length(utr5_plts) > 0) {
+    grid.arrange(grobs=utr5_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 5' UTR length")
+}
+```
+
+```{r utr3_length_by_de_status, results='asis'}
+if (length(utr3_plts) > 0) {
+    grid.arrange(grobs=utr3_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median 3' UTR length")
+}
+```
+

@@ -196,7 +196,7 @@ print_enrichment_results <- function(results, subset_sizes,
         total_enriched <- total_enriched + nrow(over_rep) + nrow(under_rep)
 
         # module size
-        num_genes <- subset_sizes[subset_sizes$module_id == result_name, 'num_genes']
+        num_genes <- subset_sizes$num_genes[subset_sizes$module_id == result_name]
 
         # Print results
         if (nrow(over_rep) > 0 || nrow(under_rep) > 0) {
@@ -229,7 +229,7 @@ print_enrichment_results <- function(results, subset_sizes,
             cat(sprintf("\n**Over-represented %s:**\n", annotation_name))
 
             # print
-            print(xkable(out %>% rename(adj_pval=over_represented_pvalue_adj), 
+            print(xkable(out %>% dplyr::rename(adj_pval=over_represented_pvalue_adj), 
                          str_max_width=str_max_width))
             cat('\n')
 
@@ -257,7 +257,7 @@ print_enrichment_results <- function(results, subset_sizes,
 
             cat(sprintf("\n**Under-represented %s:**\n", annotation_name))
 
-            print(xkable(out %>% rename(adj_pval=under_represented_pvalue_adj),
+            print(xkable(out %>% dplyr::rename(adj_pval=under_represented_pvalue_adj),
                          str_max_width=str_max_width))
             cat('\n')
 

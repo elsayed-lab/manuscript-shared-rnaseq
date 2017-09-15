@@ -82,15 +82,15 @@ cat('\n### Dendrogram with annotated modules\n')
 # testing 2014/11/07
 unassigned_modules <- as.numeric(module_colors == 'grey')
 
-plotDendroAndColors(gene_tree,
-                    cbind(module_colors, go_enrichment_status,
-                          kegg_enrichment_status, unassigned_modules),
-                    groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
-                                  #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
-                                  "GO enrichment", "KEGG enrichment", "Unassigned"),
-                    cex.colorLabels=cex_color_labels, cex.main=cex_main,
-                    cex.axis=cex_axis, cex.lab=cex_lab,
-                    dendroLabels=FALSE,
-                    marAll=c(4,8,6,4),
-                    guideHang=0.05)
+WGCNA::plotDendroAndColors(gene_tree,
+                        cbind(module_colors, go_enrichment_status,
+                            kegg_enrichment_status, unassigned_modules),
+                        groupLabels=c(sprintf("Modules\n(n=%s)", num_modules),
+                                    #sprintf("Red = upregulated at %s", CONFIG$de_cond2),
+                                    "GO enrichment", "KEGG enrichment", "Unassigned"),
+                        cex.colorLabels=cex_color_labels, cex.main=cex_main,
+                        cex.axis=cex_axis, cex.lab=cex_lab,
+                        dendroLabels=FALSE,
+                        marAll=c(4,8,6,4),
+                        guideHang=0.05)
 ```

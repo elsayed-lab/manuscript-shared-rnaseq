@@ -1,5 +1,4 @@
-Marbach2016 TF enrichment
--------------------------
+### Marbach2016 TF enrichment
 
 Next, we will look for enrichment of genes regulated by the same TF, as
 inferred from Marbach *et al* (2016).

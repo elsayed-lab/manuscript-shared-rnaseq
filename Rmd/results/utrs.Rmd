@@ -19,6 +19,9 @@ log_cds_lengths <- log2(module_cds$median_cds_len + 1)
 log_cds_lengths <- log_cds_lengths - min(log_cds_lengths)
 ```
 
+```{r}
+```
+
 ### Load UTR data
 
 Next, we will load a dataset containing UTR lengths, read support, and GC- and
@@ -61,14 +64,24 @@ module_utrs <- result %>%
                       median_utr3_len=median(utr3_len, na.rm=TRUE) * 1.0,
                       median_utr5_num_reads=median(utr5_num_reads) * 1.0,
                       median_utr3_num_reads=median(utr3_num_reads) * 1.0)
+
+# data frame containing only transcript and utr lengths
+length_info <- result %>% 
+    mutate(tx_len=transcript_length + utr5_len + utr3_len) %>%
+    select(gene_id, tx_len, utr5_len, utr3_len, utr5_gc_percent, utr5_ct_percent,
+           utr3_gc_percent, utr3_ct_percent)
 ```
 
 ### UTR length by stage and DE status
 
 ```{r utr_length_correlation_with_stage_dea, results='asis'}
-# create lists to store 5' and 3' UTR length bar plots
+# create lists to store transcript, 5' and 3' UTR length bar plots
+tx_plts <- list()
 utr5_plts <- list()
 utr3_plts <- list()
+
+DOWNREG_IDX <- 1
+UPREG_IDX   <- 3
 
 # iterate over contrasts
 for (stage in names(top_genes)) {
@@ -89,13 +102,13 @@ for (stage in names(top_genes)) {
 
     cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
-    utr_info <- result %>% select(gene_id, utr5_len, utr3_len)
-    x <- merge(x, utr_info, by='gene_id') 
+    x <- merge(x, length_info, by='gene_id') 
 
     # table output
     xx <- x %>% 
         group_by(de_status) %>%
         summarise(
+            median_tx_len=median(tx_len, na.rm=TRUE) * 1.0,
             median_5utr_len=median(utr5_len, na.rm=TRUE) * 1.0,
             median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0
         )
@@ -106,8 +119,8 @@ for (stage in names(top_genes)) {
     # add newline between de status and gene numbers in plot
     xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
 
-    # bar plots for contrasts with differing UTR lengths
-    if (abs(xx$median_5utr_len[3] - xx$median_5utr_len[1]) > 10) {    
+    # bar plots for contrasts with differing Tx and UTR lengths
+    if (abs(xx$median_5utr_len[UPREG_IDX] - xx$median_5utr_len[DOWNREG_IDX]) > 10) {    
         utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_len)) +
             geom_bar(stat = "identity") +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
@@ -116,8 +129,17 @@ for (stage in names(top_genes)) {
                 plot.title=element_text(hjust=0.5))
     }
 
-    if (abs(xx$median_3utr_len[3] - xx$median_3utr_len[1]) > 10) {    
+    if (abs(xx$median_3utr_len[UPREG_IDX] - xx$median_3utr_len[DOWNREG_IDX]) > 10) {    
         utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_len)) +
+            geom_bar(stat = "identity") +
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
+    }
+
+    if (abs(xx$median_tx_len[UPREG_IDX] - xx$median_tx_len[DOWNREG_IDX]) > 10) {    
+        tx_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_tx_len)) +
             geom_bar(stat = "identity") +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
@@ -140,6 +162,14 @@ if (length(utr3_plts) > 0) {
     grid.arrange(grobs=utr3_plts, ncol=3,
                 bottom='Differential Expression Status',
                 left="Median 3' UTR length")
+}
+```
+
+```{r tx_length_by_de_status, results='asis'}
+if (length(tx_plts) > 0) {
+    grid.arrange(grobs=tx_plts, ncol=3,
+                bottom='Differential Expression Status',
+                left="Median transcript length")
 }
 ```
 
@@ -173,41 +203,6 @@ rownames(dendro_vs_diffexpr) <- c(
 
 if (CONFIG$include_tables) {
     datatable(dendro_vs_diffexpr)
-}
-```
-
-### 5'UTR
-
-```{r utr5_length_dendrogram_subtrees}
-# 5'UTR
-utr5_lengths_left  <- (utr_lengths %>% filter(gene_id %in% dendro_left))$utr5_len
-utr5_lengths_right <- (utr_lengths %>% filter(gene_id %in% dendro_right))$utr5_len
-median_5utr_length_left  <- median(utr5_lengths_left, na.rm=TRUE)
-median_5utr_length_right <- median(utr5_lengths_right, na.rm=TRUE)
-
-if (CONFIG$include_plots) {
-    ggplot(utr_lengths, aes(utr5_len, color=branch)) +
-        geom_density() +
-        ggtitle(sprintf("5'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
-                        median_5utr_length_left, median_5utr_length_right))
-}
-```
-
-### 3'UTR
-
-```{r utr3_length_dendrogram_subtrees}
-# 3'UTR
-utr3_lengths_left  <- (result %>% filter(gene_id %in% dendro_left))$utr3_len
-utr3_lengths_right <- (result %>% filter(gene_id %in% dendro_right))$utr3_len
-median_3utr_length_left  <- median(utr3_lengths_left, na.rm=TRUE)
-median_3utr_length_right <- median(utr3_lengths_right, na.rm=TRUE)
-
-#simple_result$logFC   <- round(simple_result$logFC, 2)
-if (CONFIG$include_plots) {
-    ggplot(utr_lengths, aes(utr3_len, color=branch)) +
-        geom_density() +
-        ggtitle(sprintf("3'UTR lengths (median left: %0.2f nt, right: %0.2f nt)",
-                        median_3utr_length_left, median_3utr_length_right))
 }
 ```
 
@@ -583,10 +578,7 @@ for (stage in names(top_genes)) {
 
     cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
-    utr_info <- result %>% select(gene_id, 
-                                  utr5_gc_percent, utr5_ct_percent,
-                                  utr3_gc_percent, utr3_ct_percent)
-    x <- merge(x, utr_info, by='gene_id') 
+    x <- merge(x, length_info, by='gene_id') 
 
     xx <- x %>% 
         group_by(de_status) %>%
@@ -602,16 +594,22 @@ for (stage in names(top_genes)) {
     xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
 
     # bar plots
-    if (abs(xx$median_5utr_gc_richness[3] - xx$median_5utr_gc_richness[1]) > 0.035) {    
+    if (abs(xx$median_5utr_gc_richness[UPREG_IDX] - xx$median_5utr_gc_richness[DOWNREG_IDX]) > 0.035) {    
         utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_gc_richness)) +
             geom_bar(stat="identity") +
-            labs(title=sprintf("%s hrs", gsub('_', ' ', stage)))
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
     }
 
-    if (abs(xx$median_3utr_gc_richness[3] - xx$median_3utr_gc_richness[1]) > 0.035) {    
+    if (abs(xx$median_3utr_gc_richness[UPREG_IDX] - xx$median_3utr_gc_richness[DOWNREG_IDX]) > 0.035) {    
         utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_gc_richness)) +
             geom_bar(stat="identity") +
-            labs(title=sprintf("%s hrs", gsub('_', ' ', stage)))
+            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                plot.title=element_text(hjust=0.5))
     }
 }
 ```
@@ -620,7 +618,7 @@ for (stage in names(top_genes)) {
 if (length(utr5_plts) > 0) {
     grid.arrange(grobs=utr5_plts, ncol=3,
                 bottom='Differential Expression Status',
-                left="Median 5' UTR GC-richness'")
+                left="Median 5' UTR GC-richness")
 }
 ```
 
@@ -628,7 +626,7 @@ if (length(utr5_plts) > 0) {
 if (length(utr3_plts) > 0) {
     grid.arrange(grobs=utr3_plts, ncol=3,
                 bottom='Differential Expression Status',
-                left="Median 3' UTR GC-richness'")
+                left="Median 3' UTR GC-richness")
 }
 ```
 
@@ -636,7 +634,7 @@ if (length(utr3_plts) > 0) {
 
 #### 5' UTR
 
-```{r gene_expression_grouped_by_utr_length, results='asis'}
+```{r gene_expression_grouped_by_5utr_length, results='asis'}
 # expression of top N genes with longest/shortest UTR's
 n <- 50 
 
@@ -656,12 +654,13 @@ dat2 <- dat %>%
     summarise(expr=mean(log_cpm))
 
 ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
-    geom_line()
+       geom_line(size=2) +
+       theme(axis.text=element_text(size=14))
 ```
 
 #### 3' UTR
 
-```{r gene_expression_grouped_by_utr_length, results='asis'}
+```{r gene_expression_grouped_by_3utr_length, results='asis'}
 # expression of top N genes with longest/shortest UTR's
 n <- 50
 
@@ -681,8 +680,33 @@ dat2 <- dat %>%
     summarise(expr=mean(log_cpm))
 
 ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
-    geom_line()
+    geom_line(size=2) + 
+    theme(axis.text=element_text(size=14))
 ```
 
-### UTR lengths by DE status
+### Expression of Genes with Long and Short Total Transcript Lengths
+
+```{r gene_expression_grouped_by_tx_length, results='asis'}
+# expression of top N genes with longest/shortest transcripts
+n <- 50 
+
+short_txs <- (length_info %>% arrange(tx_len) %>% head(n))$gene_id
+long_txs <- (length_info %>% arrange(desc(tx_len)) %>% head(n))$gene_id
+
+dat <- counts_long %>% 
+    filter(gene_id %in% c(short_txs, long_txs)) %>%
+    mutate(txlen=ifelse(gene_id %in% short_txs, 'short', 'long'))
+
+ggplot(dat, aes(condition, log_cpm, group=gene_id, color=txlen)) +
+    geom_line()
+
+# average expression of top N genes with longest/shortest UTR's
+dat2 <- dat %>% 
+    group_by(txlen, condition) %>% 
+    summarise(expr=mean(log_cpm))
+
+ggplot(dat2, aes(condition, expr, group=txlen, color=txlen)) +
+       geom_line(size=2) +
+       theme(axis.text=element_text(size=14))
+```
 
