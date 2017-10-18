@@ -7,16 +7,18 @@
 #' @author V. Keith Hughitt, \email{khughitt@umd.edu}
 #'
 #' @param counts_long long format count table with columns: "id", "condition",
-#' "log_cpm", and "cluster"
+#' "expression", and "cluster"
 #' @param module_colors module assisgnments for each gene
 #' @param module_order order to use when plotting modules
 #' @param max_plots maximum number of plots to display 
 #' @param modules_per_plot number of modules to include in each plot (default: 9)
+#' @param ncols Number of columns to display for grid plots
 #'
 #' @return None
 module_expression_profile_plot <- function (counts_long, module_colors,
                                             module_order=NA, max_plots=50,
-                                            modules_per_plot=9) {
+                                            modules_per_plot=9,
+                                            ncols=3) {
     # determine order of plots
     if (is.na(module_order)) {
         module_order <- unique(module_colors)
@@ -51,10 +53,10 @@ module_expression_profile_plot <- function (counts_long, module_colors,
             line_color <- '#212121'
 
             plots[[counter]] <- module_profile_plot(counts_long, color,
-                                                   line_color=line_color)
+                                                    line_color=line_color)
             counter <- counter + 1
         }
-        print(do.call("grid.arrange", c(plots, ncol=3)))
+        print(do.call("grid.arrange", c(plots, ncol=ncols)))
     }
 
 }
@@ -82,7 +84,7 @@ module_expression_profile_plot <- function (counts_long, module_colors,
 #' @param white_background Whether or not to make the plot background white.
 #'
 #' @return ggplot instance
-module_profile_plot <- function(counts_long, module, expr_var='log_cpm',
+module_profile_plot <- function(counts_long, module, expr_var='expression',
                                 line_width=0.2, font_size=10, 
                                 line_color='#333333',
                                 font_color='#333333', 

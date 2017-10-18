@@ -372,15 +372,19 @@ treecut_params <- sprintf("method=%s,\nmin_module_size=%d,\ndeep_split=%s",
 
 dendrogram_colors <- c(module_colors)
 
+# dendrogram module labels
 if (CONFIG$fig_width < 1920) {
     dendrogram_module_labels <- c(sprintf("Modules (n=%s)", num_modules))
 } else {
     dendrogram_module_labels <- c(sprintf("Modules (n=%s)\n%s", num_modules, treecut_params))
 }
 
+# vector of all row labels for this dendrogram instance
+dendrogram_labels <- dendrogram_module_labels
+
 for (contrast in names(lifecycle_stages)) {
     dendrogram_colors <- cbind(dendrogram_colors, lifecycle_stages[[contrast]])
-    dendrogram_labels <- append(dendrogram_module_labels, contrast)
+    dendrogram_labels <- append(dendrogram_labels, contrast)
 }
 
 #sprintf("%s vs. %s\n Red <- Up-regulated\n Black <- Down-regulated",

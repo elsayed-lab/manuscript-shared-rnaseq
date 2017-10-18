@@ -24,12 +24,12 @@ module_expr <- exprs(network_counts$final)[module_colors == module_color,]
 
 # wide to long
 dat <- melt(module_expr)
-colnames(dat) <- c('gene_id', 'sample_id', 'log_cpm')
+colnames(dat) <- c('gene_id', 'sample_id', 'expression')
 dat$sample_id <- factor(dat$sample_id)
 #dat <- cbind(dat, condition=rep(condition, each=nrow(module_expr)))
 
 ggplot(data=dat,
-    aes(x=sample_id, y=log_cpm, group=gene_id), color='#333') +
+    aes(x=sample_id, y=expression, group=gene_id), color='#333') +
     geom_line(size=0.2) +
     ggtitle(sprintf("Gene Expression Profiles (%s)", module_color)) +
     xlab("Sample") +
@@ -55,7 +55,7 @@ combined_counts_table <- cbind(gene_id=rownames(network_counts$final),
 
 # convert to long
 counts_long <- melt_counts(combined_counts, CONFIG$condition_mapping)
-colnames(counts_long) <- c('gene_id', 'condition', 'log_cpm')
+colnames(counts_long) <- c('gene_id', 'condition', 'expression')
 
 # add clustering results and convert to a factor
 counts_long <- cbind(counts_long, cluster=as.factor(module_colors))

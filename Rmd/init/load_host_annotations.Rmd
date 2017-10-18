@@ -2,8 +2,8 @@
 
 Next, we will use [Bioconductor
 OrganismDb](http://bioconductor.org/packages/release/bioc/html/OrganismDbi.html)
-packages `r citep(citation('OrganismDbi'))` and the R interface to BioMart 
-`r citep(c('10.1186/1471-2164-10-22', '10.1038/nprot.2009.97'))` to retrieve ENSEMBL
+packages `citep(citation('OrganismDbi'))` and the R interface to BioMart 
+`citep(c('10.1186/1471-2164-10-22', '10.1038/nprot.2009.97'))` to retrieve ENSEMBL
 gene annotations for the host.
 
 ```{r load_gene_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
@@ -55,8 +55,8 @@ if (CONFIG$include_tables) {
 
 Next, we will use the [GO.db annotation
 package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.html) 
-`r citep(citation('GO.db'))` to load a table of Gene Ontology (GO) 
-`r citep('10.1038/75556')` terms associated with each parasite gene.
+`citep(citation('GO.db'))` to load a table of Gene Ontology (GO) 
+`citep('10.1038/75556')` terms associated with each parasite gene.
 
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations (for host species, exclude ancestor terms to speed things
@@ -82,7 +82,7 @@ if (CONFIG$include_tables) {
 
 ### Load KEGG annotations
 
-Next, we will load a table of KEGG `r citep('10.1093/nar/27.1.29')` pathway
+Next, we will load a table of KEGG `citep('10.1093/nar/27.1.29')` pathway
 annotations for each host gene.
 
 ```{r load_kegg_annotations}

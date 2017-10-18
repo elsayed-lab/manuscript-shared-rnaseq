@@ -73,6 +73,8 @@ if (CONFIG$include_tables) {
     xkable(data.frame(comparison=names(sig_genes), diff_expr=num_de), 25, 
         caption='Number of differentially expressed genes for each contrast.')
 }
+
+num_sig <- sum(sapply(sig_genes, nrow))
 ```
 
 ### Mean-variance relationship for differentially expressed genes

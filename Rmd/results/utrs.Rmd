@@ -645,13 +645,13 @@ dat <- counts_long %>%
     filter(gene_id %in% c(short_utrs, long_utrs)) %>%
     mutate(utr_length=ifelse(gene_id %in% short_utrs, 'short', 'long'))
 
-ggplot(dat, aes(condition, log_cpm, group=gene_id, color=utr_length)) +
+ggplot(dat, aes(condition, expression, group=gene_id, color=utr_length)) +
     geom_line()
 
 # average expression of top N genes with longest/shortest UTR's
 dat2 <- dat %>% 
     group_by(utr_length, condition) %>% 
-    summarise(expr=mean(log_cpm))
+    summarise(expr=mean(expression))
 
 ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
        geom_line(size=2) +
@@ -671,13 +671,13 @@ dat <- counts_long %>%
     filter(gene_id %in% c(short_utrs, long_utrs)) %>%
     mutate(utr_length=ifelse(gene_id %in% short_utrs, 'short', 'long'))
 
-ggplot(dat, aes(condition, log_cpm, group=gene_id, color=utr_length)) +
+ggplot(dat, aes(condition, expression, group=gene_id, color=utr_length)) +
     geom_line()
 
 # average expression of top N genes with longest/shortest UTR's
 dat2 <- dat %>% 
     group_by(utr_length, condition) %>% 
-    summarise(expr=mean(log_cpm))
+    summarise(expr=mean(expression))
 
 ggplot(dat2, aes(condition, expr, group=utr_length, color=utr_length)) +
     geom_line(size=2) + 
@@ -697,13 +697,13 @@ dat <- counts_long %>%
     filter(gene_id %in% c(short_txs, long_txs)) %>%
     mutate(txlen=ifelse(gene_id %in% short_txs, 'short', 'long'))
 
-ggplot(dat, aes(condition, log_cpm, group=gene_id, color=txlen)) +
+ggplot(dat, aes(condition, expression, group=gene_id, color=txlen)) +
     geom_line()
 
 # average expression of top N genes with longest/shortest UTR's
 dat2 <- dat %>% 
     group_by(txlen, condition) %>% 
-    summarise(expr=mean(log_cpm))
+    summarise(expr=mean(expression))
 
 ggplot(dat2, aes(condition, expr, group=txlen, color=txlen)) +
        geom_line(size=2) +

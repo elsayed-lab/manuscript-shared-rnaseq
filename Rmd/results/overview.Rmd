@@ -110,6 +110,6 @@ module_sizes <- setNames(as.data.frame(module_colors), 'module_id') %>%
 ```
 
 ```{r echo=CONFIG$verbose, include=CONFIG$verbose}
-summary(module_counts)
+summary(module_sizes$num_genes)
 ```
 

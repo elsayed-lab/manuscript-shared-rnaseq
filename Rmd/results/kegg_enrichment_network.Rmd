@@ -26,7 +26,7 @@ module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('gose
     enriched <- tryCatch({
         in_module_geneids <- gene_ids[module_colors == color]
         enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
-                                        gene_kegg_mapping, gene_lengths)
+                                         gene_kegg_mapping, gene_lengths)
         # 2015/11/13
         # T. cruzi KEGG problem:
         #

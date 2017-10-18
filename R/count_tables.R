@@ -132,7 +132,7 @@ melt_counts <- function(counts, condition_mapping, shorten_names=TRUE) {
     counts_long <- melt(counts)
 
     # fix column names
-    names(counts_long) <- c('id', 'condition', 'log_cpm')
+    names(counts_long) <- c('id', 'condition', 'expression')
 
     # If all conditions include a time component (e.g. amast04, amast24)
     # then we can convert the condition to numeric to improve plotting

@@ -9,7 +9,7 @@ Network properties
 # can be prohibitively high. For instance -- for a ~7000 node weighted network,
 # more than 30GB may be needed.
 g <- graph.adjacency(adjacency_matrix, mode='undirected', weighted=TRUE,
-                    diag=FALSE)
+                     diag=FALSE)
 
 ```
 

@@ -361,12 +361,11 @@ test_host_go_enrichment <- function(gene_subset, all_genes,
                             'under_represented_pvalue', 'num_in_subset',
                             'num_total', 'term', 'ontology')
 
-    result <- cbind(result,
-                   over_represented_pvalue_adj=p.adjust(
-                       result$over_represented_pvalue, method="BH"),
-                   under_represented_pvalue_adj=p.adjust(
-                       result$under_represented_pvalue, method="BH")
-                  )
+    result <- cbind(
+        result,
+        over_represented_pvalue_adj=p.adjust(result$over_represented_pvalue, method="BH"),
+        under_represented_pvalue_adj=p.adjust(result$under_represented_pvalue, method="BH")
+    )
 
     # Drop non-significant results
     result <- result[
