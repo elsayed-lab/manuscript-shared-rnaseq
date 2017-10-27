@@ -318,7 +318,10 @@ summarize_enrichment_result <- function(enrichment_result) {
         over_rep <- module[module$over_represented_pvalue_adj < 0.05,]
 
         categories <- append(categories, over_rep$category)
-        pvalues <- append(pvalues, over_rep$over_represented_pvalue_adj)
+
+        # mean adj. p-val, and sum(-log10p(adj. p-vals)) for values <= 0.05;
+        # clip at 1E-10 to avoid -Inf values.
+        pvalues <- append(pvalues, pmax(over_rep$over_represented_pvalue_adj, 10^-10))
 
         # increment enriched module counter
         if (nrow(over_rep) > 0) {
@@ -326,12 +329,16 @@ summarize_enrichment_result <- function(enrichment_result) {
         }
     }
 
+    mean_pval <- round(mean(pvalues), 4)
+    pval_score <- sum(-log10(pvalues))
+
     # return result as a list
     return(list(
         num_enriched_modules = num_enriched_modules,
         total_categories     = length(pvalues),
         unique_categories    = length(unique(categories)),
-        mean_pval            = round(mean(pvalues), 4)
+        mean_pval            = mean_pval,
+        pval_score           = pval_score
     ))
 }
 
