@@ -1,5 +1,25 @@
-Load data
----------
+<!--
+1. Library dependencies:
+- knitcitations
+- tools
+- hpgltools
+
+2. Shared manuscript code dependencies:
+- count_tables.R
+
+3. CONFIG dependencies
+- include_tables
+- samples
+- condition
+- batch
+- covariates
+- sample_id
+- use_cache
+- input_count_tables
+-->
+
+Load RNA-Seq counts
+-------------------
 
 ### Samples
 
@@ -78,7 +98,7 @@ raw and log2cpm transformed count matrices, everything for "normed" onwards
 will depend on the exact parameters of the analysis, as specified in the
 settings.
 
-```{r prepare_count_matrix, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
+```{r prepare_count_matrix, message=FALSE, results='asis', cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
 message("Preparing count matrix")
 
 # Load from RData
@@ -100,7 +120,13 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
         # Load from sample-specific count tables
         # ids <- regmatches(count_files, regexpr('(HPGL)?[0-9]{4,}', count_files))
         ids <- file_path_sans_ext(basename(count_files))
-        count_table <- expt_read_counts(ids, count_files)
+
+        # support old/new hpgltools
+        count_table = tryCatch({
+            read_counts_expt(ids, count_files)
+        }, error = function(e) {
+            expt_read_counts(ids, count_files)
+        })
     }
 
     # Make sure HTSeq meta-columns are removed (should be taken care of in
@@ -121,8 +147,7 @@ count_table <- count_table[complete.cases(count_table),]
 
 # print initial size of raw count table
 if (CONFIG$verbose) {
-    print("Count table size:")
-    dim(count_table)
+    cat(sprintf("**Count table size:** %s\n", dim(count_table)))
 }
 ```
 

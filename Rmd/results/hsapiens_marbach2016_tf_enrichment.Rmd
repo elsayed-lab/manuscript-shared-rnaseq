@@ -3,7 +3,7 @@
 Next, we will look for enrichment of genes regulated by the same TF, as
 inferred from Marbach *et al* (2016).
 
-```{r load_marbach_tf_network_data, results='asis'}
+```{r load_marbach_tf_network_data, results='asis', warnings=FALSE}
 library('tftargets')
 
 # read_table also works in more recent versions of R...
@@ -23,6 +23,7 @@ gene_tf_mapping$gene <- gene_id_mapping$gid_ensembl[ind]
 gene_tf_mapping <- gene_tf_mapping[complete.cases(gene_tf_mapping),]
 
 if (CONFIG$verbose && CONFIG$include_tables) {
+    cat("\nPreview of gene / TF mapping:\n")
     kable(head(gene_tf_mapping))
 }
 ```
@@ -58,10 +59,15 @@ module_coreg_enrichment = module_coreg_enrichment[!sapply(module_coreg_enrichmen
 
 # unregister cpus
 stopCluster(cl)
+
+# module enrichment status
+enriched_colors_marbach <- get_enriched_modules(module_coreg_enrichment)
+marbach_enrichment_status <- as.numeric(module_colors %in%
+                                        enriched_colors_marbach)
 ```
 
 ```{r marbach_enrichment_results, results='asis'}
-if (CONFIG$verbose && CONFIG$include_tables) {
+if (CONFIG$include_tables) {
     print_enrichment_results(module_coreg_enrichment, module_sizes,
                              'Transcription Factor')
 }

@@ -10,12 +10,12 @@ module_enrichment_results <- list(
     kegg=module_kegg_enrichment
 )
 
-if ('leishcyc_pathway_enrichment' %in% ls()) {
-    module_enrichment_results[['leishcyc']] <- leishcyc_pathway_enrichment
+if ('module_leishcyc_enrichment' %in% ls()) {
+    module_enrichment_results[['leishcyc']] <- module_leishcyc_enrichment
 }
 
-if ('cpdb_pathway_enrichment' %in% ls()) {
-    module_enrichment_results[['cpdb']] <- cpdb_pathway_enrichment
+if ('module_cpdb_enrichment' %in% ls()) {
+    module_enrichment_results[['cpdb']] <- module_cpdb_enrichment
 }
 
 if ('module_coreg_enrichment' %in% ls()) {

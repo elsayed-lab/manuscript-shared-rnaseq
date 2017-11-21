@@ -1,19 +1,4 @@
-### Co-expression network modules
-
-Other tools to consider in the future:
-
-- [NetPathMiner](http://bioconductor.org/packages/release/bioc/html/NetPathMiner.html)
-- [ReactomePA](http://bioconductor.org/packages/release/bioc/html/ReactomePA.html)
-- [KEGGprofile](http://www.bioconductor.org/packages/release/bioc/html/KEGGprofile.html)
-- [pathview](http://www.bioconductor.org/packages/release/bioc/html/pathview.html)
-
-First, create a mapping from gene ids to KEGG pathways, similar to what we did
-above with GO terms.
-
-Note that in earlier versions of this analyses, some KEGG identifiers not
-corresponding to genes (e.g. "md:lma_M00005") were included. This has been
-corrected in the current version and thus may lead to different results
-(2015/03/02).
+### KEGG Enrichment
 
 ```{r kegg_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
 # Check each module for enrichment in KEGG terms and save result in a list
@@ -71,7 +56,6 @@ COEXPRESSION_NETWORK_RESULT$kegg_pathways <- kegg_pathways
 ```
 
 ```{r enrichment_status}
-go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
 kegg_enrichment_status <- as.numeric(module_colors %in% enriched_colors_kegg)
 ```
 

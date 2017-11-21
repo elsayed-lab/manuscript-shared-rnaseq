@@ -1,4 +1,4 @@
-```{r create_output_directories, include=FALSE}
+```{r create_output_directories, include=FALSE, message=FALSE, warning=FALSE}
 # create output directory
 timestring <- format(Sys.time(), "%Y%m%d")
 

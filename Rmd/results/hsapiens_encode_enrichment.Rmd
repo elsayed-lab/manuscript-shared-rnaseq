@@ -51,7 +51,7 @@ stopCluster(cl)
 ```
 
 ```{r encode_enrichment_results, results='asis'}
-if (CONFIG$verbose && CONFIG$include_tables) {
+if (CONFIG$include_tables) {
     print_enrichment_results(module_coreg_enrichment, module_sizes,
                              'Transcription Factor')
 }

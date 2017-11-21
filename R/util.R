@@ -26,7 +26,7 @@ gg_color_hue <- function(n) {
 #' @return None
 xkable <- function (dat, nrows=10, caption=NULL, digits=getOption("digits"), 
                     str_max_width=Inf, output_format=NA,
-                    datatable_style='bootstrap') {
+                    datatable_style='bootstrap', ...) {
     # Conver to data.frame (necessary for handling mixed datatypes properly)
     dat <- as.data.frame(dat)
 
@@ -75,9 +75,9 @@ xkable <- function (dat, nrows=10, caption=NULL, digits=getOption("digits"),
         # browser
         #datatable(dat, caption=caption)
         #renderDataTable(dat, caption=caption)
-        kable(dat, caption=caption)
+        kable(dat, caption=caption, ...)
     } else {
         # Static output
-        kable(dat, caption=caption)
+        kable(dat, caption=caption, ...)
     }
 }

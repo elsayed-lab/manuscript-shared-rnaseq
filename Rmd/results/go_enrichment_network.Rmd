@@ -1,10 +1,10 @@
-### Co-expression network modules
+### GO enrichment
 
 Next, let's look for enrichment in the modules detected using WGCNA.
 
 ```{r gene_lengths_network}
 # Redefine gene lengths in case DE enrichment was not run
-gene_ids <- rownames(network_counts$final)
+gene_ids <- gene_info$gene_id
 
 # Create gene lengths vector
 gene_lengths <- gene_info$transcript_length
@@ -68,6 +68,9 @@ if (CONFIG$include_tables) {
 }
 
 enriched_colors_go <- get_enriched_modules(module_go_enrichment)
+
+# Module enrichment status (used in dendrogram plots)
+go_enrichment_status   <- as.numeric(module_colors %in% enriched_colors_go)
 
 # save results
 COEXPRESSION_NETWORK_RESULT$enriched_colors_go <- enriched_colors_go

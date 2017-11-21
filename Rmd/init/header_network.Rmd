@@ -1,4 +1,4 @@
-```{r knitr_settings, include=FALSE}
+```{r knitr_settings, include=FALSE, message=FALSE, warning=FALSE}
 library('knitr')
 opts_knit$set(progress=FALSE, verbose=TRUE)
 opts_chunk$set(error=FALSE)

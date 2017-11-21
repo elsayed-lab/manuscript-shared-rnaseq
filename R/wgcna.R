@@ -1,4 +1,4 @@
-#' Create a dataframe of module statistics
+#g su' Create a dataframe of module statistics
 #'
 #' Constructs a summary dataframe containing some useful module statistics such
 #' as the number of enriched GO terms in the module, the average correlation of

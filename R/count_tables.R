@@ -15,6 +15,9 @@ combine_replicates <- function(counts, conditions) {
     conditions <- as.character(conditions)
     unique_conditions <- unique(conditions)
 
+    # convert to matrix, if not already
+    counts <- as.matrix(counts)
+
     # Create a new data.frame by combining replicates from first condition
     rep_counts <- counts[,conditions == unique_conditions[1]]
 
@@ -76,18 +79,22 @@ counts_per_million <- function (x) {
 #' @return Matrix of module-average expression values across all conditions.
 get_module_averages <- function(counts, module_assignments, method=mean) {
     # data frame with expression and module assignments
-    module_expr <- as.data.frame(exprs(counts) * 1.0)
+    if (class(counts) == 'ExpressionSet') {
+        module_expr <- as.data.frame(exprs(counts) * 1.0)
+    } else {
+        module_expr <- counts
+    }
     module_expr$module <- module_assignments
     module_expr <- tbl_df(module_expr)
 
     # average expression for genes in each module
     module_averages <- as.matrix(module_expr %>% 
         group_by(module) %>% 
-        select(-module) %>% 
-        summarise_each(funs(method)) %>%
+        summarise_all(method) %>%
         select(-module))
 
     # modules appear in dataframe in sorted order
+    # module_averages[,1] == sort(unique(module_assignments))
     rownames(module_averages) <- sort(unique(module_assignments))
 
     return(module_averages)
@@ -138,7 +145,7 @@ melt_counts <- function(counts, condition_mapping, shorten_names=TRUE) {
     # then we can convert the condition to numeric to improve plotting
     if (shorten_names) {
         counts_long$condition <- get_short_condition_names(counts_long$condition,
-                                                          condition_mapping)
+                                                           condition_mapping)
     }
 
     # If non-numeric conditions (e.g. 'procyclic') are included, convert to

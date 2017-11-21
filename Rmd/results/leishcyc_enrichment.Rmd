@@ -18,7 +18,7 @@ cl <- makeCluster(min(12, detectCores() - 1))
 registerDoParallel(cl)
 
 # Check each module for pathway enrichment and save result in a list
-leishcyc_pathway_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+module_leishcyc_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
     # Measure enrichment for module
     enriched <- tryCatch({
         in_module_geneids <- gene_ids[module_colors == color]
@@ -33,10 +33,15 @@ leishcyc_pathway_enrichment <- foreach(color=unique(module_colors), .packages=c(
     })
     enriched
 }
-names(leishcyc_pathway_enrichment) <- unique(module_colors)
+names(module_leishcyc_enrichment) <- unique(module_colors)
 
 # remove any null entries from the results
-leishcyc_pathway_enrichment <- leishcyc_pathway_enrichment[!sapply(leishcyc_pathway_enrichment, is.null)]
+module_leishcyc_enrichment <- module_leishcyc_enrichment[!sapply(module_leishcyc_enrichment, is.null)]
+
+# module enrichment status
+enriched_colors_leishcyc <- get_enriched_modules(module_leishcyc_enrichment)
+leishcyc_enrichment_status <- as.numeric(module_colors %in%
+                                         enriched_colors_leishcyc)
 
 # unregister cpus
 stopCluster(cl)
@@ -44,7 +49,7 @@ stopCluster(cl)
 
 ```{r leishcyc_enrichment_results, results='asis'}
 if (CONFIG$include_tables) {
-    print_enrichment_results(leishcyc_pathway_enrichment, module_sizes, 
+    print_enrichment_results(module_leishcyc_enrichment, module_sizes, 
                              'LeishCyc Pathway', output_dir='output/modules',
                              enrichment_type='leishcyc')
 }

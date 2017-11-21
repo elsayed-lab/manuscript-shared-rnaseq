@@ -201,7 +201,7 @@ if (CONFIG$pathogen %in% c("L. major", "T. cruzi")) {
 
     # print counts for each chromosome
     multicopy_ch_counts <- as.data.frame(sort(table(multicopy_genes$chromosome), decreasing=TRUE))
-    colnames(multicopy_ch_counts) <- c("Number of genes")
+    colnames(multicopy_ch_counts) <- c("Chromosome", "Number of genes")
 
     # will only show top 15 chromosomes / contigs if more than this many contain
     # multicopy genes.

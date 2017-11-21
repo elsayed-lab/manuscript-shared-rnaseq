@@ -40,7 +40,7 @@ featureNames(feature_data) <- gene_info$gene_id
 de_counts = list()
 
 de_counts$raw <- new("ExpressionSet", exprs=assay_data,
-                        phenoData=pheno_data, featureData=feature_data)
+                     phenoData=pheno_data, featureData=feature_data)
 ```
 
 ```{r include=CONFIG$verbose, echo=CONFIG$verbose}

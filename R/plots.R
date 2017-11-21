@@ -20,7 +20,7 @@ module_expression_profile_plot <- function (counts_long, module_colors,
                                             modules_per_plot=9,
                                             ncols=3) {
     # determine order of plots
-    if (is.na(module_order)) {
+    if (any(is.na(module_order))) {
         module_order <- unique(module_colors)
     }
 
@@ -162,6 +162,7 @@ module_profile_plot <- function(counts_long, module, expr_var='expression',
               axis.title=base_font,
               axis.title.x=base_font,
               axis.title.y=base_font,
+              plot.margin=unit(c(5.5, 8.5, 5.5, 5.5), "pt"),
               legend.text=base_font)
 
     return(plt)

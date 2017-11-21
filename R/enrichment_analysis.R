@@ -230,7 +230,7 @@ print_enrichment_results <- function(results, subset_sizes,
 
             # print
             print(xkable(out %>% dplyr::rename(adj_pval=over_represented_pvalue_adj), 
-                         str_max_width=str_max_width))
+                         str_max_width=str_max_width, row.names=FALSE))
             cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
@@ -243,7 +243,7 @@ print_enrichment_results <- function(results, subset_sizes,
                                                      color==result_name)
                 gene_list <- gene_list[!duplicated(gene_list),]
                                          
-                print(xkable(gene_list, str_max_width=str_max_width))
+                print(xkable(gene_list, str_max_width=str_max_width, row.names=FALSE))
                 cat('\n')
             }
         }
@@ -258,7 +258,7 @@ print_enrichment_results <- function(results, subset_sizes,
             cat(sprintf("\n**Under-represented %s:**\n", annotation_name))
 
             print(xkable(out %>% dplyr::rename(adj_pval=under_represented_pvalue_adj),
-                         str_max_width=str_max_width))
+                         str_max_width=str_max_width, row.names=FALSE))
             cat('\n')
 
             # Add adjusted pvalues to vector for averaging purposes
@@ -271,7 +271,7 @@ print_enrichment_results <- function(results, subset_sizes,
                                                      color==result_name)
                 gene_list <- gene_list[!duplicated(gene_list),]
                                          
-                print(xkable(gene_list, str_max_width=str_max_width))
+                print(xkable(gene_list, str_max_width=str_max_width, row.names=FALSE))
                 cat('\n')
             }
         }
@@ -279,8 +279,13 @@ print_enrichment_results <- function(results, subset_sizes,
 
     # Summary
     cat(sprintf("\n#### Total enriched %s\n", annotation_name))
-    cat(sprintf("\nTotal: %d (Mean adjusted pval=%f)\n", total_enriched,
-                  mean(pvalues)))
+    
+    if (total_enriched > 0) {
+        cat(sprintf("\nTotal: %d (Total -log10(adj.pval) = %f)\n", total_enriched,
+                    sum(-log10(pmax(pvalues, 1E-10)))))
+    } else {
+        cat("\nTotal: 0\n")
+    }
 }
 
 #' Compute summary statistics for enrichment analysis.

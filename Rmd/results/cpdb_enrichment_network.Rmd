@@ -1,0 +1,84 @@
+### ConsensusPathDB pathway enrichment
+
+ConsensusPathDB (CPDB) integrated network information from numerous resources.
+Below, we will use the combined pathway mapping they offer to look for
+pathway enrichment of modules.
+
+```{r load_cpdb, results='asis'}
+# load data
+if (CONFIG$host == 'H. sapiens') {
+    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'human', '30',
+                            'CPDB_pathways_genes_human.tab')
+} else if (CONFIG$host == 'M. musculus') {
+    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'mouse', 'mm9',
+                            'CPDB_pathways_genes_mouse.tab')
+}
+
+# load full CPDB mapping
+cpdb <- read_tsv(cpdb_infile)
+
+# check for pre-parsed mapping
+cpdb_rdata <- sub('.tab', '.RData', cpdb_infile)
+
+if (file.exists(cpdb_rdata)) {
+    load(cpdb_rdata)
+} else {
+    # convert list of genes to a single dataframe
+    cpdb_mapping <- data.frame()
+
+    for (i in 1:nrow(cpdb)) {
+        category <- cpdb$external_id[i]
+        gene_id <- strsplit(cpdb$ensembl_ids[i], ',')[[1]]
+
+        if (length(gene_id) > 0) {
+            cpdb_mapping <- rbind(cpdb_mapping, cbind(category, gene_id))
+        }
+    }
+
+    # save binary version to speed up future analyses
+    save(cpdb_mapping, file=cpdb_rdata)
+}
+```
+
+```{r cpdb_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Initialize CPUs
+cl <- makeCluster(min(12, detectCores() - 1))
+registerDoParallel(cl)
+
+# Check each module for pathway enrichment and save result in a list
+module_cpdb_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
+    # Measure enrichment for module
+    enriched <- tryCatch({
+        in_module_geneids <- gene_ids[module_colors == color]
+        enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                        cpdb_mapping, gene_lengths)
+    }, error=function(e) {
+        # goseq fails in some cases; have not been able to track down cause yet
+        # Note: goseq will also fail if supplied with a dplyr tbl_df so first 
+        # make sure that is not the case
+        warning(sprintf("ConsensusPathDB enrichment failed for module %s", color))
+        return(get_enrichment_placeholder())
+    })
+    enriched
+}
+names(module_cpdb_enrichment) <- unique(module_colors)
+
+# remove any null entries from the results
+module_cpdb_enrichment <- module_cpdb_enrichment[!sapply(module_cpdb_enrichment, is.null)]
+
+# unregister cpus
+stopCluster(cl)
+
+# module enrichment status
+enriched_colors_cpdb <- get_enriched_modules(module_cpdb_enrichment)
+cpdb_enrichment_status <- as.numeric(module_colors %in% enriched_colors_cpdb)
+```
+
+```{r cpdb_enrichment_results, results='asis'}
+if (CONFIG$include_tables) {
+    print_enrichment_results(module_cpdb_enrichment, module_sizes,
+                                'ConsensusPathDB Pathway',
+                                cpdb %>% select(category=external_id, pathway, source))
+}
+```
+
