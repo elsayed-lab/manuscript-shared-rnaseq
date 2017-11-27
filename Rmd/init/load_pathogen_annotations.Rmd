@@ -11,7 +11,7 @@ input_dir <- file.path('..', '..', 'data', species_dir)
 # Pathogen-specific data and annotations
 if (CONFIG$pathogen == "L. major") {
     orf_counts            <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_ORF_counts.txt")
-    secreted_proteins     <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_SignalP.csv")
+    secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_LmajorFriedlin_SignalP.csv")
     membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_TMHMM.csv")
     gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_LmajorFriedlin_PredGPI.csv")
     utr5_stats            <- file.path(input_dir, "lmajor_all_combined_5utr.csv")
@@ -19,7 +19,7 @@ if (CONFIG$pathogen == "L. major") {
     go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_go_terms.csv")
 } else if (CONFIG$pathogen == "T. cruzi") {
     orf_counts            <- file.path(input_dir, "TriTrypDB-8.0_TcruziCLBrenerEsmeraldo_ORF_counts.txt")
-    secreted_proteins     <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
+    secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
     membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_TMHMM.csv")
     gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_TcruziCLBrenerEsmeraldo-like_PredGPI.csv")
     utr5_stats            <- file.path(input_dir, "tcruzi_combined_5utrs.csv")
