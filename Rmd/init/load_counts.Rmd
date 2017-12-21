@@ -102,10 +102,18 @@ settings.
 message("Preparing count matrix")
 
 # Load from RData
-if (file_ext(CONFIG$input_count_tables) == 'RData') {
+if (tolower(file_ext(CONFIG$input_count_tables)) == 'rdata') {
     load(CONFIG$input_count_tables)
-    count_table <- exprs(get(CONFIG$input_count_var))
-    attributes(count_table)$names <- NULL
+    dat <- get(CONFIG$input_count_var)
+
+    # ExpressionSet
+    if (class(dat) == 'ExpressionSet') {
+        count_table <- exprs(dat)
+        attributes(count_table)$names <- NULL
+    } else if (class(dat) == 'RangedSummarizedExperiment') {
+        # RangedSummarizedExperiment
+        count_table <- SummarizedExperiment::assays(dat)$counts
+    }
 } else  {
     # Find all matching count files
     count_files <- Sys.glob(CONFIG$input_count_tables)
@@ -123,8 +131,19 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
 
         # support old/new hpgltools
         count_table = tryCatch({
-            read_counts_expt(ids, count_files)
+            res <- read_counts_expt(ids, count_files)
+
+            # newer version (dec 2017)
+            if (is.list(res)) {
+                count_table <- as.data.frame(res$count_table)
+                row.names(count_table) <- count_table$rownames
+                as.matrix(count_table[,colnames(count_table) != 'rownames'])
+            } else {
+                # new version
+                res
+            }
         }, error = function(e) {
+            # old hpgltool
             expt_read_counts(ids, count_files)
         })
     }
@@ -134,12 +153,17 @@ if (file_ext(CONFIG$input_count_tables) == 'RData') {
     count_table <- count_table[!grepl('^X__', rownames(count_table)),]
 }
 
+# Remove ENSEMBL gene id version, if present
+# e.g. "ENSG00000005421.8" -> "ENSG00000005421"
+if (startsWith(rownames(count_table)[1], 'ENS')) {
+    rownames(count_table) <- sub('\\.[0-9]*', '', rownames(count_table))
+}
+
 # Exclude any missing samples
 #sample_ids <- sample_ids[sample_ids %in% colnames(count_table)]
 
 # Filter out samples not needed for this analysis
 count_table <- count_table[,sample_ids]
-
 
 # Drop any rows with NA's (should only occur when comparing counts across
 # experiments where different reference GFF's were used)
@@ -164,7 +188,7 @@ Sample Overview
 # color scheme for plots
 num_conditions <- length(unique(condition))
 
-pal <- colorRampPalette(brewer.pal(num_conditions, 'Dark2'))(num_conditions)
+pal <- colorRampPalette(RColorBrewer::brewer.pal(num_conditions, 'Dark2'))(num_conditions)
 colors <- pal[as.numeric(condition)]
 
 plot_libsize(count_table, condition, colors=colors, scale=FALSE)
