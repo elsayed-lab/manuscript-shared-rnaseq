@@ -80,7 +80,7 @@ load_host_annotations <- function(orgdb, gene_ids, keytype='ENSEMBL',
 
     # Get gene biotype from biomaRt
     ensembl_mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",
-                            host=biomart_host, biomart_dataset)
+                            dataset=biomart_dataset, host=biomart_host)
     biomart <- useDataset(biomart_dataset, mart=ensembl_mart)
 
     biomart_genes <- getBM(attributes=c("ensembl_gene_id", "gene_biotype"), 

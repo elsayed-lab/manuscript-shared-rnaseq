@@ -102,13 +102,13 @@ sum(similarity_matrix)
 
 ```{r similarity_matrix_density, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi}
 if (CONFIG$include_plots) {
-    plot(density(similarity_matrix))
+    plot(density(sample(similarity_matrix, 1E4)))
 }
 ```
 
 ```{r similarity_matrix_heatmap, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi, dev='png'}
 # Similarity matrix plot, downsampled to speed things up
-heatmap_indices <- sample(nrow(similarity_matrix), min(1600, nrow(similarity_matrix)))
+heatmap_indices <- sample(nrow(similarity_matrix), min(800, nrow(similarity_matrix)))
 
 if (CONFIG$include_plots) {
     heatmap.2(t(similarity_matrix[heatmap_indices, heatmap_indices]),

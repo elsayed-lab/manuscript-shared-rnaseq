@@ -96,7 +96,7 @@ output_module_enrichment_results(module_kegg_enrichment, module_output_dir,
                                  'kegg', kegg_pathways %>% select(-description))
 
 if (CONFIG$target == "pathogen" && CONFIG$pathogen == "L. major") {
-    output_module_enrichment_results(leishcyc_pathway_enrichment,
+    output_module_enrichment_results(module_leishcyc_enrichment,
                                      module_output_dir, 'leishcyc')
 }
 

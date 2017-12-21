@@ -51,7 +51,7 @@ module_cpdb_enrichment <- foreach(color=unique(module_colors), .packages=c('gose
     enriched <- tryCatch({
         in_module_geneids <- gene_ids[module_colors == color]
         enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
-                                        cpdb_mapping, gene_lengths)
+                                         cpdb_mapping, gene_lengths)
     }, error=function(e) {
         # goseq fails in some cases; have not been able to track down cause yet
         # Note: goseq will also fail if supplied with a dplyr tbl_df so first 

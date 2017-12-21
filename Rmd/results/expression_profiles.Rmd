@@ -17,7 +17,7 @@ within-condition averages up or down relative to the center of the clusters.
 For reference, below is an example expression profile plot for where samples
 have *not* been averaged by condition.
 
-```{r example_expr_plot}
+```{r example_expr_plot, fig.width=6, fig.height=6, dpi=600}
 # example module expression
 module_color <- module_colors[sample(1:length(module_colors), 1)]
 module_expr <- exprs(network_counts$final)[module_colors == module_color,]
@@ -30,12 +30,13 @@ dat$sample_id <- factor(dat$sample_id)
 
 ggplot(data=dat,
     aes(x=sample_id, y=expression, group=gene_id), color='#333') +
-    geom_line(size=0.2) +
+    geom_line(size=0.4) +
     ggtitle(sprintf("Gene Expression Profiles (%s)", module_color)) +
     xlab("Sample") +
     ylab("Expression level (log2-CPM)") +
+    theme_bw() +
     theme(axis.text=element_text(colour="#333333"), 
-            axis.text.x=element_text(angle=90, hjust=1, size=16))
+            axis.text.x=element_text(angle=90, hjust=1, size=12))
 ```
 
 ### Combine replicates

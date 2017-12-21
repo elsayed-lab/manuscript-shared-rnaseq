@@ -1,6 +1,12 @@
 <!-- Dependencies
 1. Libraries:
 - biomaRt
+- dplyr
+- goseq (getlengths)
+
+2. Libraries (human-specific)
+- Homo.sapiens
+- TxDb.Hsapiens.UCSC.hg38.knownGene
 -->
 
 ### Load gene annotations
@@ -8,11 +14,11 @@
 Next, we will use [Bioconductor
 OrganismDb](http://bioconductor.org/packages/release/bioc/html/OrganismDbi.html)
 packages `citep(citation('OrganismDbi'))` and the R interface to BioMart 
-`citep(c('10.1186/1471-2164-10-22', '10.1038/nprot.2009.97'))` to retrieve ENSEMBL
-gene annotations for the host.
+`citep(c('10.1186/1471-2164-10-22', '10.1038/nprot.2009.97'))` to retrieve
+ENSEMBL gene annotations for the host.
 
 ```{r load_gene_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
-# Load gene annotations
+# Load gene and transcript annotations
 library(CONFIG$organism_db, character.only=TRUE)
 orgdb <- get(CONFIG$organism_db)
 
@@ -24,9 +30,10 @@ assign('get',    base::get, envir=.GlobalEnv)
 gene_info <- load_host_annotations(orgdb, rownames(count_table),
                                    keytype=CONFIG$orgdb_key,
                                    biomart_dataset=CONFIG$biomart_dataset,
-								   biomart_host='www.ensembl.org')
+                                   biomart_host='aug2017.archive.ensembl.org')
+								   #biomart_host='www.ensembl.org')
+                                   #biomart_host='archive.ensembl.org')
 								   #biomart_host='useast.ensembl.org')
-                                   #biomart_host='dec2016.archive.ensembl.org')
 
 # Keep only the feature information remaining genes
 gene_info <- gene_info[gene_info$gene_id %in% rownames(count_table),]
@@ -38,11 +45,18 @@ gene_info <- gene_info[!duplicated(gene_info$gene_id),]
 gene_ids <- rownames(count_table)
 
 # Determine approximate transcript lengths for each gene.
-# 1. For Human, hg19 must be used instead of hg38 (hg38 not supported yet)
-# 2. Because the annotations have not been filtered to remove ncRNAs, many of
-# the genes associated with lncRNAs, etc. will not have a length associated
-# with them.
+# Note that because the annotations have not been filtered to remove ncRNAs,
+# many of the genes associated with lncRNAs, etc. will not have a length
+# associated with them.
 gene_info$transcript_length <- getlength(gene_ids, CONFIG$organism_genome, "ensGene")
+
+# Note 2017/12/09
+# ---------------
+# hg19 still better to use for tx lengths than hg38 for the moment:
+# > sum(is.na(getlength(gene_ids, 'hg38', "ensGene"))                                                                                                                                                            
+#   [1] 36591
+# > sum(is.na(getlength(gene_ids, 'hg19', "ensGene")))                                                                                                                                                           
+#   [1] 24462      
 
 # Location of external annotation files
 species_dir <- tolower(sub('. ', '', CONFIG$host))

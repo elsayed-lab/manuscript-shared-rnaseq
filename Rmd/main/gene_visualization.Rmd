@@ -8,10 +8,13 @@ Heatmap of log2-CPM gene expression.
 clip_upper <- quantile(exprs(de_counts$log2cpm), 0.99)
 dat <- pmin(exprs(de_counts$log2cpm), clip_upper)
 
+# randomly sample genes since we can't fit them all anyway
 colnames(dat) <- CONFIG$condition_mapping$short[match(condition, 
                                                 CONFIG$condition_mapping$long)]
 
-heatmap.2(dat, hclustfun=flashClust,
+ind <- sample(1:nrow(dat), min(nrow(dat), 1000))
+
+heatmap.2(dat[ind,], hclustfun=flashClust,
           trace="none", col=redgreen(75), labRow=NA, main="Log2-CPM counts",
           symbreaks=FALSE, symkey=FALSE, margins=c(12,8))
 ```

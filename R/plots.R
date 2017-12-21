@@ -67,7 +67,6 @@ module_expression_profile_plot <- function (counts_long, module_colors,
 #' @param module Name of module to be plotted
 #' @param expr_var Name of column in input data containing expression values
 #' @param line_width Line width to use for plotting
-#' @param font_size Size of fonts in plot
 #' @param line_color Line color to use in plot
 #' @param font_color Font color to use for plt
 #' @param highlight_group Optional set of genes to be highlighted in a
@@ -79,13 +78,13 @@ module_expression_profile_plot <- function (counts_long, module_colors,
 #' @param scale_linetype_values linetypes to use for highlighted genes, passed to
 #'        scale_linetype_manual function.
 #' @param include_title Whether or not to include a plot title
+#' @param ylimits Options two-value vector containining min and max y-limits
 #' @param xlabel Label for x-axis.
 #' @param ylabel Label for y-axis.
-#' @param white_background Whether or not to make the plot background white.
 #'
 #' @return ggplot instance
 module_profile_plot <- function(counts_long, module, expr_var='expression',
-                                line_width=0.2, font_size=10, 
+                                line_width=0.2, 
                                 line_color='#333333',
                                 font_color='#333333', 
                                 highlight_group=NULL,
@@ -93,9 +92,9 @@ module_profile_plot <- function(counts_long, module, expr_var='expression',
                                 scale_size_values=NULL,
                                 scale_linetype_values=NULL,
                                 include_title=TRUE,
+                                ylimits=NULL,
                                 xlabel='Condition',
-                                ylabel='Expression level (log2-CPM)',
-                                white_background=FALSE) {
+                                ylabel='Expression level (log2-CPM)') {
     # Get the module genes
     cluster_genes <- counts_long[counts_long$cluster == module,]
 
@@ -122,15 +121,9 @@ module_profile_plot <- function(counts_long, module, expr_var='expression',
     plt <- ggplot(data=cluster_genes,
             aes_string(x='condition', y=expr_var, group='gene_id'))
 
-    # background (optional)
-    if (white_background) {
-        plt <- plt + theme_bw()
-    }
-
-    # title (optional)
     if (include_title) {
-        plt <- plt + ggtitle(sprintf("%s (n=%d, var=%0.2f)", module,
-                                    nrow(cluster_genes_wide), cluster_var))
+        plt <- plt + ggtitle(sprintf("%s (n=%d)", module, 
+                                     nrow(cluster_genes_wide)))
     }
 
     # line plot
@@ -149,21 +142,19 @@ module_profile_plot <- function(counts_long, module, expr_var='expression',
             scale_size(guide='none')
     }
 
-    # shared font properties
-    base_font <- element_text(size=font_size)
+    # y-axis limits (optional)
+    if (!is.null(ylimits)) {
+        plt <- plt + scale_y_continuous(limits=ylimits)
+    }
 
     # remaining options
     plt <- plt +
         xlab(xlabel) +
         ylab(ylabel) +
-        plot_scale +
-        theme(axis.text=element_text(colour=font_color, size=font_size), 
-              axis.text.x=element_text(angle=90, hjust=1),
-              axis.title=base_font,
-              axis.title.x=base_font,
-              axis.title.y=base_font,
-              plot.margin=unit(c(5.5, 8.5, 5.5, 5.5), "pt"),
-              legend.text=base_font)
+        plot_scale
+
+        #theme(axis.text=element_text(colour=font_color), 
+        #      plot.margin=unit(c(5.5, 12.5, 5.5, 7.5), "pt"))
 
     return(plt)
 }

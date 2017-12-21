@@ -97,8 +97,8 @@ for (stage in names(top_genes)) {
 
     # split into up- and down-regulated sets
     x$de_status <- 'Non-DE'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-regulated (%d genes)', num_up)
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-regulated (%d genes)', num_down)
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-reg (n=%d)', num_up)
+    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-reg (n=%d)', num_down)
 
     cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
@@ -125,8 +125,10 @@ for (stage in names(top_genes)) {
             geom_bar(stat = "identity") +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                plot.title=element_text(hjust=0.5))
+                  axis.title.y=element_blank(),
+                  axis.text.x=element_text(size=12),
+                  axis.text.y=element_text(size=12),
+                  plot.title=element_text(hjust=0.5, size=16))
     }
 
     if (abs(xx$median_3utr_len[UPREG_IDX] - xx$median_3utr_len[DOWNREG_IDX]) > 10) {    
@@ -134,8 +136,10 @@ for (stage in names(top_genes)) {
             geom_bar(stat = "identity") +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                plot.title=element_text(hjust=0.5))
+                  axis.title.y=element_blank(),
+                  axis.text.x=element_text(size=12),
+                  axis.text.y=element_text(size=12),
+                  plot.title=element_text(hjust=0.5, size=16))
     }
 
     if (abs(xx$median_tx_len[UPREG_IDX] - xx$median_tx_len[DOWNREG_IDX]) > 10) {    
@@ -143,25 +147,29 @@ for (stage in names(top_genes)) {
             geom_bar(stat = "identity") +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                plot.title=element_text(hjust=0.5))
+                  axis.title.y=element_blank(),
+                  axis.text.x=element_text(size=11),
+                  axis.text.y=element_text(size=11),
+                  plot.title=element_text(hjust=0.5, size=16))
     }
 }
 ```
 
-```{r utr5_length_by_de_status, results='asis'}
+```{r utr5_length_by_de_status, results='asis', fig.height=810/96}
+library('grid')
+
 if (length(utr5_plts) > 0) {
     grid.arrange(grobs=utr5_plts, ncol=3,
-                bottom='Differential Expression Status',
-                left="Median 5' UTR length")
+                bottom=textGrob('Differential Expression Status', gp=gpar(fontsize=14)),
+                left=textGrob("Median 5' UTR length", gp=gpar(fontsize=14), rot=90))
 }
 ```
 
-```{r utr3_length_by_de_status, results='asis'}
+```{r utr3_length_by_de_status, results='asis', fig.height=810/96}
 if (length(utr3_plts) > 0) {
-    grid.arrange(grobs=utr3_plts, ncol=3,
-                bottom='Differential Expression Status',
-                left="Median 3' UTR length")
+    grid.arrange(grobs=utr3_plts, ncol=4,
+                bottom=textGrob('Differential Expression Status', gp=gpar(fontsize=14)),
+                left=textGrob("Median 3' UTR length", gp=gpar(fontsize=14), rot=90))
 }
 ```
 
@@ -257,7 +265,7 @@ if (nrow(utr_lengths_de) > 0) {
 }
 ```
 
-```{r utr_length_dendrogram}
+```{r utr_length_dendrogram, fig.width=1920/192, fig.height=1080/192, dpi=192}
 # color palette
 pal <- colorRampPalette(rev(brewer.pal(n=11, name='RdBu')))(100)
 
@@ -314,33 +322,51 @@ cds_len_colors <- module_cds$cds_len_colors[match(module_colors,
                                                  module_cds$color)]
 
 # get contrast
-de_contrast <- lifecycle_stages[[main_contrast]]
+#de_contrast <- lifecycle_stages[[main_contrast]]
 
 # If no DE genes for plot, add blank row
-if (is.null(de_contrast)) {
-    de_contrast <- rep(0, length(module_colors))
+#if (is.null(de_contrast)) {
+#    de_contrast <- rep(0, length(module_colors))
+#}
+
+# Show average change in expression across two selected stages
+combined_counts <- combine_replicates(exprs(network_counts$log2cpm), condition)
+expr_diff <- (combined_counts[,as.character(CONFIG$main_comparison[2])] - 
+              combined_counts[,as.character(CONFIG$main_comparison[1])])
+
+# Show average expression diff at the module level
+module_expr_diff <- cbind(result %>% select(gene_id, color), expr=expr_diff)
+module_expr_diff <- module_expr_diff %>% 
+    group_by(color) %>% 
+    summarize(median_expr=median(expr))
+
+#ind <- match(result$color[match(names(expr_diff), result$gene_id)], 
+#             module_expr_diff$color)
+#gene_expr_diff <- module_expr_diff$median_expr[ind]
+gene_expr_diff <- rep(0, length(module_colors))
+
+for (col in unique(module_colors)) {
+    mod_expr <- module_expr_diff$median_expr[module_expr_diff$color == col]
+    gene_expr_diff[module_colors == col] <- mod_expr
 }
 
+# Map continus values to discrete color scale
+x <- infotheo::discretize(gene_expr_diff, nbins=100)[,1]
+expr_colors <- viridis(100)[x]
 
 if (CONFIG$include_plots) {
     plotDendroAndColors(gene_tree,
-                        cbind(module_colors, de_contrast,
-                              cds_len_colors,
-                              #utr5_len_colors, utr5_num_reads_colors,
-                              #utr3_len_colors, utr3_num_reads_colors),
+                        cbind(module_colors, expr_colors,
                               utr5_len_colors, utr3_len_colors),
                         groupLabels=c(sprintf("Modules (n=%s)", num_modules),
-                                    sprintf("Red = upregulated\n at %s", "72 hours"),
-                                    "CDS Length",
-                                    #"5'UTR lengths", "5'UTR # reads",
-                                    #"3'UTR lengths", "3'UTR # reads"),
-                                    "5'UTR lengths", "3'UTR lengths"),
+                                      "ΔExpr (72 - 4 hrs)",
+                                      "5'UTR lengths", "3'UTR lengths"),
                         dendroLabels=FALSE,
-                        cex.colorLabels=cex_color_labels,
-                        cex.main=cex_main,
-                        cex.axis=cex_axis,
-                        cex.lab=cex_lab,
-                        marAll=c(4,8,6,4),
+                        cex.colorLabels=1.35,
+                        cex.main=1.8,
+                        cex.axis=1.9,
+                        cex.lab=1.9,
+                        marAll=c(4,12,6,4),
                         guideHang=0.05)
 }
 ```
