@@ -18,6 +18,12 @@ Below, we will generate a topological overlap matrix. Depending on the analysis
 settings, this may be used for cluster detection and network export, otherwise
 the adjacency matrix will be used.
 
+```{r cleanup}
+# First, let's remove the similarity matrix to free up memory
+rm(similarity_matrix)
+gc()
+```
+
 ```{r construct_dissimilarity_matrix, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
 # Dissimilarity matrix (used for clustering distance metric)
 if (CONFIG$topological_overlap) {

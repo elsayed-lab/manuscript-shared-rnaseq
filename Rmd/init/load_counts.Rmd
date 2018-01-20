@@ -133,14 +133,14 @@ if (tolower(file_ext(CONFIG$input_count_tables)) == 'rdata') {
         count_table = tryCatch({
             res <- read_counts_expt(ids, count_files)
 
-            # newer version (dec 2017)
-            if (is.list(res)) {
+            if (is.data.frame(res)) { 
+                # new version
+                res
+            } else {
+                # newer version (dec 2017)
                 count_table <- as.data.frame(res$count_table)
                 row.names(count_table) <- count_table$rownames
                 as.matrix(count_table[,colnames(count_table) != 'rownames'])
-            } else {
-                # new version
-                res
             }
         }, error = function(e) {
             # old hpgltool

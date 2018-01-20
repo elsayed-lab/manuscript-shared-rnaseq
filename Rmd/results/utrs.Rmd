@@ -74,21 +74,24 @@ length_info <- result %>%
 
 ### UTR length by stage and DE status
 
-```{r utr_length_correlation_with_stage_dea, results='asis'}
+```{r utr_length_correlation_with_stage_dea, results='asis', fig.width=2160/300, fig.height=2160/300, dpi=300}
 # create lists to store transcript, 5' and 3' UTR length bar plots
-tx_plts <- list()
-utr5_plts <- list()
-utr3_plts <- list()
+#tx_plts <- list()
+#utr5_plts <- list()
+#utr3_plts <- list()
 
 DOWNREG_IDX <- 1
 UPREG_IDX   <- 3
+
+# DE adjusted p-value cutoff to use
+pval_cutoff <- 0.05
 
 # iterate over contrasts
 for (stage in names(top_genes)) {
     x <- top_genes[[stage]]
 
-    num_up <- sum(x$adj.P.Val < 0.05 & x$logFC > 0)
-    num_down <- sum(x$adj.P.Val < 0.05 & x$logFC < 0)
+    num_up <- sum(x$adj.P.Val < pval_cutoff & x$logFC > 0)
+    num_down <- sum(x$adj.P.Val < pval_cutoff & x$logFC < 0)
 
     # skip contrasts with few/no up- and down-regulated genes
     if (num_up < 10 || num_down < 10) {
@@ -97,8 +100,8 @@ for (stage in names(top_genes)) {
 
     # split into up- and down-regulated sets
     x$de_status <- 'Non-DE'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-reg (n=%d)', num_up)
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-reg (n=%d)', num_down)
+    x$de_status[x$adj.P.Val < pval_cutoff & x$logFC > 0] <- sprintf('Up-reg (n=%d)', num_up)
+    x$de_status[x$adj.P.Val < pval_cutoff & x$logFC < 0] <- sprintf('Down-reg (n=%d)', num_down)
 
     cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
@@ -110,7 +113,10 @@ for (stage in names(top_genes)) {
         summarise(
             median_tx_len=median(tx_len, na.rm=TRUE) * 1.0,
             median_5utr_len=median(utr5_len, na.rm=TRUE) * 1.0,
-            median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0
+            median_3utr_len=median(utr3_len, na.rm=TRUE) * 1.0,
+            sd_tx_len=sd(tx_len, na.rm=TRUE) * 1.0,
+            sd_5utr_len=sd(utr5_len, na.rm=TRUE) * 1.0,
+            sd_3utr_len=sd(utr3_len, na.rm=TRUE) * 1.0,
         )
 
     print(kable(xx))
@@ -119,43 +125,93 @@ for (stage in names(top_genes)) {
     # add newline between de status and gene numbers in plot
     xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
 
-    # bar plots for contrasts with differing Tx and UTR lengths
+    # plots for contrasts with differing Tx and UTR lengths
+    # 5' UTRs
     if (abs(xx$median_5utr_len[UPREG_IDX] - xx$median_5utr_len[DOWNREG_IDX]) > 10) {    
-        utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_len)) +
-            geom_bar(stat = "identity") +
-            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+        # bar plot
+        # 2017/12/24: Switching to density plots; stdev is large for UTR lengths
+        # so comparing mean/median not as helpful; density plots give better
+        # idea of overall picture)
+        #utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_len)) +
+        #    geom_bar(stat = "identity") +
+        #    labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+        #    theme(axis.title.x=element_blank(),
+        #          axis.title.y=element_blank(),
+        #          axis.text.x=element_text(size=12),
+        #          axis.text.y=element_text(size=12),
+        #          plot.title=element_text(hjust=0.5, size=16))
+
+        # density plot
+        print(ggplot(x, aes(utr5_len, fill=de_status, color=de_status)) + 
+            geom_density(alpha=0.25) +
+            scale_x_continuous(limits = c(0, 2500)) +
+            labs(title=sprintf("5' UTR lengths: %s hrs", gsub('_', ' ', stage))) +
+            guides(fill=guide_legend(title="DE Status"),
+                   color=guide_legend(title="DE Status")) +
             theme(axis.title.x=element_blank(),
                   axis.title.y=element_blank(),
                   axis.text.x=element_text(size=12),
                   axis.text.y=element_text(size=12),
-                  plot.title=element_text(hjust=0.5, size=16))
+                  plot.title=element_text(hjust=0.5, size=12)))
     }
 
+
+    # 3' UTRs
     if (abs(xx$median_3utr_len[UPREG_IDX] - xx$median_3utr_len[DOWNREG_IDX]) > 10) {    
-        utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_len)) +
-            geom_bar(stat = "identity") +
+        # density plot
+        print(ggplot(x, aes(utr3_len, fill=de_status, color=de_status)) + 
+            geom_density(alpha=0.25) +
+            scale_x_continuous(limits = c(0, 6000)) +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+            guides(fill=guide_legend(title="DE Status"),
+                   color=guide_legend(title="DE Status")) +
             theme(axis.title.x=element_blank(),
                   axis.title.y=element_blank(),
                   axis.text.x=element_text(size=12),
                   axis.text.y=element_text(size=12),
-                  plot.title=element_text(hjust=0.5, size=16))
+                  plot.title=element_text(hjust=0.5, size=12)))
+
+        # bar plot
+        #utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_len)) +
+        #    geom_bar(stat = "identity") +
+        #    labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+        #    theme(axis.title.x=element_blank(),
+        #          axis.title.y=element_blank(),
+        #          axis.text.x=element_text(size=12),
+        #          axis.text.y=element_text(size=12),
+        #          plot.title=element_text(hjust=0.5, size=16))
+
+        # boxplot
+        #ggplot(x, aes(de_status, utr3_len)) +
+        #    geom_boxplot() + 
+        #    scale_y_continuous(limits=c(0, 200)) + 
+        #    labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+        #    theme(axis.title.x=element_blank(),
+        #          axis.title.y=element_blank(),
+        #          axis.text.x=element_text(size=12),
+        #          axis.text.y=element_text(size=12),
+        #          plot.title=element_text(hjust=0.5, size=16))
     }
 
+    # Transcripts
     if (abs(xx$median_tx_len[UPREG_IDX] - xx$median_tx_len[DOWNREG_IDX]) > 10) {    
-        tx_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_tx_len)) +
-            geom_bar(stat = "identity") +
-            labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
+        print(ggplot(x, aes(tx_len, fill=de_status, color=de_status)) + 
+            geom_density(alpha=0.25) +
+            scale_x_continuous(limits = c(0, 10000)) +
+            labs(title=sprintf("3' UTR lengths: %s hrs", gsub('_', ' ', stage))) +
+            guides(fill=guide_legend(title="DE Status"),
+                   color=guide_legend(title="DE Status")) +
             theme(axis.title.x=element_blank(),
                   axis.title.y=element_blank(),
-                  axis.text.x=element_text(size=11),
-                  axis.text.y=element_text(size=11),
-                  plot.title=element_text(hjust=0.5, size=16))
+                  axis.text.x=element_text(size=12),
+                  axis.text.y=element_text(size=12),
+                  plot.title=element_text(hjust=0.5, size=12)))
     }
+    cat('\n')
 }
 ```
 
-```{r utr5_length_by_de_status, results='asis', fig.height=810/96}
+```{r utr5_length_by_de_status, results='asis', fig.height=810/96, eval=FALSE}
 library('grid')
 
 if (length(utr5_plts) > 0) {
@@ -165,7 +221,7 @@ if (length(utr5_plts) > 0) {
 }
 ```
 
-```{r utr3_length_by_de_status, results='asis', fig.height=810/96}
+```{r utr3_length_by_de_status, results='asis', fig.height=810/96, eval=FALSE}
 if (length(utr3_plts) > 0) {
     grid.arrange(grobs=utr3_plts, ncol=4,
                 bottom=textGrob('Differential Expression Status', gp=gpar(fontsize=14)),
@@ -173,7 +229,7 @@ if (length(utr3_plts) > 0) {
 }
 ```
 
-```{r tx_length_by_de_status, results='asis'}
+```{r tx_length_by_de_status, results='asis', eval=FALSE}
 if (length(tx_plts) > 0) {
     grid.arrange(grobs=tx_plts, ncol=3,
                 bottom='Differential Expression Status',
@@ -581,17 +637,17 @@ sequence_composition <- result %>% select(gene_id,
 ### GC and CT richness by stage and DE status
 
 ```{r correlation_with_stage_dea, results='asis'}
-# create lists to store 5' and 3' UTR length bar plots
-utr5_plts <- list()
-utr3_plts <- list()
+# create lists to store 5' and 3' UTR length plots
+#utr5_plts <- list()
+#utr3_plts <- list()
 
 for (stage in names(top_genes)) {
     cat(sprintf('\n#### %s\n\n', stage))
     x <- top_genes[[stage]]
 
     # Split into up- and down-regulated sets
-    num_up <- sum(x$adj.P.Val < 0.05 & x$logFC > 0)
-    num_down <- sum(x$adj.P.Val < 0.05 & x$logFC < 0)
+    num_up <- sum(x$adj.P.Val < pval_cutoff & x$logFC > 0)
+    num_down <- sum(x$adj.P.Val < pval_cutoff & x$logFC < 0)
 
     # skip contrasts with few/no up- and down-regulated genes
     if (num_up < 10 || num_down < 10) {
@@ -599,8 +655,8 @@ for (stage in names(top_genes)) {
     }
 
     x$de_status <- 'Non-DE'
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC > 0] <- sprintf('Up-reg\n(%d genes)', num_up)
-    x$de_status[x$adj.P.Val < 0.05 & x$logFC < 0] <- sprintf('Down-reg\n(%d genes)', num_down)
+    x$de_status[x$adj.P.Val < pval_cutoff & x$logFC > 0] <- sprintf('Up-reg\n(%d genes)', num_up)
+    x$de_status[x$adj.P.Val < pval_cutoff & x$logFC < 0] <- sprintf('Down-reg\n(%d genes)', num_down)
 
     cat(sprintf('\n#### %s (%d up / %d down)\n\n', stage, num_up, num_down))
 
@@ -619,36 +675,42 @@ for (stage in names(top_genes)) {
     # add newline between de status and gene numbers in plot
     xx$de_status <- sub(' \\(', '\n\\(', xx$de_status)
 
-    # bar plots
+    # plots
     if (abs(xx$median_5utr_gc_richness[UPREG_IDX] - xx$median_5utr_gc_richness[DOWNREG_IDX]) > 0.035) {    
-        utr5_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_5utr_gc_richness)) +
-            geom_bar(stat="identity") +
+        print(ggplot(x, aes(utr5_gc_percent, fill=de_status, color=de_status)) + 
+            geom_density(alpha=0.25) +
+            scale_x_continuous(limits = c(0.2, 0.8)) +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                plot.title=element_text(hjust=0.5))
+                  axis.title.y=element_blank(),
+                  axis.text.x=element_text(size=12),
+                  axis.text.y=element_text(size=12),
+                  plot.title=element_text(hjust=0.5, size=16)))
     }
 
     if (abs(xx$median_3utr_gc_richness[UPREG_IDX] - xx$median_3utr_gc_richness[DOWNREG_IDX]) > 0.035) {    
-        utr3_plts[[stage]] <- ggplot(xx, aes(de_status, y=median_3utr_gc_richness)) +
-            geom_bar(stat="identity") +
+        print(ggplot(x, aes(utr3_gc_percent, fill=de_status, color=de_status)) + 
+            geom_density(alpha=0.25) +
+            scale_x_continuous(limits = c(0.2, 0.8)) +
             labs(title=sprintf("%s hrs", gsub('_', ' ', stage))) +
             theme(axis.title.x=element_blank(),
-                axis.title.y=element_blank(),
-                plot.title=element_text(hjust=0.5))
+                  axis.title.y=element_blank(),
+                  axis.text.x=element_text(size=12),
+                  axis.text.y=element_text(size=12),
+                  plot.title=element_text(hjust=0.5, size=16)))
     }
 }
 ```
 
-```{r utr5_gc_richness_by_de_status, results='asis'}
+```{r utr5_gc_richness_by_de_status, results='asis', eval=FALSE}
 if (length(utr5_plts) > 0) {
     grid.arrange(grobs=utr5_plts, ncol=3,
                 bottom='Differential Expression Status',
-                left="Median 5' UTR GC-richness")
+                left="5' UTR GC-richness")
 }
 ```
 
-```{r utr3_gc_richness_by_de_status, results='asis'}
+```{r utr3_gc_richness_by_de_status, results='asis', eval=FALSE}
 if (length(utr3_plts) > 0) {
     grid.arrange(grobs=utr3_plts, ncol=3,
                 bottom='Differential Expression Status',
