@@ -49,6 +49,9 @@ stopCluster(cl)
 
 ```{r leishcyc_enrichment_results, results='asis'}
 if (CONFIG$include_tables) {
+    cat(sprintf('- Total enriched modules: %d\n', 
+                sum(sapply(module_leishcyc_enrichment, nrow) > 0)))
+
     print_enrichment_results(module_leishcyc_enrichment, module_sizes, 
                              'LeishCyc Pathway', output_dir='output/modules',
                              enrichment_type='leishcyc')

@@ -40,6 +40,9 @@ stopCluster(cl)
 ```
 
 ```{r print_kegg_enrichment_modules, results='asis'}
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_kegg_enrichment, nrow) > 0)))
+
 if (CONFIG$include_tables) {
     print_enrichment_results(module_kegg_enrichment, module_sizes, 
                              'KEGG pathway',

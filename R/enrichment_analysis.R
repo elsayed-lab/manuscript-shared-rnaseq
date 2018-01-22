@@ -151,6 +151,17 @@ print_enrichment_results <- function(results, subset_sizes,
     total_enriched <- 0
     pvalues <- c()
 
+    # show modules with most significant p-values first
+    avg_pvals <- sapply(results, function(x) {
+        if (nrow(x) > 0) {
+            min(median(x$under_represented_pvalue_adj),
+                median(x$over_represented_pvalue_adj))
+        } else {
+            Inf
+        }
+    })
+    results <- results[order(rank(avg_pvals, ties.method='first'))]
+
     # For GO enrichment results, make GO: categories hyperlinks
     if(enrichment_type == 'go') {
         if (!is.null(gene_mapping)) {

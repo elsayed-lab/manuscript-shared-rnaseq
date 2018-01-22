@@ -75,6 +75,9 @@ cpdb_enrichment_status <- as.numeric(module_colors %in% enriched_colors_cpdb)
 ```
 
 ```{r cpdb_enrichment_results, results='asis'}
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_cpdb_enrichment, nrow) > 0)))
+
 if (CONFIG$include_tables) {
     print_enrichment_results(module_cpdb_enrichment, module_sizes,
                                 'ConsensusPathDB Pathway',

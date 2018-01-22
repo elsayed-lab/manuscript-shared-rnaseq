@@ -67,6 +67,9 @@ marbach_enrichment_status <- as.numeric(module_colors %in%
 ```
 
 ```{r marbach_enrichment_results, results='asis'}
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_coreg_enrichment, nrow) > 0)))
+
 if (CONFIG$include_tables) {
     print_enrichment_results(module_coreg_enrichment, module_sizes,
                              'Transcription Factor')

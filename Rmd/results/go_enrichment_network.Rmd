@@ -61,6 +61,9 @@ stopCluster(cl)
 tmp <- cbind(gene=gene_ids, color=module_colors)
 gene_mapping <- merge(gene_go_mapping, tmp, by='gene')
 
+cat(sprintf('- Total enriched modules: %d\n', 
+            sum(sapply(module_go_enrichment, nrow) > 0)))
+
 if (CONFIG$include_tables) {
     print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
                              NULL, gene_mapping, 'output/modules', 'go',
