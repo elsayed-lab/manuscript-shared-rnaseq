@@ -147,6 +147,10 @@ print_enrichment_results <- function(results, subset_sizes,
                                      exclude_unclustered=TRUE,
                                      include_gene_lists=FALSE,
                                      str_max_width=Inf) {
+    # exclude any duplicated pathways to avoid double-counting enriched
+    # categories when merging annotation with results
+    annotation_mapping <- annotation_mapping[!duplicated(annotation_mapping$category),]
+
     # counters
     total_enriched <- 0
     pvalues <- c()
