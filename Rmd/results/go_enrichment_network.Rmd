@@ -13,7 +13,8 @@ names(gene_lengths) <- gene_info$gene_id
 
 ```{r go_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$module_enrichment}
 # Initiallize parallelization
-cl <- makeCluster(min(12, detectCores() - 1))
+#cl <- makeCluster(min(12, detectCores() - 1))
+cl <- makeCluster(4)
 registerDoParallel(cl)
 
 # Check each module for enrichment in GO terms and save result in a list
@@ -66,7 +67,9 @@ cat(sprintf('- Total enriched modules: %d\n',
 
 if (CONFIG$include_tables) {
     print_enrichment_results(module_go_enrichment, module_sizes, 'GO terms',
-                             NULL, gene_mapping, 'output/modules', 'go',
+                             #NULL, gene_mapping, 'output/modules', 
+                             NULL, gene_mapping, 
+                             enrichment_type='go',
                              include_gene_lists=FALSE)
 }
 

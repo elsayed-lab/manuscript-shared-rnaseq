@@ -30,10 +30,10 @@ assign('get',    base::get, envir=.GlobalEnv)
 gene_info <- load_host_annotations(orgdb, rownames(count_table),
                                    keytype=CONFIG$orgdb_key,
                                    biomart_dataset=CONFIG$biomart_dataset,
-                                   biomart_host='aug2017.archive.ensembl.org')
+								   biomart_host='useast.ensembl.org')
+                                   #biomart_host='aug2017.archive.ensembl.org')
                                    #biomart_host='www.ensembl.org')
                                    #biomart_host='archive.ensembl.org')
-								   #biomart_host='useast.ensembl.org')
 
 # Keep only the feature information remaining genes
 gene_info <- gene_info[gene_info$gene_id %in% rownames(count_table),]

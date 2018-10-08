@@ -22,6 +22,8 @@ pca_feature_correlations <- function(dat, features) {
     features <- features[,!single_level]
 
     # SVD
+    # Mean centering results in s$v and s$u having one fewer column and d being
+    # one element smaller.
     s <- corpcor:::fast.svd(dat - rowMeans(dat))
     rownames(s$v) <- colnames(dat)
 

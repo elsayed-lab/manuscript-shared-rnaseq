@@ -156,7 +156,11 @@ adjacency_matrix <- adjacency.fromSimilarity(similarity_matrix,
                                              power=CONFIG$adjmatrix_power,
                                              type=CONFIG$network_type)
 
-# Convert to matrix
+# Delete similarity matrix to free up memory
+rm(similarity_matrix)
+gc()
+
+# Convert to matrix (rownames(adjacency_matrix) == gene_ids == sort(gene_ids))
 adjacency_matrix <- matrix(adjacency_matrix, nrow=nrow(adjacency_matrix))
 rownames(adjacency_matrix) <- gene_ids
 colnames(adjacency_matrix) <- gene_ids
