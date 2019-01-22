@@ -102,7 +102,7 @@ sum(similarity_matrix)
 
 ```{r similarity_matrix_density, message=FALSE, cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE, fig.width=CONFIG$fig_height/CONFIG$dpi}
 if (CONFIG$include_plots) {
-    plot(density(sample(similarity_matrix, 1E4)))
+    plot(density(sample(similarity_matrix, min(nrow(similarity_matrix), 1E4))))
 }
 ```
 

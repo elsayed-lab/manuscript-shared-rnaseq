@@ -15,16 +15,27 @@ if (ncol(counts$log2cpm) > 50) {
 plt
 ```
 
+```{r}
+# for remaining sample plots, if a large number of samples are present, subsample improve speed and
+# visibility
+if (ncol(counts$normed) > 50) {
+  ind <- sample(ncol(counts$normed), 50)
+} else {
+  ind <- 1:ncol(counts$normed)
+}
+```
+
+
 ### Sample pairwise correlations
 
 ```{r outlier_check, include=CONFIG$include_plots, eval=CONFIG$include_plots}
-plot_sample_correlations(exprs(counts$normed), condition, batch, mar=c(16,6,4,6))
+plot_sample_correlations(exprs(counts$normed)[, ind], condition[ind], batch[ind], mar=c(16,6,4,6))
 ```
 
 ### Sample heatmap (normalized euclidean distance)
 
 ```{r heatmap_diffexpr_euclidean_distance, cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$include_plots}
-plot_sample_heatmap(exprs(counts$normed), condition, batch, covariates,
+plot_sample_heatmap(exprs(counts$normed)[, ind], condition[ind], batch[ind], covariates[ind, ],
                     main='Sample Heatmap (normalized euclidean distance)')
 ```
 
@@ -32,14 +43,14 @@ plot_sample_heatmap(exprs(counts$normed), condition, batch, covariates,
 
 ```{r heatmap_diffexpr_pearson_correlation, cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$include_plots}
 plot_sample_heatmap(exprs(counts$normed), 
-                    condition, batch, covariates, metric='pearson',
+                    condition[ind], batch[ind], covariates[ind, ], metric='pearson',
                     main='Sample Heatmap (normalized pearson correlation)')
 ```
 
 ### Sample PCA (normalized counts)
 
 ```{r sample_pca_normed, eval=CONFIG$include_plots}
-plot_sample_pca(exprs(counts$normed), sample_ids, condition,
-                batch, num_pcs=3, main='Sample PCA (normalized counts)')
+plot_sample_pca(exprs(counts$normed), sample_ids[ind], condition[ind],
+                batch[ind], num_pcs=3, main='Sample PCA (normalized counts)')
 ```
 

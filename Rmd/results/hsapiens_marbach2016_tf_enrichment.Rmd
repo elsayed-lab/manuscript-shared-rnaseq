@@ -32,7 +32,7 @@ Look for enrichment of co-regulated genes.
 
 ```{r marbach_coregulated_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
 # Initialize CPUs
-cl = makeCluster(min(12, detectCores() - 1))
+cl = makeCluster(max(1, min(12, detectCores() - 2)))
 registerDoParallel(cl)
 
 # Check each module for enrichment in co-regulated genes and save result in a list

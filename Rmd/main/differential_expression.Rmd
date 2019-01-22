@@ -33,8 +33,7 @@ limma_results$num_de <- num_de
 # Extend results to include gene metadata and condition-specific average expression
 for (contrast in names(sig_genes)) {
     # Add gene meta information (type, description, etc.)
-    meta_cols <- intersect(c('gene_id', 'description', 'type'),
-                           colnames(gene_info))
+    meta_cols <- intersect(c('gene_id', 'description', 'type'), colnames(gene_info))
 
     meta <- gene_info[match(sig_genes[[contrast]]$gene_id, gene_info$gene_id),] %>% 
         select_(.dots=meta_cols)

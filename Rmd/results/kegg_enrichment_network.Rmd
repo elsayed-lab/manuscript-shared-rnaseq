@@ -2,9 +2,11 @@
 
 ```{r kegg_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
 # Check each module for enrichment in KEGG terms and save result in a list
-#cl <- makeCluster(min(12, detectCores() - 1))
-cl <- makeCluster(4)
+#cl <- makeCluster(max(1, min(12, detectCores() - 2)))
+cl <- makeCluster(2)
 registerDoParallel(cl)
+
+message("Performing KEGG enrichment")
 
 # Check each module for enrichment in GO terms and save result in a list
 module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
@@ -67,7 +69,6 @@ kegg_enrichment_status <- as.numeric(module_colors %in% enriched_colors_kegg)
 
 cat('\n### Dendrogram with annotated modules\n')
 
-# testing 2014/11/07
 unassigned_modules <- as.numeric(module_colors == 'grey')
 
 WGCNA::plotDendroAndColors(gene_tree,

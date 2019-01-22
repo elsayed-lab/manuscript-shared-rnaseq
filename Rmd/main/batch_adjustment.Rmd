@@ -6,11 +6,11 @@ Batch Adjustment
 ```{r pca_feature_cor_before, results='asis'}
 # Sample condition and covariate correlations with PCs
 if (CONFIG$include_tables) {
-    xkable(pca_feature_correlations(exprs(counts$normed), 
+    xkable(head(pca_feature_correlations(exprs(counts$normed), 
                                     cbind(condition, covariates)),
                                     caption=paste('Variable correlations with ',
                                                 'principle components prior ',
-                                                'to batch adjustment'))
+                                                'to batch adjustment'), 10))
 }
 ```
 
@@ -29,11 +29,11 @@ if (batch_adjust == 'limma') {
 
 ```{r pca_feature_cor_after, results='asis', error=FALSE}
 if (CONFIG$include_tables) {
-    xkable(pca_feature_correlations(exprs(counts$batch_adjusted), 
+    xkable(head(pca_feature_correlations(exprs(counts$batch_adjusted), 
                                     cbind(condition, covariates)),
                                     caption=paste('Variable correlations with ',
                                                 'principle components ',
-                                                'following batch adjustment'))
+                                                'following batch adjustment'), 10))
 }
 ```
 

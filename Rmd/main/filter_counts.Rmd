@@ -20,8 +20,15 @@ variance-based filtering applied.
 TODO: Add explanation of filtering approach.
 
 ```{r remove_lowcount_genes}
+# for relatively small datasets, we can look for genes with non-zero expression in at least
+# as many samples are contained by the smallest condition group
 reps_per_batch <- table(factor(condition))
 min_replicates <- min(reps_per_batch)
+
+# for larger datasets with many conditions (e.g. > 1,000 samples), this may be too conservative,
+# so we will also set a lower limit equal to 5% of the samples
+min_replicates <- max(min_replicates, round(length(condition) / 20))
+
 de_counts$raw <- filter_lowcount_genes(de_counts$raw, 
                                        threshold=CONFIG$low_count_threshold,
                                        min_samples=min_replicates, verbose=TRUE)

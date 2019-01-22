@@ -13,9 +13,11 @@ names(gene_lengths) <- gene_info$gene_id
 
 ```{r go_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$module_enrichment}
 # Initiallize parallelization
-#cl <- makeCluster(min(12, detectCores() - 1))
-cl <- makeCluster(4)
+#cl <- makeCluster(max(1, min(12, detectCores() - 2)))
+cl <- makeCluster(2)
 registerDoParallel(cl)
+
+message("Performing GO enrichment")
 
 # Check each module for enrichment in GO terms and save result in a list
 module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
@@ -23,6 +25,8 @@ module_go_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq'
     enriched <- tryCatch({
         # module gene ids
         in_module_geneids <- gene_ids[module_colors == color]
+
+        message(sprintf("[GO enrichment] %s", color))
     
         # for host go enrichment, take advantage of goseq's internal mapping
         if (CONFIG$target == 'host' && CONFIG$host != 'C. elegans') {

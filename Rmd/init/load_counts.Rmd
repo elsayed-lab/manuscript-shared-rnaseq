@@ -26,7 +26,8 @@ Load RNA-Seq counts
 ```{r sample_overview, results='asis'}
 # Samples included in this analysis
 if (CONFIG$include_tables) {
-    kable(CONFIG$samples, caption='RNA-Seq samples.')
+  kable(head(CONFIG$samples[, 1:min(6, ncol(CONFIG$samples))], 50), 
+        caption='RNA-Seq samples.')
 }
 ```
 
@@ -51,7 +52,8 @@ condition  <- factor(CONFIG$samples[[CONFIG$condition]])
 batch      <- factor(CONFIG$samples[[CONFIG$batch]])
 
 # Covariate dataframe
-covariates <- CONFIG$samples %>% select_(.dots=CONFIG$covariates)
+covariates <- CONFIG$samples %>% 
+  select_(.dots=CONFIG$covariates)
 
 # Make sure levels for batch and condition are valid
 #levels(condition) <- make.names(levels(condition))
@@ -102,8 +104,13 @@ settings.
 message("Preparing count matrix")
 
 # Load from RData
-if (tolower(file_ext(CONFIG$input_count_tables)) == 'rdata') {
-    load(CONFIG$input_count_tables)
+if (tolower(file_ext(CONFIG$input_count_tables)) %in% c('rda', 'rdata')) {
+    # Check to see if count table has been loaded, and if not, load
+    if (!CONFIG$input_count_var %in% ls()) {
+      load(CONFIG$input_count_tables)
+    }
+
+    # assign to variable "dat"
     dat <- get(CONFIG$input_count_var)
 
     # ExpressionSet
@@ -140,7 +147,7 @@ if (tolower(file_ext(CONFIG$input_count_tables)) == 'rdata') {
                 # newer version (dec 2017)
                 count_table <- as.data.frame(res$count_table)
                 row.names(count_table) <- count_table$rownames
-                as.matrix(count_table[,colnames(count_table) != 'rownames'])
+                as.matrix(count_table[, colnames(count_table) != 'rownames'])
             }
         }, error = function(e) {
             # old hpgltool
@@ -163,7 +170,7 @@ if (startsWith(rownames(count_table)[1], 'ENS')) {
 #sample_ids <- sample_ids[sample_ids %in% colnames(count_table)]
 
 # Filter out samples not needed for this analysis
-count_table <- count_table[,sample_ids]
+count_table <- count_table[, sample_ids]
 
 # Drop any rows with NA's (should only occur when comparing counts across
 # experiments where different reference GFF's were used)
@@ -171,7 +178,9 @@ count_table <- count_table[complete.cases(count_table),]
 
 # print initial size of raw count table
 if (CONFIG$verbose) {
-    cat(sprintf("**Count table size:** %s\n", dim(count_table)))
+    cat(sprintf("**Count table dimensions:**\n"))
+    cat(sprintf("- Rows: %d\n", nrow(count_table)))
+    cat(sprintf("- Columns: %d\n", ncol(count_table)))
 }
 ```
 
@@ -191,7 +200,20 @@ num_conditions <- length(unique(condition))
 pal <- colorRampPalette(RColorBrewer::brewer.pal(num_conditions, 'Dark2'))(num_conditions)
 colors <- pal[as.numeric(condition)]
 
-plot_libsize(count_table, condition, colors=colors, scale=FALSE)
+# for smaller number of samples, use a bar plot
+if (ncol(count_table) <= 20) {
+  plot_libsize(count_table, condition, colors=colors, scale=FALSE)
+} else {
+  # for larger numbers of samples, use a densit plots instead
+  dat <- data.frame(size = apply(count_table, 2, sum), condition)
+
+  ggplot(dat, aes(x = size, group = condition, color = condition)) +
+    geom_density() +
+    xlab("Library size") +
+    ggtitle("Distribution of sample library sizes") +
+    theme_bw() +
+    theme(legend.position='none')
+}
 ```
 
 ### Outlier check
@@ -199,6 +221,7 @@ plot_libsize(count_table, condition, colors=colors, scale=FALSE)
 Sample median pairwise Pearson correlation for raw counts.
 
 ```{r outlier_check, include=CONFIG$include_plots, eval=CONFIG$include_plots}
-plot_sample_correlations(count_table, condition, batch, mar=c(16,6,4,6))
+# TODO 2019/01/15 Fix / port to EDA
+# plot_sample_correlations(count_table, condition, batch, mar=c(16,6,4,6))
 ```
 

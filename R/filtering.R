@@ -50,11 +50,11 @@ filter_low_variance_genes <- function(counts, percentile_cutoff, include_plot=FA
     gene_variances <- apply(exprs(counts), 1, var)
 
     # Variance filtering mask
-    variance_cutoff <- as.numeric(percentile(gene_variances, percentile_cutoff))
+    variance_cutoff <- as.numeric(quantile(gene_variances, percentile_cutoff))
     low_variance_mask <- gene_variances <= variance_cutoff
 
-    ## Apply filtering to count tables at different processing stages
-    counts <- counts[!low_variance_mask,]
+    # Apply filtering to count tables at different processing stages
+    counts <- counts[!low_variance_mask, ]
 
     # Show which genes were filtered out
     if (include_plot) {
