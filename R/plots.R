@@ -370,7 +370,6 @@ plot_sample_heatmap <- function(counts, xlabels, ylabels, covariates=NULL,
         cond_colors_mat <- as.matrix(cbind(cond_colors, cond_colors))
         colnames(cond_colors_mat) <- c("Condition", "")
 
-        browser()
         heatmap.plus::heatmap.plus(dist_matrix,
                                   ColSideColors=cond_colors_mat,
                                   RowSideColors=adjust_var_colors,

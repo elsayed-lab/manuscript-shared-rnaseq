@@ -40,6 +40,8 @@ removed.
 ```{r variance_filtering}
 # Remove any genes with exactly zero variance (otherwise will result in NAs
 # in the correlation matrix)
+num_before <- nrow(network_counts$final)
+
 zero_var_mask <- apply(exprs(network_counts$final), 1, var) != 0
 network_counts$final <- network_counts$final[zero_var_mask,]
 
@@ -49,4 +51,8 @@ if (CONFIG$min_var_percentile > 0) {
                                                       CONFIG$min_var_percentile,
                                                       include_plot=CONFIG$include_plots)
 }
+
+cat(sprintf("\nRemoving **%d** low-variance genes (**%d** remaining).\n\n",
+            nrow(network_counts$final) - num_before, nrow(network_counts$final)))
+num_before <- nrow(network_counts$final)
 ```

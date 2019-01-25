@@ -1,7 +1,21 @@
 ### Sample read distributions (log2-CPM)
 
+```{r}
+# in cases where there are a large number of samples, we will just look at subsampled data to get
+# sense of the broad features of the data
+num_genes   <- nrow(exprs(counts$log2cpm))
+num_samples <- ncol(exprs(counts$log2cpm))
+
+xind <- sample(num_genes, min(num_genes, 1E4))
+yind <- sample(num_samples, min(num_samples, 50))
+```
+
+
 ```{r sample_read_densities, cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$include_plots}
-x = melt(exprs(counts$log2cpm))
+# here, to just get a broad overview of expression distributions, it is sufficient to just
+# visualize distributions for a subset of genes/samples
+x <- melt(exprs(counts$log2cpm[xind, yind]))
+x <- x[sample(nrow(x), min(nrow(x), 1E4)), ]
 
 colnames(x) = c('gene_id', 'sample', 'value')
 plt <- ggplot(x, aes(x=value, color=sample)) + geom_density()
@@ -15,42 +29,32 @@ if (ncol(counts$log2cpm) > 50) {
 plt
 ```
 
-```{r}
-# for remaining sample plots, if a large number of samples are present, subsample improve speed and
-# visibility
-if (ncol(counts$normed) > 50) {
-  ind <- sample(ncol(counts$normed), 50)
-} else {
-  ind <- 1:ncol(counts$normed)
-}
-```
-
-
 ### Sample pairwise correlations
 
 ```{r outlier_check, include=CONFIG$include_plots, eval=CONFIG$include_plots}
-plot_sample_correlations(exprs(counts$normed)[, ind], condition[ind], batch[ind], mar=c(16,6,4,6))
+plot_sample_correlations(exprs(counts$normed)[, yind], condition[yind], batch[yind], mar=c(16,6,4,6))
 ```
 
 ### Sample heatmap (normalized euclidean distance)
 
 ```{r heatmap_diffexpr_euclidean_distance, cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$include_plots}
-plot_sample_heatmap(exprs(counts$normed)[, ind], condition[ind], batch[ind], covariates[ind, ],
+plot_sample_heatmap(exprs(counts$normed)[, yind], condition[yind], batch[yind], covariates[yind, ],
                     main='Sample Heatmap (normalized euclidean distance)')
 ```
 
 ### Sample heatmap (normalized pearson correlation)
 
 ```{r heatmap_diffexpr_pearson_correlation, cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$include_plots}
-plot_sample_heatmap(exprs(counts$normed), 
-                    condition[ind], batch[ind], covariates[ind, ], metric='pearson',
+plot_sample_heatmap(exprs(counts$normed)[, yind], 
+                    condition[yind], batch[yind], covariates[yind, ], metric='pearson',
                     main='Sample Heatmap (normalized pearson correlation)')
 ```
 
 ### Sample PCA (normalized counts)
 
 ```{r sample_pca_normed, eval=CONFIG$include_plots}
-plot_sample_pca(exprs(counts$normed), sample_ids[ind], condition[ind],
-                batch[ind], num_pcs=3, main='Sample PCA (normalized counts)')
+plot_sample_pca(exprs(counts$normed)[, yind], sample_ids[yind], condition[yind],
+                batch[yind], num_pcs=3, main='Sample PCA (normalized counts)',
+                include_legend = num_samples < 30)
 ```
 
