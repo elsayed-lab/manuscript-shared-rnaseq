@@ -23,7 +23,7 @@ if ('module_coreg_enrichment' %in% ls()) {
 }
 
 # temporarily recreate correlation matrix to compute module stats
-correlation_matrix <- cor(t(wgcna_input))
+correlation_matrix <- coop::pcor(t(wgcna_input))
 module_stats <- create_module_stats_df(result, correlation_matrix, wgcna_input,
                                        main_contrast, module_enrichment_results)
 # free up memory

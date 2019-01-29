@@ -43,7 +43,7 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
     }
 } else if (CONFIG$similarity_measure == 'spearman') {
     # Spearman correlation
-    similarity_matrix <- cor(t(wgcna_input), method='spearman')
+    similarity_matrix <- coop::pcor(t(wgcna_input), method='spearman')
 
     # 2015/12/19 Spearman sometimes returns values outside of [-1, 1]
     # see: https://bugs.r-project.org/bugzilla3/show_bug.cgi?id=16638
@@ -51,8 +51,8 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
     similarity_matrix[similarity_matrix > 1] <- 1
 } else if (CONFIG$similarity_measure == 'cor-dist') {
     # Combination of Pearson correlation and Euclidean distance
-    cor_matrix  <- cor(t(wgcna_input))
-    dist_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
+    cor_matrix  <- coop::pcor(t(wgcna_input))
+    dist_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
     dist_matrix <- log1p(dist_matrix)
     dist_matrix <- 1 - (dist_matrix / max(dist_matrix))
 
@@ -67,7 +67,7 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
 
     # Old way of converting euclidean distance to a similarity measure:
     # inverse of max-scaled log-euclidean-distance
-    similarity_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
+    similarity_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
     similarity_matrix <- log1p(similarity_matrix)
     similarity_matrix <- 1 - (similarity_matrix / max(similarity_matrix))
 
@@ -75,14 +75,14 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
     # Produces a matrix in the range [0,1]
     # http://www.inside-r.org/packages/cran/KRLS/docs/gausskernel
     #sigma <- median(rowSums(wgcna_input**2))
-    #similarity_matrix <- exp(-1 * as.matrix(dist(wgcna_input)^2)/sigma)
+    #similarity_matrix <- exp(-1 * as.matrix(parallelDist::parDist(wgcna_input)^2)/sigma)
 
     if (CONFIG$similarity_measure == 'dist') {
         # For convenience, modify to range from [0,1] to [-1,1]; this will allow 
         # downstream steps that expect output from cor() to behave the same
         similarity_matrix <- (2 * similarity_matrix) - 1
     } else if (CONFIG$similarity_matrix == 'signed-dist') {
-        similarity_matrix <- sign(cor(t(wgcna_input))) * similarity_matrix
+        similarity_matrix <- sign(coop::pcor(t(wgcna_input))) * similarity_matrix
     }
 }
 

@@ -26,17 +26,12 @@ reps_per_batch <- table(factor(condition))
 min_replicates <- min(reps_per_batch)
 
 # for larger datasets with many conditions (e.g. > 1,000 samples), this may be too conservative,
-# so we will also set a lower limit equal to 5% of the samples
+# so we will also set a lower limit equal to 5% times the total number of samples
 min_replicates <- max(min_replicates, round(length(condition) / 20))
 
 de_counts$raw <- filter_lowcount_genes(de_counts$raw, 
                                        threshold=CONFIG$low_count_threshold,
                                        min_samples=min_replicates, verbose=TRUE)
-```
-
-```{r include=CONFIG$verbose, echo=CONFIG$verbose}
-print("Removing low count genes:")
-print(head(rownames(assay_data)[!rownames(assay_data) %in% rownames(de_counts$raw)]))
 ```
 
 ```{r include=CONFIG$debug, eval=CONFIG$debug}
@@ -109,6 +104,9 @@ de_counts$log2cpm <- de_counts$raw
 
 # Keep a copy of the Log2-CPM normalized counts for plotting purposes
 exprs(de_counts$log2cpm) <- log2(counts_per_million(exprs(de_counts$raw)) + 0.5)
+
+# clean-up
+suppressMessages(gc())
 ```
 
 ```{r include=CONFIG$debug, eval=CONFIG$debug}
