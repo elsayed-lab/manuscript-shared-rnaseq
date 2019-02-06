@@ -98,7 +98,7 @@ for (name in names(network_counts)) {
 samples_differ <- length(sample_ids) == length(sample_ids_network)
 
 if (samples_differ) {
-    cat("\nNetwork sample visualization\n\n")
+    cat("\n## Network sample visualization\n\n")
     counts <- network_counts
 }
 ```

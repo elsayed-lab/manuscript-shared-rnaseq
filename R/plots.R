@@ -243,7 +243,7 @@ plot_color_bar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, le
 #'
 #' @return None
 plot_sample_pca <- function(dat, sample_ids, condition, batch, num_pcs=2, 
-                            main="", include_legend=TRUE, scale=FALSE) {
+                            main="", include_labels=TRUE, include_legend=TRUE, scale=FALSE) {
     # check to make sure request number of PC's to plot is valid
     if (num_pcs > ncol(dat)) {
         stop("Invalid number of PCs requested.")
@@ -272,26 +272,28 @@ plot_sample_pca <- function(dat, sample_ids, condition, batch, num_pcs=2,
                          pc1=prcomp_results$x[,pc1], pc2=prcomp_results$x[,pc2],
                          condition=condition, batch=batch)
         # PCA plot
-
-        if (ncol(dat) <= 50) {
-          # for relatively small sample numbers, we make use of shape aesthetic
+        if (include_legend) {
+          # with legend
           plt <- ggplot(df, aes(pc1, pc2, color=condition, shape=batch)) +
             theme_bw()
         } else {
-          # for large numbers of samples, don't style by shape and drop the legend
-          plt <- ggplot(df, aes(pc1, pc2, color=condition)) +
+          # without legend
+          plt <- ggplot(df, aes(pc1, pc2)) +
             theme_bw() +
             theme(legend.position="none")
         }
 
+        # scatter plot and axes labels
         plt <- plt + 
           geom_point(stat="identity",size=5) +
-          geom_text(aes(label=sample_id), angle=45, size=4,vjust=2) +
-          #scale_shape_manual(values=1:nlevels(batch)) +
           xlab(xl) + ylab(yl) +
           ggtitle(sprintf("PCA: %s", main)) +
-          theme(axis.ticks=element_blank(), 
-                axis.text.x=element_text(angle=-90))
+          theme(axis.ticks=element_blank(), axis.text.x=element_text(angle=-90))
+
+        # text labels
+        if (include_labels) {
+          plt <- plt + geom_text(aes(label=sample_id), angle=45, size=4,vjust=2)
+        }
 
         plot(plt)
     }

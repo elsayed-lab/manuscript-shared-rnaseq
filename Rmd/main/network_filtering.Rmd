@@ -37,7 +37,7 @@ construction, these genes will provide little information.
 If enabled in the experiment settings, genes with low variances will be
 removed.
 
-```{r variance_filtering}
+```{r variance_filtering, results = 'asis'}
 # Remove any genes with exactly zero variance (otherwise will result in NAs
 # in the correlation matrix)
 num_before <- nrow(network_counts$final)
@@ -52,7 +52,7 @@ if (CONFIG$min_var_percentile > 0) {
                                                       include_plot=CONFIG$include_plots)
 }
 
-cat(sprintf("\nRemoving **%d** low-variance genes (**%d** remaining).\n\n",
+cat(sprintf("- Removing **%d** low-variance genes (**%d** remaining).\n\n",
             nrow(network_counts$final) - num_before, nrow(network_counts$final)))
 num_before <- nrow(network_counts$final)
 ```
