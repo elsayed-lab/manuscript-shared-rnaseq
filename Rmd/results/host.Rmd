@@ -24,10 +24,10 @@ then compare it to the co-expression network adjacency matrix.
 ```{r load_irefindex_network, eval=TRUE}
 # input filepath
 if (CONFIG$host == 'H. sapiens') {
-    iref_filepath <- file.path(Sys.getenv('REF'), 'irefindex', '14.0',
+    iref_filepath <- file.path(Sys.getenv('DATA'), 'annotations', 'irefindex', '14.0',
                             '9606.07042015.ensembl.csv.gz')
 } else if (CONFIG$host == 'M. musculus') {
-    iref_filepath <- file.path(Sys.getenv('REF'), 'irefindex', '14.0',
+    iref_filepath <- file.path(Sys.getenv('DATA'), 'annotations', 'irefindex', '14.0',
                             '10090.07042015.ensembl.csv.gz')
 }
 

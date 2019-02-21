@@ -104,7 +104,7 @@ settings.
 message("Preparing count matrix")
 
 # Load from RData
-if (tolower(file_ext(CONFIG$input_count_tables)) %in% c('rda', 'rdata')) {
+if (length(CONFIG$input_count_tables) == 1 && tolower(file_ext(CONFIG$input_count_tables)) %in% c('rda', 'rdata')) {
     # Check to see if count table has been loaded, and if not, load
     if (!CONFIG$input_count_var %in% ls()) {
       load(CONFIG$input_count_tables)

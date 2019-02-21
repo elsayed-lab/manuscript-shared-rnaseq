@@ -7,11 +7,11 @@ pathway enrichment of modules.
 ```{r load_cpdb, results='asis'}
 # load data
 if (CONFIG$host == 'H. sapiens') {
-    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'human', '30',
-                            'CPDB_pathways_genes_human.tab')
+    cpdb_infile <- file.path(Sys.getenv('DATA'), 'annotations', 'cpdb', 'human', 
+                            'CPDB_pathways_genes_v30.tab')
 } else if (CONFIG$host == 'M. musculus') {
-    cpdb_infile <- file.path(Sys.getenv('REF'), 'cpdb', 'mouse', 'mm9',
-                            'CPDB_pathways_genes_mouse.tab')
+    cpdb_infile <- file.path(Sys.getenv('DATA'), 'annotations', 'cpdb', 'mouse', 
+                            'CPDB_pathways_genes_mm9.tab')
 }
 
 # load full CPDB mapping
@@ -42,8 +42,7 @@ if (file.exists(cpdb_rdata)) {
 
 ```{r cpdb_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
 # Initialize CPUs
-#cl <- makeCluster(max(1, min(12, detectCores() - 2)))
-cl <- makeCluster(2)
+cl <- makeCluster(max(1, min(12, detectCores() - 2)))
 registerDoParallel(cl)
 
 message("Performing CPDB enrichment")

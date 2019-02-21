@@ -4,8 +4,7 @@ Next, we will look for enrichment of genes regulated by the same TF, as
 inferred from ENCODE data (Gernstein *et al*, 2012).
 
 ```{r load_encode_tf_network_data, results='asis'}
-infile = file.path(Sys.getenv('REF'), 'gerstein_2012',
-                                      'enets2.Proximal_filtered_ensembl.txt')
+infile = file.path(Sys.getenv('DATA'), 'umd', 'gerstein2012', 'enets2.Proximal_filtered_ensembl.txt')
 
 # read_table also works in more recent versions of R...
 dat = tbl_df(read.table(infile, col.names=c('A', 'type', 'B')))

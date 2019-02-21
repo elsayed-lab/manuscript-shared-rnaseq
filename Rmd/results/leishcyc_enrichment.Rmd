@@ -4,8 +4,7 @@ source: http://www.biocyc.org/LEISH/organism-summary?object=LEISH
 
 ```{r load_leishcyc, results='asis'}
 # load data
-leishcyc_infile <- file.path(Sys.getenv('REF'), 'lmajor_friedlin', 'annotation',
-                            'LeishCyc_19.5_mapping.csv')
+leishcyc_infile <- file.path(Sys.getenv('DATA'), 'annotations', 'leishcyc', 'LeishCyc_19.5_mapping.csv')
 
 # load full LeishCyc mapping
 leishcyc_mapping <- read.csv(leishcyc_infile)
