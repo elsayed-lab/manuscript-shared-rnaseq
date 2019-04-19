@@ -27,6 +27,7 @@ library('RColorBrewer')
 library('RCurl')
 library('sva')
 library('viridis')
+library('annotables')
 library('hpgltools')
 
 # Load helper functions

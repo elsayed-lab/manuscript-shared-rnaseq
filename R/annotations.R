@@ -332,3 +332,60 @@ generate_kegg_pathway_mapping <- function(pathways, verbose=FALSE) {
     }
     return(kegg_pathways)
 }
+
+#
+# Parses GMT file at a specified location and returns a gene/annotation mapping dataframe
+#
+parse_gmt <- function(infile, keytype) {
+  # determine maximum number columns (empty column in gmt file may be skipped, so adding
+  # one to be safe)
+  max_cols <- max(count.fields(infile, sep='\t'), na.rm = TRUE) + 1
+
+  cnames <- c('annotation', 'source', paste0('gene_', 1:(max_cols - 2)))
+
+  # read in table, filling empty cells with NA's
+  gmt <- read.delim(infile, sep = '\t', header = FALSE, col.names = cnames,
+                    fill = TRUE, stringsAsFactors = FALSE)
+
+  # drop any empty columns after the first two
+  na_cols <- which(apply(gmt, 2, function(x) { all(is.na(x)) }))
+  na_cols <- na_cols[!na_cols %in% 1:2]
+
+  if (length(na_cols) > 0) {
+    gmt <- gmt[, -na_cols]
+  }
+
+  # Check first column of genes to see if weights are specified for each entry
+  #  (e.g. <SYMBOL>,1.0)
+  if (all(grepl(',', gmt$gene_1))) {
+    # for now, we will simply discard the weights and keep the annotation - term mapping 
+    for (i in 3:ncol(gmt)) {
+        message(i)
+        gmt[, i] <- unlist(lapply(strsplit(gmt[, i], ','), '[', 1))
+    } 
+  }
+
+  # remove any annotation with no associated gene entries (found in some gmt files..)
+  mask <- apply(gmt, 1, function(x) { sum(!is.na(x)) }) > 2
+  gmt <- gmt[mask, ]
+  
+  # convert to an n x 2 (annotation, gene) mapping
+  res <- do.call('rbind', apply(gmt, 1, function(entry) {
+    # gene id's starting in third column
+    gids <- entry[3:length(entry)]
+    gids <- gids[!is.na(gids)]
+
+    data.frame(annotation = entry[1], gene = gids, row.names=NULL)
+  }))
+
+  # convert entrez gene ids to numer
+  if (startsWith(keytype, 'entrez')) {
+    res$gene <- as.numeric(as.character(res$gene))
+  }
+
+  # convert annotation column to character
+  res$annotation <- as.character(res$annotation)
+
+  # return dataframe
+  res
+}

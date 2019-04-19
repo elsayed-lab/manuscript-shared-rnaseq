@@ -18,6 +18,10 @@ if ('module_cpdb_enrichment' %in% ls()) {
     module_enrichment_results[['cpdb']] <- module_cpdb_enrichment
 }
 
+if ('module_msigdb_enrichment' %in% ls()) {
+    module_enrichment_results[['msigdb']] <- module_msigdb_enrichment
+}
+
 if ('module_coreg_enrichment' %in% ls()) {
     module_enrichment_results[['marbach']] <- module_coreg_enrichment
 }
