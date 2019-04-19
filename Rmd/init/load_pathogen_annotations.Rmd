@@ -6,27 +6,27 @@ Next, let's load gene annotation data from [TriTrypDB](http://tritrypdb.org/trit
 ```{r pathogen_annotation_filepaths}
 # Location of external annotation files
 species_dir <- tolower(sub('. ', '', CONFIG$pathogen))
-input_dir <- file.path('..', '..', 'data', species_dir)
+input_dir <- normalizePath(file.path(base_dir, '..', '..', '2015', '00-shared', 'data', species_dir))
 
 # Pathogen-specific data and annotations
 if (CONFIG$pathogen == "L. major") {
-    orf_counts            <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_ORF_counts.txt")
-    secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_LmajorFriedlin_SignalP.csv")
-    membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_TMHMM.csv")
-    gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_LmajorFriedlin_PredGPI.csv")
-    utr5_stats            <- file.path(input_dir, "lmajor_all_combined_5utr.csv")
-    utr3_stats            <- file.path(input_dir, "lmajor_all_combined_3utr.csv")
-    go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_go_terms.csv")
+  orf_counts            <- file.path(input_dir, "TriTrypDB-9.0_LmajorFriedlin_ORF_counts.txt")
+  secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_LmajorFriedlin_SignalP.csv")
+  membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_TMHMM.csv")
+  gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_LmajorFriedlin_PredGPI.csv")
+  utr5_stats            <- file.path(input_dir, "lmajor_all_combined_5utr.csv")
+  utr3_stats            <- file.path(input_dir, "lmajor_all_combined_3utr.csv")
+  go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_LmajorFriedlin_go_terms.csv")
 } else if (CONFIG$pathogen == "T. cruzi") {
-    orf_counts            <- file.path(input_dir, "TriTrypDB-8.0_TcruziCLBrenerEsmeraldo_ORF_counts.txt")
-    secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
-    membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_TMHMM.csv")
-    gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_TcruziCLBrenerEsmeraldo-like_PredGPI.csv")
-    utr5_stats            <- file.path(input_dir, "tcruzi_combined_5utrs.csv")
-    utr3_stats            <- file.path(input_dir, "tcruzi_combined_3utrs.csv")
-    go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_go_terms.csv")
+  orf_counts            <- file.path(input_dir, "TriTrypDB-8.0_TcruziCLBrenerEsmeraldo_ORF_counts.txt")
+  secreted_proteins     <- file.path(input_dir, "TriTrypDB-32_TcruziCLBrenerEsmeraldo-like_SignalP.csv")
+  membrane_proteins     <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_TMHMM.csv")
+  gpi_anchored_proteins <- file.path(input_dir, "TriTrypDB-24_TcruziCLBrenerEsmeraldo-like_PredGPI.csv")
+  utr5_stats            <- file.path(input_dir, "tcruzi_combined_5utrs.csv")
+  utr3_stats            <- file.path(input_dir, "tcruzi_combined_3utrs.csv")
+  go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_TcruziCLBrenerEsmeraldo-like_go_terms.csv")
 } else if (CONFIG$pathogen == "T. brucei") {
-    go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_TbruceiTREU927_go_terms.csv")
+  go_term_mapping       <- file.path(input_dir, "TriTrypDB-31_TbruceiTREU927_go_terms.csv")
 }
 ```
 
@@ -49,39 +49,39 @@ transcript_lengths <- transcript_lengths[transcript_lengths$gene_id %in%
                                          gene_info$gene_id,]
 
 gene_info[match(transcript_lengths$gene_id, gene_info$gene_id), 
-            'transcript_length'] <- transcript_lengths$tx_len
+          'transcript_length'] <- transcript_lengths$tx_len
 gene_info$transcript_length <- as.numeric(gene_info$transcript_length)
 
 if (CONFIG$debug) {
-    sum(gene_info$transcript_length)
+  sum(gene_info$transcript_length)
 }
 
 # For L. major, include ribosome profiling detected ORFs
 if (CONFIG$pathogen == 'L. major') {
-    # Unannotated ORF ids (e.g. LmjF.01_108)
-    orf_ids <- rownames(count_table)[grepl('_', rownames(count_table))]        
+  # Unannotated ORF ids (e.g. LmjF.01_108)
+  orf_ids <- rownames(count_table)[grepl('_', rownames(count_table))]        
 
-    # If count table includes entries for unannotated ORFs (e.g. those detected
-    # in our lab using ribosome profiling data), then add them to the
-    # annotation data frame.
-    if (length(orf_ids) > 0) {
-        # First 7 characters of ORF name indicates its corresponding chromosome
-        orf_chrs <- substr(orf_ids, 1, 7)
-        orf_entries <- data.frame(gene_id=orf_ids, chromosome=orf_chrs,
-                                  description=NA, strand=NA, type=NA,
-                                  transcript_length=NA)
-        gene_info <- rbind(gene_info, orf_entries)
-    }
+  # If count table includes entries for unannotated ORFs (e.g. those detected
+  # in our lab using ribosome profiling data), then add them to the
+  # annotation data frame.
+  if (length(orf_ids) > 0) {
+  # First 7 characters of ORF name indicates its corresponding chromosome
+    orf_chrs <- substr(orf_ids, 1, 7)
+    orf_entries <- data.frame(gene_id=orf_ids, chromosome=orf_chrs,
+                              description=NA, strand=NA, type=NA,
+                              transcript_length=NA)
+    gene_info <- rbind(gene_info, orf_entries)
+  }
 
-    # 2015/06/22 Add placeholder entry for LmjF.28.2965;
-    # currently excluded from annotation database because of potentially
-    # problematic annotation (strange exon structure). Contracted TriTrypDB
-    # regarding the gene.
-    gene_info <- rbind(gene_info,
-                       data.frame(gene_id='LmjF.28.2965',
-                                  chromosome='LmjF.28',
-                                  description=NA, strand=NA, type=NA, 
-                                  transcript_length=NA))
+  # 2015/06/22 Add placeholder entry for LmjF.28.2965;
+  # currently excluded from annotation database because of potentially
+  # problematic annotation (strange exon structure). Contracted TriTrypDB
+  # regarding the gene.
+  gene_info <- rbind(gene_info,
+                     data.frame(gene_id='LmjF.28.2965',
+                                chromosome='LmjF.28',
+                                description=NA, strand=NA, type=NA, 
+                                transcript_length=NA))
 }
 
 # Keep only the feature information remaining genes
@@ -92,24 +92,23 @@ gene_info <- gene_info[!duplicated(gene_info$gene_id),]
 
 # Species-specific additions
 if (CONFIG$pathogen == "L. major") {
-    # Work-around (2015/03/27)
-    # uORF transcript length support
-    # This second work-around updates the previous dataframe to include lengths
-    # for genes not in the main database. This is only necessary if the
-    # alternative L. major count tables which include the uORFs has been used.
-    if ("LmjF.01_20" %in% gene_info$gene_id) {
-        uorf_lengths <- read.csv(file.path(input_dir,
-                                          'lmajor_uorf_lengths.csv'))
-        for (i in 1:nrow(uorf_lengths)) {
-            gene_id     <- uorf_lengths[i, 'gene_id']
-            gene_length <- uorf_lengths[i, 'transcript_length']
+  # Work-around (2015/03/27)
+  # uORF transcript length support
+  # This second work-around updates the previous dataframe to include lengths
+  # for genes not in the main database. This is only necessary if the
+  # alternative L. major count tables which include the uORFs has been used.
+  if ("LmjF.01_20" %in% gene_info$gene_id) {
+    uorf_lengths <- read.csv(file.path(input_dir,
+                                      'lmajor_uorf_lengths.csv'))
+    for (i in 1:nrow(uorf_lengths)) {
+      gene_id     <- uorf_lengths[i, 'gene_id']
+      gene_length <- uorf_lengths[i, 'transcript_length']
 
-            if (gene_id %in% gene_info$gene_id) {
-                gene_info[gene_info$gene_id == gene_id,]$transcript_length <- gene_length
-            }
-        }
-
+      if (gene_id %in% gene_info$gene_id) {
+        gene_info[gene_info$gene_id == gene_id,]$transcript_length <- gene_length
+      }
     }
+  }
 }
 
 # Gene IDs
@@ -119,7 +118,7 @@ gene_ids <- rownames(count_table)
 ```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
 # gene annotations
 if (CONFIG$include_tables) {
-    kable(head(gene_info), caption='Preview of gene annotations.')
+  kable(head(gene_info), caption='Preview of gene annotations.')
 }
 ```
 
@@ -131,15 +130,15 @@ associated with each parasite gene, extracted from TriTrypDB.
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations
 if (file.exists(go_term_mapping)) {
-    go_terms <- read.csv(go_term_mapping, row.names=1)
+  go_terms <- read.csv(go_term_mapping, row.names=1)
 } else {
-    # generate gene / go term mapping for all gene id's
-    go_terms <- load_go_terms(orgdb, keys(orgdb, keytype=CONFIG$orgdb_key),
-                              keytype=CONFIG$orgdb_key)
-    colnames(go_terms) <- c('category', 'gene', 'term', 'ontology')
+  # generate gene / go term mapping for all gene id's
+  go_terms <- load_go_terms(orgdb, keys(orgdb, keytype=CONFIG$orgdb_key),
+                            keytype=CONFIG$orgdb_key)
+  colnames(go_terms) <- c('category', 'gene', 'term', 'ontology')
 
-    # cache for future use
-    write.csv(go_terms, file=go_term_mapping)
+  # cache for future use
+  write.csv(go_terms, file=go_term_mapping)
 }
 
 # Exclude genes not found in count table
@@ -156,7 +155,7 @@ go_term_id_mapping <- as.data.frame(unique(go_terms %>% select(-gene)))
 ```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
 # Preview of GO term annotations
 if (CONFIG$include_tables) {
-    kable(head(go_terms), caption='Preview of GO term annotations.')
+  kable(head(go_terms), caption='Preview of GO term annotations.')
 }
 ```
 
@@ -168,7 +167,7 @@ annotations for each parasite gene.
 ```{r load_kegg_annotations, message=FALSE, warning=FALSE}
 # L. major, T. cruzi, etc
 gene_kegg_mapping <- load_kegg_mapping(orgdb, rownames(count_table),
-                                        keytype=CONFIG$orgdb_key)
+                                       keytype=CONFIG$orgdb_key)
 kegg_pathways <- load_kegg_pathways(orgdb, rownames(count_table),
                                     keytype=CONFIG$orgdb_key)
 

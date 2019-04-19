@@ -103,8 +103,11 @@ settings.
 ```{r prepare_count_matrix, message=FALSE, results='asis', cache=CONFIG$use_cache, cache.lazy=FALSE, autodep=TRUE}
 message("Preparing count matrix")
 
-# Load from RData
-if (length(CONFIG$input_count_tables) == 1 && tolower(file_ext(CONFIG$input_count_tables)) %in% c('rda', 'rdata')) {
+# Use pre-loaded count table
+if (is.data.frame(CONFIG$input_count_tables)) {
+  count_table <- CONFIG$input_count_tables
+} else if (length(CONFIG$input_count_tables) == 1 && tolower(file_ext(CONFIG$input_count_tables)) %in% c('rda', 'rdata')) {
+  # Load from RData
     # Check to see if count table has been loaded, and if not, load
     if (!CONFIG$input_count_var %in% ls()) {
       load(CONFIG$input_count_tables)

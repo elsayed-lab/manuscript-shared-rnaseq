@@ -27,7 +27,7 @@ names(gene_lengths) <- gene_info$gene_id
 
 ```{r go_enrichment_diff_expr_genes, message=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$de_enrichment}
 # Initiallize parallelization
-cl <- makeCluster(min(12, detectCores() - 1))
+cl <- makeCluster(max(1, min(12, detectCores() - 2)))
 registerDoParallel(cl)
 
 # Run goseq for each contrast tested

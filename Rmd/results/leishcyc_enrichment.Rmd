@@ -13,7 +13,7 @@ colnames(leishcyc_mapping) <- c('category', 'gene_id')
 
 ```{r leishcyc_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
 # Initialize CPUs
-cl <- makeCluster(min(12, detectCores() - 1))
+cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
 registerDoParallel(cl)
 
 # Check each module for pathway enrichment and save result in a list

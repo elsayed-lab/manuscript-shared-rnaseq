@@ -13,7 +13,7 @@ names(gene_lengths) <- gene_info$gene_id
 
 ```{r go_enrichment_modules, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE, eval=CONFIG$module_enrichment}
 # Initiallize parallelization
-cl <- makeCluster(max(1, min(12, detectCores() - 2)))
+cl <- makeCluster(max(1, min(10, detectCores() - 2, na.rm = TRUE)))
 registerDoParallel(cl)
 
 message("Performing GO enrichment")
