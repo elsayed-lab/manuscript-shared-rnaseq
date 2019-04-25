@@ -427,8 +427,8 @@ test_gene_enrichment <- function(gene_subset, all_genes,
     pwf <- nullp(member_status, bias.data=gene_lengths, plot.fit=FALSE)
 
     # Check to make sure annotation mapping is in the expected format
-    if (all(!c('gene', 'category') %in% colnames(gene_annotation_mapping))) {
-        error("Gene-annotation mapping does not have expected fields")
+    if (!all(c('gene', 'category') %in% colnames(gene_annotation_mapping))) {
+        stop("Gene-annotation mapping does not have expected fields")
     }
 
     # Check to see if we are performing GO enrichment, or some other

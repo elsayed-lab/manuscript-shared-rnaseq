@@ -341,7 +341,7 @@ parse_gmt <- function(infile, keytype) {
   # one to be safe)
   max_cols <- max(count.fields(infile, sep='\t'), na.rm = TRUE) + 1
 
-  cnames <- c('annotation', 'source', paste0('gene_', 1:(max_cols - 2)))
+  cnames <- c('category', 'source', paste0('gene_', 1:(max_cols - 2)))
 
   # read in table, filling empty cells with NA's
   gmt <- read.delim(infile, sep = '\t', header = FALSE, col.names = cnames,
@@ -375,7 +375,7 @@ parse_gmt <- function(infile, keytype) {
     gids <- entry[3:length(entry)]
     gids <- gids[!is.na(gids)]
 
-    data.frame(annotation = entry[1], gene = gids, row.names=NULL)
+    data.frame(category = entry[1], gene = gids, row.names=NULL)
   }))
 
   # convert entrez gene ids to numer
@@ -384,7 +384,7 @@ parse_gmt <- function(infile, keytype) {
   }
 
   # convert annotation column to character
-  res$annotation <- as.character(res$annotation)
+  res$category <- as.character(res$category)
 
   # return dataframe
   res

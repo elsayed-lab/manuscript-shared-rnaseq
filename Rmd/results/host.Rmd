@@ -61,7 +61,7 @@ masked_adjmatrix <- adjacency_matrix
 masked_adjmatrix[!as.matrix(iref_adjmatrix)] <- 0
 ```
 
-```{r irefindex_plots, eval=TRUE}
+```{r irefindex_stats, eval=TRUE}
 # sum of irefindex supported edge weights
 iref_edge_sum <- sum(masked_adjmatrix)
 
@@ -76,30 +76,29 @@ sum(masked_adjmatrix > 0.8)
 sum(masked_adjmatrix > 0.5)
 sum(masked_adjmatrix > 0.3)
 sum(masked_adjmatrix > 0.1)
+```
 
-# Heatmap
-if (CONFIG$include_plots) {
-    # Create a binary version of the matrix and reorder to match previous heatmaps
-    ppi_input <- masked_adjmatrix[heatmap_row_idx, heatmap_col_idx]
-    ppi_input[ppi_input > 0] <- 1
+```{r iref_index_plot, include = CONFIG$include_plots, evan = CONFIG$include_plots}
+# Create a binary version of the matrix and reorder to match previous heatmaps
+ppi_input <- masked_adjmatrix[heatmap_row_idx, heatmap_col_idx]
+ppi_input[ppi_input > 0] <- 1
 
-    # make diagonal easy to see
-    diag(ppi_input) <- 1
+# make diagonal easy to see
+diag(ppi_input) <- 1
 
-    heatmap.2(ppi_input, 
-              Rowv=NA, Colv=NA,
-              labRow=NA, labCol=NA, 
-              hclustfun=flashClust, col=c('#000000', '#00FF00'), margin=c(7,7),
-              key.xlab='iRefIndex supported co-expression network',
-              trace='none',
-              dendrogram='none',
-              xlab='Gene', ylab='Gene',
-              cexRow=2, cexCol=2, keysize=1,
-              density.info='none', revC=TRUE)
+heatmap.2(ppi_input, 
+          Rowv=NA, Colv=NA,
+          labRow=NA, labCol=NA, 
+          hclustfun=flashClust, col=c('#000000', '#00FF00'), margin=c(7,7),
+          key.xlab='iRefIndex supported co-expression network',
+          trace='none',
+          dendrogram='none',
+          xlab='Gene', ylab='Gene',
+          cexRow=2, cexCol=2, keysize=1,
+          density.info='none', revC=TRUE)
 
-    # clean-up plot input when finished
-    rm(ppi_input)
-}
+# clean-up plot input when finished
+rm(ppi_input)
 ```
 
 ```{r irefindex_cleanup}

@@ -61,9 +61,7 @@ cat(sprintf('- Total enriched modules: %d\n',
             sum(sapply(module_msigdb_enrichment, nrow) > 0)))
 
 if (CONFIG$include_tables) {
-    print_enrichment_results(module_msigdb_enrichment, module_sizes,
-                                'MSigDB Gene Set',
-                                msigdb %>% select(category=external_id, pathway, source))
+    print_enrichment_results(module_msigdb_enrichment, module_sizes, 'MSigDB Gene Set')
 }
 ```
 
