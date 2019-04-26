@@ -28,10 +28,10 @@ if (file.exists(cpdb_rdata)) {
 
     for (i in 1:nrow(cpdb)) {
         category <- cpdb$external_id[i]
-        gene_id <- strsplit(cpdb$ensembl_ids[i], ',')[[1]]
+        gene <- strsplit(cpdb$ensembl_ids[i], ',')[[1]]
 
-        if (length(gene_id) > 0) {
-            cpdb_mapping <- rbind(cpdb_mapping, cbind(category, gene_id))
+        if (length(gene) > 0) {
+            cpdb_mapping <- rbind(cpdb_mapping, cbind(category, gene))
         }
     }
 
