@@ -30,20 +30,22 @@ registerDoParallel(cl)
 
 # Check for enrichment in KEGG terms and save result in a list
 kegg_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
-    gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+  set.seed(1)
 
-    # Measure KEGG enrichment for module
-    enriched <- tryCatch({
-        enriched <- test_gene_enrichment(gene_subset, gene_ids,
-                                        gene_kegg_mapping, gene_lengths)
-        enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
-                                by='category'))
-    }, error=function(e) {
-        # goseq fails in some cases; have not been able to track down cause yet
-        warning("KEGG enrichment failed")
-        return(get_enrichment_placeholder())
-    })
-    enriched
+  gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+
+  # Measure KEGG enrichment for module
+  enriched <- tryCatch({
+      enriched <- test_gene_enrichment(gene_subset, gene_ids,
+                                      gene_kegg_mapping, gene_lengths)
+      enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
+                              by='category'))
+  }, error=function(e) {
+      # goseq fails in some cases; have not been able to track down cause yet
+      warning("KEGG enrichment failed")
+      return(get_enrichment_placeholder())
+  })
+  enriched
 }
 names(kegg_results) <- names(sig_genes)
 

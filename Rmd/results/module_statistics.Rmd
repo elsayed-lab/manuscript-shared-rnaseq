@@ -3,7 +3,7 @@ Module Statistics
 
 Create a dataframe with module-specific statistics.
 
-```{r create_module_stats_df}
+```{r create_module_stats_df, warnings = FALSE}
 # create a list including all enrichment results
 module_enrichment_results <- list(
     go=module_go_enrichment,

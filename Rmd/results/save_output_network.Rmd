@@ -5,9 +5,6 @@ Next we will export the WGCNA network, along with the module assignments and
 some addition meta information to a format that is easily readable by network
 visualization tools such as Cytoscape.
 
-- TODO 2014/06/09: Include cor() as well as TOM in output, including the sign
-  of the correlation.
-
 ```{r create_output_df, cache=CONFIG$use_cache, autodep=TRUE, cache.lazy=FALSE}
 if ('descriptiion' %in% colnames(result)) {
     sorted_result <- tbl_df(result[with(result, order(color, description)),])

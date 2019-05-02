@@ -48,14 +48,8 @@ regulated in the same manner as other coding genes. Since these are not
 polyadenylated, they should not be present in the samples in large numbers.
 
 ```{r filter_noncoding_rnas}
-# TODO: Extend human/mouse filtering to include tRNAs
-# library('FDb.UCSC.tRNAs')
-# names(features(FDb.Hsapiens.UCSC.hg19.tRNAs))
-# Returns names from UCSC table, but not corresponding ENSEMBL ids?
-
 # Filter by gene id or type
-# Note that when filtering by type for T. cruzi, SRPs and SLRNAs are not
-# included
+# Note that when filtering by type for T. cruzi, SRPs and SLRNAs are not included
 ncrna_mask <- rep(FALSE, nrow(de_counts$raw))
 
 if (!is.null(CONFIG$id_filter_string)) {

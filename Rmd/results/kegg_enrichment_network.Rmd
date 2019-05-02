@@ -9,27 +9,29 @@ message("Performing KEGG enrichment")
 
 # Check each module for enrichment in GO terms and save result in a list
 module_kegg_enrichment <- foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
-    # Measure KEGG enrichment for module
-    enriched <- tryCatch({
-        in_module_geneids <- gene_ids[module_colors == color]
-        enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
-                                         gene_kegg_mapping, gene_lengths)
-        # 2015/11/13
-        # T. cruzi KEGG problem:
-        #
-        # Columns incorrectly names? (category saved as "description")
-        # 
-        #> kegg_pathways$description
-        # [1] "path:tcr00900" "path:tcr01100" "path:tcr01110" "path:tcr01130" "path:tcr03010" "path:tcr00230" "path:tcr03050" "path:tcr04141" "path:tcr01040" "path:tcr01212"
-        #[11] "path:tcr04146" "path:tcr00100" "path:tcr03015" "path:tcr05142" "path:tcr00330" "path:tcr03013" "path:tcr03040" "path:tcr00480" "path:tcr00220" "path:tcr00250"
-        enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
-                                by='category'))
-    }, error=function(e) {
-        # goseq fails in some cases; have not been able to track down cause yet
-        warning(sprintf("KEGG enrichment failed for module %s", color))
-        return(get_enrichment_placeholder())
-    })
-    enriched
+  set.seed(1)
+
+  # Measure KEGG enrichment for module
+  enriched <- tryCatch({
+      in_module_geneids <- gene_ids[module_colors == color]
+      enriched <- test_gene_enrichment(in_module_geneids, gene_ids,
+                                        gene_kegg_mapping, gene_lengths)
+      # 2015/11/13
+      # T. cruzi KEGG problem:
+      #
+      # Columns incorrectly names? (category saved as "description")
+      # 
+      #> kegg_pathways$description
+      # [1] "path:tcr00900" "path:tcr01100" "path:tcr01110" "path:tcr01130" "path:tcr03010" "path:tcr00230" "path:tcr03050" "path:tcr04141" "path:tcr01040" "path:tcr01212"
+      #[11] "path:tcr04146" "path:tcr00100" "path:tcr03015" "path:tcr05142" "path:tcr00330" "path:tcr03013" "path:tcr03040" "path:tcr00480" "path:tcr00220" "path:tcr00250"
+      enriched <- unique(merge(enriched, kegg_pathways[,c('category','name')],
+                              by='category'))
+  }, error=function(e) {
+      # goseq fails in some cases; have not been able to track down cause yet
+      warning(sprintf("KEGG enrichment failed for module %s", color))
+      return(get_enrichment_placeholder())
+  })
+  enriched
 }
 
 names(module_kegg_enrichment) <- unique(module_colors)

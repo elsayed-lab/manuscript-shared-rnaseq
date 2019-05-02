@@ -53,7 +53,7 @@ batch      <- factor(CONFIG$samples[[CONFIG$batch]])
 
 # Covariate dataframe
 covariates <- CONFIG$samples %>% 
-  select_(.dots=CONFIG$covariates)
+  select(!!CONFIG$covariates)
 
 # Make sure levels for batch and condition are valid
 #levels(condition) <- make.names(levels(condition))

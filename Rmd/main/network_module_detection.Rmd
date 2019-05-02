@@ -469,6 +469,22 @@ for (contrast in names(sig_genes)) {
 }
 ```
 
+Module sizes
+------------
+
+Create a dataframe mapping from module name to number of genes.
+
+```{r module_stats}
+# create a mapping from module id to number of genes for later use
+module_sizes <- setNames(as.data.frame(module_colors), 'module_id') %>% 
+    group_by(module_id) %>% 
+    summarize(num_genes=n())
+```
+
+```{r echo=CONFIG$verbose, include=CONFIG$verbose}
+summary(module_sizes$num_genes)
+```
+
 ### Save results
 
 ```{r save_results}
@@ -489,3 +505,4 @@ COEXPRESSION_NETWORK_RESULT <- list(
     result=result
 )
 ```
+

@@ -32,20 +32,22 @@ registerDoParallel(cl)
 
 # Run goseq for each contrast tested
 go_results <- foreach(contrast=names(sig_genes), .packages=c('goseq')) %dopar% {
-    gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+  set.seed(1)
 
-    # Skip contrasts with little/no differentially expressed genes;
-    # goseq fails, for example, for set sizes of 2;
-    if (length(gene_subset) > 2) {
-        # for host go enrichment, take advantage of goseq's internal mapping
-        if (CONFIG$target == 'host' && CONFIG$host != 'C. elegans') {
-            test_host_go_enrichment(gene_subset, gene_ids,
-                                    CONFIG$organism_genome)
-        } else {
-            # parasite, c. elegans GO enrichment
-            test_gene_enrichment(gene_subset, gene_ids, gene_go_mapping, gene_lengths)
-        }
+  gene_subset <- as.character(sig_genes[[contrast]]$gene_id)
+
+  # Skip contrasts with little/no differentially expressed genes;
+  # goseq fails, for example, for set sizes of 2;
+  if (length(gene_subset) > 2) {
+    # for host go enrichment, take advantage of goseq's internal mapping
+    if (CONFIG$target == 'host' && CONFIG$host != 'C. elegans') {
+      test_host_go_enrichment(gene_subset, gene_ids,
+                              CONFIG$organism_genome)
+    } else {
+      # parasite, c. elegans GO enrichment
+      test_gene_enrichment(gene_subset, gene_ids, gene_go_mapping, gene_lengths)
     }
+  }
 }
 names(go_results) <- names(sig_genes)
 

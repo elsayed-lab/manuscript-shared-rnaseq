@@ -37,19 +37,21 @@ registerDoParallel(cl)
 
 # Check each module for enrichment in co-regulated genes and save result in a list
 module_coreg_enrichment = foreach(color=unique(module_colors), .packages=c('goseq')) %dopar% {
-    # Measure enrichment for module
-    enriched = tryCatch({
-        in_module_geneids = gene_ids[module_colors == color]
-        enriched = test_gene_enrichment(in_module_geneids, gene_ids,
-                                        gene_tf_mapping, gene_lengths)
-    }, error=function(e) {
-        # goseq fails in some cases; have not been able to track down cause yet
-        # Note: goseq will also fail if supplied with a dplyr tbl_df so first 
-        # make sure that is not the case
-        warning(sprintf("Marbach2016 co-regulation enrichment failed for module %s", color))
-        return(get_enrichment_placeholder())
-    })
-    enriched
+  set.seed(1)
+
+  # Measure enrichment for module
+  enriched = tryCatch({
+      in_module_geneids = gene_ids[module_colors == color]
+      enriched = test_gene_enrichment(in_module_geneids, gene_ids,
+                                      gene_tf_mapping, gene_lengths)
+  }, error=function(e) {
+      # goseq fails in some cases; have not been able to track down cause yet
+      # Note: goseq will also fail if supplied with a dplyr tbl_df so first 
+      # make sure that is not the case
+      warning(sprintf("Marbach2016 co-regulation enrichment failed for module %s", color))
+      return(get_enrichment_placeholder())
+  })
+  enriched
 }
 
 names(module_coreg_enrichment) = unique(module_colors)
