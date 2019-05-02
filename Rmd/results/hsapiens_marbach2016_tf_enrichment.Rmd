@@ -11,16 +11,17 @@ gene_tf_mapping <- data.frame(category=rep(names(Marbach2016), lapply(Marbach201
                               gene=unlist(Marbach2016, recursive=FALSE))
 
 # convert HGNC gene identifiers to ENSEMBL identifiers
-gene_id_mapping <- setNames(
-    AnnotationDbi::select(orgdb, keys=unique(gene_tf_mapping$gene), keytype='ALIAS', 
-                          columns=c('ENSEMBL')), c('gene', 'gid_ensembl')
-)
+#gene_id_mapping <- setNames(
+#    AnnotationDbi::select(orgdb, keys=unique(gene_tf_mapping$gene), keytype='ALIAS', 
+#                          columns=c('ENSEMBL')), c('gene', 'gid_ensembl')
+#)
+#ind <- match(gene_tf_mapping$gene, gene_id_mapping$gene)
 
-ind <- match(gene_tf_mapping$gene, gene_id_mapping$gene)
-gene_tf_mapping$gene <- gene_id_mapping$gid_ensembl[ind]
+ind <- match(gene_tf_mapping$gene, grch37$symbol)
+gene_tf_mapping$gene <- grch37$ensgene[ind]
 
 # drop any entries that could not be mapped
-gene_tf_mapping <- gene_tf_mapping[complete.cases(gene_tf_mapping),]
+gene_tf_mapping <- gene_tf_mapping[complete.cases(gene_tf_mapping), ]
 
 if (CONFIG$verbose && CONFIG$include_tables) {
     cat("\nPreview of gene / TF mapping:\n")

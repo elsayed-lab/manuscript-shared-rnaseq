@@ -216,8 +216,7 @@ load_kegg_pathways <- function(orgdb, gene_ids, keytype='ENSEMBL') {
     kegg_pathways <- suppressWarnings(
         tbl_df(AnnotationDbi::select(orgdb, keys=gene_ids,
                             keytype=keytype,
-                            columns=c('KEGG_PATH', 'KEGG_NAME', 'KEGG_CLASS',
-                                        'KEGG_DESCRIPTION')))
+                            columns=c('KEGG_PATH', 'KEGG_NAME', 'KEGG_CLASS', 'KEGG_DESCRIPTION')))
     )
     kegg_pathways <- kegg_pathways %>%
         na.omit() %>%
