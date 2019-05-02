@@ -1,0 +1,99 @@
+### MSigDB enrichment (GSEA)
+
+```{r load_msigdb, results='asis'}
+# MSigDB collections to include
+msigdb_collections <- c('h.all', 'c2.all', 'c5.all', 'c7.all')
+
+msigdb_pathways <- list()
+
+# load MSigDB gene sets
+for (collection in msigdb_collections) {
+  infile <- file.path(Sys.getenv('DATA'), 'annotations', 'msigdb', 'v6.2', 
+                      sprintf('%s.v6.2.entrez.gmt', collection))
+  pathways_entrez <- fgsea::gmtPathways(infile)
+
+  # convert entrez gene ids -> ensembl gene ids
+  pathways_ensgene <- lapply(pathways_entrez, function(x) {
+    ensgene <- grch37$ensgene[match(x, grch37$entrez)]
+    ensgene[!is.na(ensgene)]
+  })
+
+  msigdb_pathways <- c(msigdb_pathways, pathways_ensgene)
+}
+```
+
+```{r msigdb_gene_enrichment, message=FALSE, warning=FALSE, results='hide', cache=CONFIG$use_cache, autodep=TRUE}
+# Initialize CPUs
+num_threads <- max(1, min(26, detectCores() - 2, na.rm = TRUE))
+cl <- makeCluster(num_threads, outfile = '')
+registerDoParallel(cl)
+
+message("Performing MSigDB enrichment")
+
+# check each module for pathway enrichment and save result in a list
+gsea_results <- foreach(color = unique(module_colors), .packages=c('fgsea')) %dopar% {
+  set.seed(1)
+
+  # skip unclustered genes
+  if (color == 'grey') {
+    return(NULL)
+  }
+
+  # get module eigengene (first PC)
+  module_expr <- wgcna_input[module_colors == color, ]
+  module_eigengene <- prcomp(t(module_expr))$x[, 1]
+
+  # measure correlation of all genes with module eigengene
+  gene_eigengene_cors <- cor(t(wgcna_input), module_eigengene)
+  gene_eigengene_cors <- setNames(as.numeric(gene_eigengene_cors), rownames(gene_eigengene_cors))
+
+  # measure GSEA enrichment for module
+  res <- fgsea::fgsea(msigdb_pathways, gene_eigengene_cors, minSize = 10, nperm = 25000, nproc = 1)
+
+  as.data.frame(res[order(res$padj), -'leadingEdge'])
+}
+names(gsea_results) <- unique(module_colors)
+
+# drop unclustered genes
+gsea_results[['grey']] <- NULL
+
+# unregister cpus
+stopCluster(cl)
+```
+
+#### MSigDB GSEA results (module-level)
+
+```{r msigdb_gsea_enrichment_results_modules, results='asis', include = CONFIG$include_tables, eval = CONFIG$include_tables}
+# summarize GSEA enrichment results by module
+gsea_module_summary <- data.frame(
+  module       = names(gsea_results), 
+  num_genes    = module_sizes$num_genes[match(names(gsea_results), module_sizes$module_id)],
+  num_enriched = as.numeric(lapply(gsea_results, function(x) { sum(x$padj < 0.05, na.rm = TRUE) })),
+  min_pval     = as.numeric(lapply(gsea_results, function(x) { min(x$padj, na.rm = TRUE) })),
+  mean_pval    = as.numeric(lapply(gsea_results, function(x) { mean(x$padj, na.rm = TRUE) })),
+  median_pval  = as.numeric(lapply(gsea_results, function(x) { median(x$padj, na.rm = TRUE) }))
+)
+
+gsea_module_summary %>%
+  arrange(median_pval) %>% 
+  kable
+```
+
+#### MSigDB GSEA results (network-level)
+
+```{r msigdb_gsea_enrichment_results_network, results = 'asis'}
+# combine results into a single dataframe and drop non-significant entries
+gsea_results_df <- do.call(rbind, gsea_results) %>%
+  filter(padj < 0.05)
+
+# compute statistics for significantly-enriched annotations
+gsea_network_summary <- list(num_enriched = nrow(gsea_results_df),
+                             unique_enriched = length(unique(gsea_results_df$pathway)),
+                             mean_pval = mean(gsea_results_df$padj),
+                             median_pval = median(gsea_results_df$padj),
+                             pval_score = sum(-log10(pmax(gsea_results_df$padj, 10^-10))),
+                             avg_enriched_per_module = nrow(gsea_results_df) / length(gsea_results))
+
+kable(as.data.frame(gsea_network_summary))
+```
+
