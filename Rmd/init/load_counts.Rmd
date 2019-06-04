@@ -135,32 +135,25 @@ if (is.data.frame(CONFIG$input_count_tables)) {
         count_table <- read.table(CONFIG$input_count_tables, header=TRUE,
                                   row.names=1, check.names=FALSE) 
     } else {
-        # Load from sample-specific count tables
-        # ids <- regmatches(count_files, regexpr('(HPGL)?[0-9]{4,}', count_files))
-        ids <- file_path_sans_ext(basename(count_files))
+        # iterate over per-sample counts and append to count matrix
+        count_table <- read.delim(count_files[1], header = FALSE, row.names = 1)
 
-        # support old/new hpgltools
-        count_table = tryCatch({
-            res <- read_counts_expt(ids, count_files)
+        COUNT_COLUMN_IDX <- 2
 
-            if (is.data.frame(res)) { 
-                # new version
-                res
-            } else {
-                # newer version (dec 2017)
-                count_table <- as.data.frame(res$count_table)
-                row.names(count_table) <- count_table$rownames
-                as.matrix(count_table[, colnames(count_table) != 'rownames'])
-            }
-        }, error = function(e) {
-            # old hpgltool
-            expt_read_counts(ids, count_files)
-        })
+        for (infile in count_files[2:length(count_files)]) {
+          sample_counts <- read.delim(infile, header = FALSE)
+          count_table <- cbind(count_table, sample_counts[, COUNT_COLUMN_IDX])
+        }
+
+        # fix column names
+        colnames(count_table) <- file_path_sans_ext(basename(count_files))
+
+        count_table <- as.matrix(count_table)
     }
 
     # Make sure HTSeq meta-columns are removed (should be taken care of in
     # recent versions of HPGLtools)
-    count_table <- count_table[!grepl('^X__', rownames(count_table)),]
+    count_table <- count_table[!grepl('^X?__', rownames(count_table)),]
 }
 
 # Remove ENSEMBL gene id version, if present

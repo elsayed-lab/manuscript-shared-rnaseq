@@ -28,7 +28,7 @@ library('RCurl')
 library('sva')
 library('viridis')
 library('annotables')
-library('hpgltools')
+#library('hpgltools')
 
 # Load helper functions
 source('../../R/annotations.R')

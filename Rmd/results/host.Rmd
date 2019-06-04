@@ -78,7 +78,7 @@ sum(masked_adjmatrix > 0.3)
 sum(masked_adjmatrix > 0.1)
 ```
 
-```{r iref_index_plot, include = CONFIG$include_plots, evan = CONFIG$include_plots}
+```{r iref_index_plot, include = CONFIG$include_plots, eval = CONFIG$include_plots}
 # Create a binary version of the matrix and reorder to match previous heatmaps
 ppi_input <- masked_adjmatrix[heatmap_row_idx, heatmap_col_idx]
 ppi_input[ppi_input > 0] <- 1

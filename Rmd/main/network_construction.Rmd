@@ -52,11 +52,12 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
 } else if (CONFIG$similarity_measure == 'cor-dist') {
     # Combination of Pearson correlation and Euclidean distance
     cor_matrix  <- coop::pcor(t(wgcna_input))
-    dist_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
+    #dist_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
+    dist_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
     dist_matrix <- log1p(dist_matrix)
     dist_matrix <- 1 - (dist_matrix / max(dist_matrix))
 
-    similarity_matrix <- sign(cor_matrix) * ((abs(cor_matrix) + dist_matrix)/ 2)
+    similarity_matrix <- sign(cor_matrix) * ((abs(cor_matrix) + dist_matrix) / 2)
 
     # clean-up
     rm(cor_matrix)
@@ -67,7 +68,8 @@ if (CONFIG$similarity_measure %in% c('cor', 'bicor')) {
 
     # Old way of converting euclidean distance to a similarity measure:
     # inverse of max-scaled log-euclidean-distance
-    similarity_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
+    #similarity_matrix <- as.matrix(parallelDist::parDist(wgcna_input, diag=TRUE, upper=TRUE))
+    similarity_matrix <- as.matrix(dist(wgcna_input, diag=TRUE, upper=TRUE))
     similarity_matrix <- log1p(similarity_matrix)
     similarity_matrix <- 1 - (similarity_matrix / max(similarity_matrix))
 

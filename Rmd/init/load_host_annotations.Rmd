@@ -39,7 +39,7 @@ gene_info <- load_host_annotations(orgdb, rownames(count_table),
 gene_info <- gene_info[gene_info$gene_id %in% rownames(count_table),]
 
 # For now, just grab the description for the first transcript
-gene_info <- gene_info[!duplicated(gene_info$gene_id),]
+gene_info <- gene_info[!duplicated(gene_info$gene_id), ]
 
 # Gene IDs
 gene_ids <- rownames(count_table)
@@ -66,7 +66,7 @@ input_dir <- file.path('..', '..', 'data', species_dir)
 ```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
 # gene annotations
 if (CONFIG$include_tables) {
-    kable(head(gene_info), caption='Preview of gene annotations.')
+  kable(head(gene_info), caption='Preview of gene annotations.')
 }
 ```
 
@@ -80,12 +80,12 @@ package](http://bioconductor.org/packages/release/data/annotation/html/GO.db.htm
 ```{r load_go_annotations, message=FALSE, warning=FALSE, error=FALSE, results='asis'}
 # Load GO annotations (for host species, exclude ancestor terms to speed things
 # up; goseq will handle this for us later on)
-go_terms <- load_go_terms(orgdb, rownames(count_table),
-                          keytype=CONFIG$orgdb_key, include_ancestors=FALSE)
+go_terms <- load_go_terms(orgdb, rownames(count_table), keytype=CONFIG$orgdb_key,
+                          include_ancestors=FALSE)
 
 # Gene / GO term mapping
 gene_go_mapping <- as.data.frame(unique(
-    go_terms %>% select(.data[[CONFIG$orgdb_key]], GO, ONTOLOGY)
+  go_terms %>% select(.data[[CONFIG$orgdb_key]], GO, ONTOLOGY)
 ))
 colnames(gene_go_mapping) <- c('gene', 'category', 'ontology')
 go_term_id_mapping <- as.data.frame(unique(go_terms[c('GO', 'TERM', 'ONTOLOGY')]))
@@ -95,7 +95,7 @@ colnames(go_term_id_mapping) <- c("category", "term", "ontology")
 ```{r results='asis', include=CONFIG$verbose, echo=CONFIG$verbose}
 # Preview of GO term annotations
 if (CONFIG$include_tables) {
-    kable(head(go_terms), caption='Preview of GO annotations.')
+  kable(head(go_terms), caption='Preview of GO annotations.')
 }
 ```
 
@@ -109,39 +109,39 @@ annotations for each host gene.
 
 # Human
 if (CONFIG$host == 'H. sapiens') {
-    kegg_mapping_file  <- file.path(input_dir, 'Hsapiens_KEGG_Annotations.csv')
-    kegg_pathways_file <- file.path(input_dir, 'Hsapiens_KEGG_Pathways.csv')
-    org_abbreviation <- 'hsa'
+  kegg_mapping_file  <- file.path(input_dir, 'Hsapiens_KEGG_Annotations.csv')
+  kegg_pathways_file <- file.path(input_dir, 'Hsapiens_KEGG_Pathways.csv')
+  org_abbreviation <- 'hsa'
 } else if (CONFIG$host == 'M. musculus') {
-    # Mouse
-    kegg_mapping_file  <- file.path(input_dir, 'Mmusculus_KEGG_Annotations.csv')
-    kegg_pathways_file <- file.path(input_dir, 'Mmusculus_KEGG_Pathways.csv')
-    org_abbreviation <- 'mmu'
+  # Mouse
+  kegg_mapping_file  <- file.path(input_dir, 'Mmusculus_KEGG_Annotations.csv')
+  kegg_pathways_file <- file.path(input_dir, 'Mmusculus_KEGG_Pathways.csv')
+  org_abbreviation <- 'mmu'
 }
 
 if (file.exists(kegg_mapping_file)) {
-    # If KEGG mapping are available, load from file
-    gene_kegg_mapping <- read.csv(kegg_mapping_file)
-    kegg_pathways <- read.delim(kegg_pathways_file)
+  # If KEGG mapping are available, load from file
+  gene_kegg_mapping <- read.csv(kegg_mapping_file)
+  kegg_pathways <- read.delim(kegg_pathways_file)
 } else {
-    # Otherwise use KEGGREST to construct mappings
-    library('KEGGREST')
+  # Otherwise use KEGGREST to construct mappings
+  library('KEGGREST')
 
-    pathways <- unique(keggLink("pathway", org_abbreviation))
-    kegg_pathways <- generate_kegg_pathway_mapping(pathways, CONFIG$verbose)
-    gene_kegg_mapping <- generate_gene_kegg_mapping(pathways,
-                                                    org_abbreviation,
-                                                    verbose=CONFIG$verbose)
+  pathways <- unique(keggLink("pathway", org_abbreviation))
+  kegg_pathways <- generate_kegg_pathway_mapping(pathways, CONFIG$verbose)
+  gene_kegg_mapping <- generate_gene_kegg_mapping(pathways,
+                                                  org_abbreviation,
+                                                  verbose=CONFIG$verbose)
 
-    # Save KEGG mapping
-    if(!file.exists(input_dir)) {
-        dir.create(input_dir, recursive=TRUE)
-    }
+  # Save KEGG mapping
+  if(!file.exists(input_dir)) {
+      dir.create(input_dir, recursive=TRUE)
+  }
 
-    write.csv(gene_kegg_mapping, file=kegg_mapping_file, quote=FALSE,
-            row.names=FALSE)
-    write.table(kegg_pathways, file=kegg_pathways_file, quote=FALSE,
-            row.names=FALSE, sep='\t')
+  write.csv(gene_kegg_mapping, file=kegg_mapping_file, quote=FALSE,
+          row.names=FALSE)
+  write.table(kegg_pathways, file=kegg_pathways_file, quote=FALSE,
+          row.names=FALSE, sep='\t')
 }
 
 # Rename gene/KEGG mapping columns to be consistent with GO mapping
